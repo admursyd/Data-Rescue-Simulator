@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA RESCUE — Selamatkan Pangkalan Data!</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --highlight-pk: #fbbf24;
+            --highlight-fk: #a78bfa;
+            --highlight-fd: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--bg-panel);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .xp-text { color: var(--highlight-pk); }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        button.danger { background-color: var(--danger); }
+        button.success { background-color: var(--success); }
+        button.warning { background-color: var(--warning); color: #000; }
+        button:disabled { background-color: var(--text-muted); cursor: not-allowed; transform: none; }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 1rem 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--highlight-fd);
+            font-weight: 600;
+        }
+
+        tr:hover td { background-color: rgba(255,255,255,0.05); }
+
+        .pk { border-bottom: 2px solid var(--highlight-pk); padding-bottom: 2px; }
+        .fk { border-bottom: 2px dotted var(--highlight-fk); padding-bottom: 2px; }
+
+        .xray-mode th.dep-partial { background-color: rgba(56, 189, 248, 0.2); }
+        .xray-mode th.dep-transitive { background-color: rgba(16, 185, 129, 0.2); }
+
+        .attribute-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 1rem 0;
+            min-height: 50px;
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .attr-pill {
+            background-color: var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .attr-pill:hover { background-color: var(--primary); }
+        .attr-pill.selected { border-color: var(--highlight-pk); background-color: rgba(251, 191, 36, 0.2); }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-panel);
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .badge-list { display: flex; gap: 10px; margin-top: 10px; }
+        .badge { background: var(--warning); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+
+        .feedback-msg { margin: 1rem 0; padding: 1rem; border-radius: 8px; font-weight: bold; }
+        .feedback-success { background: rgba(16, 185, 129, 0.2); border-left: 4px solid var(--success); }
+        .feedback-error { background: rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger); }
+
+        .hidden { display: none !important; }
+        
+        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .flex-1 { flex: 1; min-width: 300px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            💾 DATA RESCUE
+        </div>
+        <div class="dashboard">
+            <div class="stat-box">
+                Misi: <span id="mission-level">1/3</span>
+            </div>
+            <div class="stat-box">
+                <span class="xp-text">⚡XP:</span> <span id="xp-score">0</span>
+            </div>
+            <div id="badge-container" class="badge-list"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Pengenalan & Nota Penyelidikan -->
+        <div id="intro-panel" class="panel">
+            <h2>Selamat Datang, Jurutera Pangkalan Data!</h2>
+            <p style="margin: 1rem 0; color: var(--text-muted);">
+                Sistem rekod universiti sedang mengalami krisis integriti data! Jadual bercelaru, data berulang, dan maklumat hilang.
+                Misi anda adalah untuk menyiasat masalah, mencari kebergantungan fungsi, dan menormalisasikan pangkalan data daripada tahap 1NF ke 3NF.
+            </p>
+            <div style="background: rgba(56, 189, 248, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--highlight-fd);">
+                <strong>Nota Adaptasi Kajian:</strong> Simulator ini mengaplikasikan dapatan kajian lepas melalui:
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-muted);">
+                    <li><strong>Penguraian interaktif:</strong> Memilih dan memindahkan atribut untuk membina jadual (adaptasi dari kaedah drag-and-drop).</li>
+                    <li><strong>Maklum balas automatik:</strong> Mesej ralat spesifik beserta semakan logik kebergantungan fungsi.</li>
+                    <li><strong>Papan pemuka bergamifikasi:</strong> Mata pengalaman (XP) dan pencapaian (Lencana) untuk motivasi.</li>
+                </ul>
+            </div>
+            <button onclick="startGame()" style="font-size: 1.1rem; padding: 0.75rem 2rem;">🚀 Mulakan Misi 1</button>
+        </div>
+
+        <div id="mission-area" class="hidden">
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 id="mission-title">Misi 1: Database Disaster</h2>
+                    <button id="btn-xray" class="warning" onclick="toggleXRay()">🔍 Database X-Ray</button>
+                </div>
+                <p id="mission-desc" style="color: var(--text-muted); margin-bottom: 1.5rem;"></p>
+                
+                <!-- Ruang Interaksi -->
+                <div id="interaction-workspace"></div>
+
+                <!-- Pemapar Jadual -->
+                <div id="tables-viewer"></div>
+
+                <!-- Maklum balas & Kawalan -->
+                <div id="feedback-box" class="hidden feedback-msg"></div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button id="btn-check" onclick="checkMission()">Sahkan Tindakan</button>
+                    <button id="btn-next" class="success hidden" onclick="nextMission()">Misi Seterusnya ➡️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="summary-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="summary-title" style="color: var(--success); margin-bottom: 1rem;">Misi Selesai!</h2>
+            <div id="summary-content" style="margin-bottom: 1.5rem;"></div>
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <strong>Soalan Refleksi:</strong>
+                <p id="reflection-question" style="color: var(--highlight-pk); margin-top: 0.5rem;"></p>
+            </div>
+            <button onclick="closeSummaryModal()">Teruskan</button>
+        </div>
+    </div>
+
+    <script>
+        // Data Utama Permainan
+        let gameState = {
+            mission: 0,
+            xp: 0,
+            xrayActive: false,
+            badges: [],
+            currentData: {}
+        };
+
+        // Jadual Tidak Dinormalisasi (0NF/1NF asas)
+        const rawTable = {
+            name: "Pendaftaran_Asal",
+            columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+            rows: [
+                ["S01", "Ahmad Ali", "CS", "FTMK", "K01", "Pangkalan Data", "A"],
+                ["S01", "Ahmad Ali", "CS", "FTMK", "K02", "Rangkaian", "B"],
+                ["S02", "Siti Aminah", "IT", "FTMK", "K01", "Pangkalan Data", "A-"],
+                ["S03", "John Doe", "CS", "FTMK", "K03", "Pengaturcaraan C", "B+"]
+            ]
+        };
+
+        const missions = [
+            {
+                id: 1,
+                title: "Misi 1: Database Disaster (Menemui Anomali)",
+                desc: "Jadual ini mengandungi semua data dalam satu tempat (Data tidak ternormal). Cuba lakukan tindakan di bawah untuk melihat bagaimana struktur yang buruk menyebabkan <strong>Insertion Anomaly</strong>, <strong>Update Anomaly</strong>, dan <strong>Deletion Anomaly</strong>.",
+                setup: setupMission1,
+                check: checkMission1
+            },
+            {
+                id: 2,
+                title: "Misi 2: Table Surgery (Menuju 1NF & 2NF)",
+                desc: "Kunci primer komposit adalah <strong>(PelajarID, KodKursus)</strong>.<br><strong>Kebergantungan Separa (Partial Dependency):</strong> NamaPelajar, Program, Fakulti hanya bergantung pada <em>PelajarID</em>. NamaKursus bergantung pada <em>KodKursus</em>. Gred bergantung pada kedua-duanya.<br><br><strong>Tugasan:</strong> Asingkan atribut ke dalam 3 jadual baharu: Jadual Pelajar, Jadual Kursus, dan Jadual Pendaftaran. Pilih atribut, pilih mana yang akan jadi Kunci Primer (PK), dan cipta jadual.",
+                setup: setupMission2,
+                check: checkMission2
+            },
+            {
+                id: 3,
+                title: "Misi 3: Integrity Rescue (Menuju 3NF)",
+                desc: "Dalam Jadual Pelajar, <strong>Program</strong> menentukan <strong>Fakulti</strong>. Ini dipanggil <strong>Kebergantungan Transitif (Transitive Dependency)</strong> kerana Fakulti bergantung kepada Program, bukan secara langsung kepada PelajarID.<br><br><strong>Tugasan:</strong> Ekstrak jadual baharu untuk Program bagi mengelakkan pertindihan nama Fakulti.",
+                setup: setupMission3,
+                check: checkMission3
+            }
+        ];
+
+        function addXP(points) {
+            gameState.xp += points;
+            document.getElementById('xp-score').innerText = gameState.xp;
+            document.getElementById('xp-score').style.transform = 'scale(1.5)';
+            setTimeout(() => { document.getElementById('xp-score').style.transform = 'scale(1)'; }, 300);
+        }
+
+        function addBadge(name) {
+            if (!gameState.badges.includes(name)) {
+                gameState.badges.push(name);
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'badge';
+                badgeEl.innerText = name;
+                document.getElementById('badge-container').appendChild(badgeEl);
+            }
+        }
+
+        function showFeedback(msg, isSuccess) {
+            const fb = document.getElementById('feedback-box');
+            fb.innerHTML = msg;
+            fb.className = 'feedback-msg ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+            fb.classList.remove('hidden');
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        function toggleXRay() {
+            gameState.xrayActive = !gameState.xrayActive;
+            const viewer = document.getElementById('tables-viewer');
+            if(gameState.xrayActive) {
+                viewer.classList.add('xray-mode');
+                document.getElementById('btn-xray').style.boxShadow = "0 0 10px var(--highlight-pk)";
+            } else {
+                viewer.classList.remove('xray-mode');
+                document.getElementById('btn-xray').style.boxShadow = "none";
+            }
+        }
+
+        function startGame() {
+            document.getElementById('intro-panel').classList.add('hidden');
+            document.getElementById('mission-area').classList.remove('hidden');
+            loadMission(1);
+        }
+
+        function loadMission(level) {
+            gameState.mission = level;
+            hideFeedback();
+            document.getElementById('btn-next').classList.add('hidden');
+            document.getElementById('btn-check').classList.remove('hidden');
+            document.getElementById('mission-level').innerText = `${level}/3`;
+            
+            const m = missions[level-1];
+            document.getElementById('mission-title').innerText = m.title;
+            document.getElementById('mission-desc').innerHTML = m.desc;
+            
+            // Padam ruang kerja lama
+            document.getElementById('interaction-workspace').innerHTML = '';
+            document.getElementById('tables-viewer').innerHTML = '';
+            
+            m.setup();
+        }
+
+        function checkMission() {
+            if (gameState.mission === 1) {
+                checkMission1();
+            } else if (gameState.mission === 2) {
+                checkMission2();
+            } else if (gameState.mission === 3) {
+                checkMission3();
+            }
+        }
+
+        function renderTable(tableData, containerId) {
+            let html = `<div class="table-container"><h3>📋 ${tableData.name}</h3><table><thead><tr>`;
+            tableData.columns.forEach(col => {
+                let classes = [];
+                if(tableData.pk && tableData.pk.includes(col)) classes.push('pk');
+                if(tableData.fk && tableData.fk.includes(col)) classes.push('fk');
+                // X-Ray markers based on current mission logic
+                if(gameState.mission === 2 && ['NamaPelajar','Program','Fakulti','NamaKursus'].includes(col)) classes.push('dep-partial');
+                if(gameState.mission === 3 && col === 'Fakulti') classes.push('dep-transitive');
+                
+                html += `<th class="${classes.join(' ')}" title="${classes.includes('pk')?'Kunci Primer':''}">${col}</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+            tableData.rows.forEach(row => {
+                html += `<tr>`;
+                row.forEach(cell => { html += `<td>${cell}</td>`; });
+                html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+            document.getElementById(containerId).innerHTML += html;
+        }
+
+        function setupMission1() {
+            gameState.m1State = { tested: 0 };
+            renderTable(rawTable, 'tables-viewer');
+            
+            const ws = document.getElementById('interaction-workspace');
+            ws.innerHTML = `
+                <div class="flex-row" style="margin-bottom: 1rem;">
+                    <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar Baharu (Tiada Kursus)</button>
+                    <button class="warning" onclick="triggerAnomaly('update')">Uji: Tukar Program Ahmad Ali</button>
+                    <button class="danger" onclick="triggerAnomaly('delete')">Uji: Buang Pendaftaran John Doe</button>
+                </div>
+            `;
+        }
+
+        function triggerAnomaly(type) {
+            hideFeedback();
+            let tempTable = JSON.parse(JSON.stringify(rawTable));
+            
+            if (type === 'insert') {
+                showFeedback("❌ <strong>Insertion Anomaly:</strong> Anda tidak boleh memasukkan pelajar baharu ke dalam sistem tanpa mendaftarkan kursus (KodKursus adalah sebahagian daripada Kunci Primer dan tidak boleh NULL).", false);
+                gameState.m1State.tested |= 1;
+            } else if (type === 'update') {
+                // Update only one record of Ali to show inconsistency
+                tempTable.rows[0][2] = "AI"; // Change CS to AI only on row 1
+                document.getElementById('tables-viewer').innerHTML = '';
+                renderTable(tempTable, 'tables-viewer');
+                showFeedback("❌ <strong>Update Anomaly:</strong> Program Ahmad Ali ditukar kepada 'AI', tetapi pendaftaran kursusnya yang lain (baris kedua) masih merekodkan 'CS'. Data menjadi tidak konsisten!", false);
+                gameState.m1State.tested |= 2;
+            } else if (type === 'delete') {
+                tempTable.rows.pop(); // Remove John Doe
+                document.getElementById('tables-viewer').innerHTML = '';
+                renderTable(tempTable, 'tables-viewer');
+                showFeedback("❌ <strong>Deletion Anomaly:</strong> Dengan memadam rekod kursus K03, kita telah kehilangan SEMUA maklumat tentang pelajar John Doe dari pangkalan data!", false);
+                gameState.m1State.tested |= 4;
+            }
+        }
+
+        function checkMission1() {
+            if (gameState.m1State.tested === 7) { // All 3 buttons clicked
+                addXP(50);
+                addBadge("Anomaly Hunter");
+                showFeedback("✅ Syabas! Anda telah mengenalpasti ketiga-tiga anomali. Jadual ini perlu dipecahkan (dinormalisasikan)!", true);
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
+                showSummaryModal(
+                    "Penemuan Anomali", 
+                    "Jadual yang tidak normal menyebabkan kerosakan data apabila maklumat dikemas kini, ditambah, atau dipadam. Kunci utamanya adalah mencari kebergantungan fungsi.",
+                    "Mengapakah kehilangan maklumat pelajar berlaku apabila kita hanya mahu membatalkan pendaftaran kursusnya?"
+                );
+            } else {
+                showFeedback("Sila uji kesemua 3 jenis anomali (Tambah, Tukar, Buang) sebelum meneruskan.", false);
+            }
+        }
+
+        function setupMission2() {
+            gameState.m2Tables = [];
+            gameState.m2Columns = [...rawTable.columns];
+            
+            renderWorkspaceM2();
+        }
+
+        function renderWorkspaceM2() {
+            const ws = document.getElementById('interaction-workspace');
+            
+            let html = `
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <h4>Atribut Tersedia:</h4>
+                    <div class="attribute-pool" id="pool-available">
+                        ${gameState.m2Columns.map(col => `<div class="attr-pill" onclick="toggleSelect('${col}', this)">${col}</div>`).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 1rem;">
+                        <input type="text" id="new-table-name" placeholder="Nama Jadual Baharu (cth: Pelajar)" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white;">
+                        <button onclick="createTableM2()">Bina Jadual</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--warning); margin-top: 5px;">* Klik pada atribut untuk memilih. Atribut pertama yang dipilih secara automatik dianggap Kunci Primer (PK).</p>
+                </div>
+            `;
+            ws.innerHTML = html;
+            
+            const viewer = document.getElementById('tables-viewer');
+            viewer.innerHTML = '';
+            gameState.m2Tables.forEach(t => renderTable(t, 'tables-viewer'));
+        }
+
+        let selectedCols = [];
+        function toggleSelect(col, el) {
+            const idx = selectedCols.indexOf(col);
+            if (idx > -1) {
+                selectedCols.splice(idx, 1);
+                el.classList.remove('selected');
+                el.innerHTML = col;
+            } else {
+                selectedCols.push(col);
+                el.classList.add('selected');
+                if(selectedCols.length === 1) el.innerHTML = `🔑 ${col} (PK)`;
+                if(selectedCols.length === 2 && document.getElementById('new-table-name').value.toLowerCase() === 'pendaftaran') {
+                    // special visual hint for composite key
+                    el.innerHTML = `🔑 ${col} (PK)`;
+                }
+            }
+        }
+
+        function createTableM2() {
+            const tableName = document.getElementById('new-table-name').value.trim();
+            if(!tableName || selectedCols.length === 0) {
+                showFeedback("Sila masukkan nama jadual dan pilih sekurang-kurangnya satu atribut.", false);
+                return;
+            }
+
+            // Logic Validation for 2NF
+            // Expected subsets: 
+            // Pelajar: PelajarID(PK), NamaPelajar, Program, Fakulti
+            // Kursus: KodKursus(PK), NamaKursus
+            // Pendaftaran: PelajarID(PK), KodKursus(PK), Gred
+            
+            const sortedSel = [...selectedCols].sort();
+            const setStr = sortedSel.join(',');
+            
+            let isValid = false;
+            let expectedMsg = "";
+            let pks = [];
+
+            if (setStr === ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(',')) {
+                isValid = true; pks = ['PelajarID'];
+            } else if (setStr === ['KodKursus', 'NamaKursus'].sort().join(',')) {
+                isValid = true; pks = ['KodKursus'];
+            } else if (setStr === ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')) {
+                isValid = true; pks = ['PelajarID', 'KodKursus'];
+            } else {
+                expectedMsg = "Kumpulan atribut tidak tepat mengikut kebergantungan fungsi. Cth: Semua maklumat pelajar mesti bersama PelajarID. Maklumat gred perlukan KEDUA-DUA PelajarID dan KodKursus.";
+            }
+
+            if (!isValid) {
+                showFeedback("❌ Penguraian salah: " + expectedMsg, false);
+                selectedCols = [];
+                renderWorkspaceM2();
+                return;
+            }
+
+            // Valid decomposition
+            let newRows = [];
+            // Basic extraction (unique rows)
+            rawTable.rows.forEach(r => {
+                let newRow = [];
+                selectedCols.forEach(col => {
+                    newRow.push(r[rawTable.columns.indexOf(col)]);
+                });
+                if(!newRows.some(er => JSON.stringify(er) === JSON.stringify(newRow))) {
+                    newRows.push(newRow);
+                }
+            });
+
+            gameState.m2Tables.push({
+                name: tableName,
+                columns: [...selectedCols],
+                pk: pks,
+                rows: newRows
+            });
+
+            // Remove extracted columns from pool, EXCEPT keys which might be needed for relationship
+            // Actually, in standard UI, we allow reusing PKs as FKs. 
+            // Let's just reset selected cols, and keep pool as is, but maybe gray out fully assigned non-key attributes?
+            // For simplicity, just reset selection.
+            selectedCols = [];
+            showFeedback(`✅ Jadual ${tableName} berjaya dibina mengikut syarat kebergantungan!`, true);
+            addXP(30);
+            renderWorkspaceM2();
+        }
+
+        function checkMission2() {
+            if (gameState.m2Tables.length === 3) {
+                addXP(100);
+                addBadge("Surgeon 2NF");
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-check').classList.add('hidden');
+                showFeedback("🎉 Tahniah! Pangkalan data kini mencapai tahap 2NF. Tiada lagi Kebergantungan Separa.", true);
+                
+                // Set data for Mission 3 based on this success
+                gameState.currentData.pelajarTable = gameState.m2Tables.find(t => t.columns.includes('NamaPelajar'));
+                
+                showSummaryModal(
+                    "Mencapai 2NF", 
+                    "Anda telah memecahkan jadual menggunakan <strong>Kunci Primer</strong>. Atribut yang hanya bergantung pada sebahagian kunci komposit (seperti Nama bergantung pada PelajarID sahaja) telah diasingkan. Ini menyelesaikan anomali insertion!",
+                    "Adakah kita kehilangan data asal dengan pecahan ini? (Jawapan: Tidak, kita masih boleh MENGGABUNGKAN jadual menggunakan Kunci Primer dan Kunci Asing)."
+                );
+            } else {
+                showFeedback("❌ Sila bina ketiga-tiga jadual yang diperlukan (Pelajar, Kursus, Pendaftaran) untuk melepasi Misi 2.", false);
+            }
+        }
+
+        function setupMission3() {
+            gameState.m3Tables = [];
+            // We use the Pelajar table from M2
+            const tPelajar = gameState.currentData.pelajarTable;
+            
+            const ws = document.getElementById('interaction-workspace');
+            ws.innerHTML = `
+                <div style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.1);">
+                    <strong>Ujian Integriti:</strong> Lihat Jadual Pelajar di bawah. Perhatikan bahawa <em>Fakulti FTMK</em> berulang untuk program <em>CS</em> dan <em>IT</em>. Fakulti sebenarnya bergantung pada Program, bukan PelajarID.
+                </div>
+                <button class="success" onclick="extractTransitive()">Ekstrak Jadual Program (Hapus Kebergantungan Transitif)</button>
+            `;
+
+            document.getElementById('tables-viewer').innerHTML = '';
+            renderTable(tPelajar, 'tables-viewer');
+        }
+
+        function extractTransitive() {
+            const tPelajarOld = gameState.currentData.pelajarTable;
+            
+            const tProgram = {
+                name: "Program",
+                columns: ["Program", "Fakulti"],
+                pk: ["Program"],
+                rows: [
+                    ["CS", "FTMK"],
+                    ["IT", "FTMK"]
+                ]
+            };
+
+            const tPelajarNew = {
+                name: "Pelajar (3NF)",
+                columns: ["PelajarID", "NamaPelajar", "Program"],
+                pk: ["PelajarID"],
+                fk: ["Program"],
+                rows: [
+                    ["S01", "Ahmad Ali", "CS"],
+                    ["S02", "Siti Aminah", "IT"],
+                    ["S03", "John Doe", "CS"]
+                ]
+            };
+
+            gameState.m3Tables = [tPelajarNew, tProgram];
+            
+            document.getElementById('tables-viewer').innerHTML = '';
+            renderTable(tPelajarNew, 'tables-viewer');
+            renderTable(tProgram, 'tables-viewer');
+            
+            showFeedback("✅ Kebergantungan Transitif disingkirkan! Atribut Fakulti telah dipindahkan ke jadual Program. 'Program' di jadual Pelajar kini bertindak sebagai Kunci Asing (Foreign Key).", true);
+            gameState.m3Done = true;
+        }
+
+        function checkMission3() {
+            if (gameState.m3Done) {
+                addXP(150);
+                addBadge("Master 3NF");
+                document.getElementById('btn-check').classList.add('hidden');
+                
+                showSummaryModal(
+                    "Pangkalan Data Diselamatkan!", 
+                    "Anda telah mencapai Bentuk Normal Ketiga (3NF). Jadual anda kini bebas daripada anomali pengemaskinian dan pertindihan data yang tidak perlu. Semua atribut bukan kunci bergantung SEPENUHNYA dan LANGSUNG kepada Kunci Primer.",
+                    "Bagaimana Kunci Asing (Foreign Key) membantu mengekalkan integriti rujukan antara jadual yang dipecahkan?"
+                );
+            } else {
+                showFeedback("Sila laksanakan pengekstrakan jadual Program terlebih dahulu.", false);
+            }
+        }
+
+        function nextMission() {
+            if(gameState.mission < 3) {
+                loadMission(gameState.mission + 1);
+            }
+        }
+
+        function showSummaryModal(title, text, reflection) {
+            document.getElementById('summary-title').innerText = title;
+            document.getElementById('summary-content').innerHTML = text;
+            document.getElementById('reflection-question').innerText = reflection;
+            document.getElementById('summary-modal').classList.add('active');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summary-modal').classList.remove('active');
+            if (gameState.mission === 3 && gameState.m3Done) {
+                document.getElementById('interaction-workspace').innerHTML = `
+                    <div style="text-align:center; padding: 3rem;">
+                        <h2 style="color: var(--success); font-size: 2rem;">🏆 Misi Selesai Sepenuhnya!</h2>
+                        <p style="margin: 1rem 0;">Anda telah membuktikan kecekapan sebagai Jurutera Pangkalan Data.</p>
+                        <button onclick="location.reload()">Main Semula</button>
+                    </div>
+                `;
+                document.getElementById('tables-viewer').innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>
