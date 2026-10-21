@@ -21,714 +21,477 @@
             --highlight-fd: #38bdf8;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            line-height: 1.6;
-            overflow-x: hidden;
-            padding-bottom: 200px; /* Ruang untuk avatar di bawah */
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); line-height: 1.6; overflow-x: hidden; padding-bottom: 50px; }
 
         header {
-            background-color: var(--bg-panel);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background-color: var(--bg-panel); padding: 1rem 2rem; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px solid var(--border-color); position: sticky; top: 0; z-index: 100;
         }
-
-        .brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .dashboard {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            background: rgba(0,0,0,0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-        }
-
+        .brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .dashboard { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+        .stat-box { background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color); font-weight: bold; }
         .xp-text { color: var(--highlight-pk); }
+        .badge-list { display: flex; gap: 10px; }
+        .badge { background: var(--warning); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
 
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+        .main-layout { display: flex; flex-direction: column; max-width: 1400px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; position: relative; }
+        .content-area { flex: 1; min-width: 0; position: relative; }
+        .side-panel { width: 100%; display: flex; flex-direction: column; gap: 1rem; }
+        
+        @media (min-width: 992px) {
+            .main-layout { flex-direction: row; align-items: flex-start; }
+            .side-panel { width: 320px; flex-shrink: 0; position: sticky; top: 90px; }
         }
 
-        .panel {
-            background-color: var(--bg-panel);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
+        .panel { background-color: var(--bg-panel); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        button { background-color: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 1rem; }
+        button:hover:not(:disabled) { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         button.danger { background-color: var(--danger); }
         button.success { background-color: var(--success); }
         button.warning { background-color: var(--warning); color: #000; }
-        button.secondary { background-color: transparent; border: 2px solid var(--border-color); }
-        button.secondary:hover { background-color: var(--border-color); }
-        button:disabled { background-color: var(--text-muted); cursor: not-allowed; transform: none; color: #333; }
+        button.outline { background-color: transparent; border: 2px solid var(--border-color); color: var(--text-main); }
+        button.outline:hover:not(:disabled) { border-color: var(--text-main); background: rgba(255,255,255,0.1); }
+        button:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7; }
 
-        .table-container {
-            overflow-x: auto;
-            margin: 1rem 0;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            background-color: rgba(255,255,255,0.05);
-            color: var(--highlight-fd);
-            font-weight: 600;
-        }
-
+        .table-container { overflow-x: auto; margin: 1rem 0; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color); transition: 0.3s; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: rgba(255,255,255,0.05); color: var(--highlight-fd); font-weight: 600; }
         tr:hover td { background-color: rgba(255,255,255,0.05); }
+        .pk { border-bottom: 3px solid var(--highlight-pk); }
+        .fk { border-bottom: 3px dotted var(--highlight-fk); }
 
-        .pk { border-bottom: 2px solid var(--highlight-pk); padding-bottom: 2px; }
-        .fk { border-bottom: 2px dotted var(--highlight-fk); padding-bottom: 2px; }
+        .xray-mode th.dep-partial { background-color: rgba(56, 189, 248, 0.2); border-top: 2px solid var(--highlight-fd); }
+        .xray-mode th.dep-transitive { background-color: rgba(16, 185, 129, 0.2); border-top: 2px solid var(--success); }
 
-        .xray-mode th.dep-partial { background-color: rgba(56, 189, 248, 0.2); }
-        .xray-mode th.dep-transitive { background-color: rgba(16, 185, 129, 0.2); }
-
-        .attribute-pool {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 1rem 0;
-            min-height: 50px;
-            padding: 1rem;
-            background: rgba(0,0,0,0.3);
-            border-radius: 8px;
-            border: 2px dashed var(--border-color);
-        }
-
-        .attr-pill {
-            background-color: var(--border-color);
-            padding: 0.6rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
+        .attribute-pool { display: flex; flex-wrap: wrap; gap: 10px; margin: 1rem 0; min-height: 60px; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 2px dashed var(--border-color); }
+        .attr-pill { background-color: var(--border-color); padding: 0.6rem 1.2rem; border-radius: 20px; cursor: pointer; user-select: none; transition: all 0.2s; border: 2px solid transparent; font-weight: 500; }
         .attr-pill:hover { background-color: var(--primary); }
-        .attr-pill.selected { border-color: var(--highlight-pk); background-color: rgba(251, 191, 36, 0.2); }
+        .attr-pill.selected { border-color: var(--highlight-pk); background-color: rgba(251, 191, 36, 0.2); color: var(--highlight-pk); }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            visibility: hidden;
-            opacity: 0;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .modal-content {
-            background: var(--bg-panel);
-            padding: 2.5rem;
-            border-radius: 16px;
-            max-width: 650px;
-            width: 90%;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .badge-list { display: flex; gap: 10px; margin-top: 10px; }
-        .badge { background: var(--warning); color: #000; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; }
-
-        .feedback-msg { margin: 1rem 0; padding: 1.2rem; border-radius: 8px; font-weight: 500; line-height: 1.5; font-size: 1.05rem; }
-        .feedback-success { background: rgba(16, 185, 129, 0.15); border-left: 5px solid var(--success); }
-        .feedback-error { background: rgba(239, 68, 68, 0.15); border-left: 5px solid var(--danger); }
-        .feedback-warning { background: rgba(245, 158, 11, 0.15); border-left: 5px solid var(--warning); color: var(--text-main); }
-
+        .feedback-msg { margin: 1rem 0; padding: 1rem; border-radius: 8px; font-weight: bold; }
+        .feedback-success { background: rgba(16, 185, 129, 0.2); border-left: 4px solid var(--success); }
+        .feedback-error { background: rgba(239, 68, 68, 0.2); border-left: 4px solid var(--warning); color: var(--warning); }
         .hidden { display: none !important; }
-        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+        .blur-mode { filter: blur(6px) grayscale(50%); pointer-events: none; opacity: 0.5; user-select: none; transition: all 0.3s ease; }
+        #ik-panel { border: 2px solid var(--success); position: relative; z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        #abe-container {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            z-index: 2000;
-            max-width: 420px;
-            transition: all 0.3s ease;
-            pointer-events: none; /* ruang kosong tidak menghalang klik pada kandungan */
-        }
+        #abe-container { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; transition: all 0.3s ease; }
+        .speech-bubble { background: #ffffff; color: #0f172a; border: 3px solid var(--primary); padding: 1.5rem; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-size: 15px; line-height: 1.5; font-weight: 500; width: 100%; position: relative; transition: all 0.3s; }
+        .abe-jamal-svg { width: 140px; height: 140px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); transition: transform 0.2s; flex-shrink: 0; cursor: pointer; }
+        .abe-jamal-svg:hover { transform: scale(1.05); }
+        #btn-toggle-hint { width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid var(--border-color); font-size: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: bold; background: var(--bg-panel); color: var(--text-main); transition: all 0.2s; cursor: pointer; }
+        #btn-toggle-hint:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        #abe-container > * { pointer-events: auto; }
+        #observation-ui { background: rgba(0,0,0,0.6); padding: 15px 25px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; border: 2px solid var(--highlight-pk); box-shadow: 0 0 20px rgba(251, 191, 36, 0.2); margin-top: 1.5rem; transition: opacity 0.3s; }
+        .predict-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 1rem; }
+        @media(min-width: 768px) { .predict-grid { grid-template-columns: 1fr 1fr; } }
         
-        #abe-dialog {
-            background: white;
-            color: #0f172a;
-            padding: 14px 16px 12px;
-            max-width: 300px;
-            border-radius: 20px 20px 0 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            position: relative;
-            display: none;
-            border: 3px solid var(--primary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        #abe-dialog::after {
-            content: '';
-            position: absolute;
-            bottom: -15px;
-            right: 25px;
-            border-width: 15px 0 0 15px;
-            border-style: solid;
-            border-color: white transparent transparent transparent;
-        }
-        
-        #abe-dialog::before {
-            content: '';
-            position: absolute;
-            bottom: -19px;
-            right: 23px;
-            border-width: 17px 0 0 17px;
-            border-style: solid;
-            border-color: var(--primary) transparent transparent transparent;
-            z-index: -1;
-        }
+        .predict-option { background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: 8px; cursor: pointer; border: 2px solid var(--border-color); display: flex; align-items: flex-start; transition: all 0.2s; font-size: 1.05rem; }
+        .predict-option:hover { background: rgba(255,255,255,0.05); }
+        .predict-option input { transform: scale(1.3); margin-right: 15px; margin-top: 5px; flex-shrink: 0; cursor: pointer; }
 
-        .abe-avatar-img {
-            width: 110px;
-            height: 110px;
-            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.4));
-            cursor: pointer;
-            transition: transform 0.2s;
-            flex-shrink: 0;
-        }
+        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--danger); color: white; padding: 1rem 2rem; border-radius: 8px; z-index: 9999; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 
-        .abe-avatar-img:hover {
-            transform: scale(1.05) translateY(-5px);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 4000; visibility: hidden; opacity: 0; transition: all 0.3s ease; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-content { background: var(--bg-panel); padding: 2.5rem; border-radius: 12px; max-width: 600px; width: 95%; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-        .abe-scroll {
-            max-height: 32vh;
-            overflow-y: auto;
-            padding-right: 18px;
+        @media (max-width: 991px) {
+            header { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .main-layout { flex-direction: column; }
+            .side-panel { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; z-index: 2000; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); border-top: 2px solid var(--border-color); padding: 15px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); border-radius: 20px 20px 0 0; gap: 5px; }
+            #abe-container { flex-direction: row-reverse; justify-content: flex-start; align-items: flex-end; }
+            .abe-jamal-svg { width: 75px; height: 75px; flex-shrink: 0; cursor: pointer; }
+            .speech-bubble { width: auto; flex: 1; border-radius: 15px 15px 0 15px; margin-bottom: 5px; font-size: 14px; padding: 1rem; border-width: 2px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+            #btn-toggle-hint { width: auto; font-size: 0.9rem; padding: 0.5rem 1rem; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); margin-bottom: 5px; }
+            body { padding-bottom: 180px; }
+            #observation-ui { flex-direction: column; text-align: center; }
         }
-
-        .abe-close {
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            background: transparent;
-            color: #475569;
-            padding: 2px 8px;
-            font-size: 1rem;
-            line-height: 1;
-        }
-        .abe-close:hover { background: #e2e8f0; transform: none; }
-
-        #abe-dialog button.secondary { color: #0f172a; border-color: #94a3b8; }
-        #abe-dialog button.secondary:hover { color: #darkblue; }
-        #abe-dialog .dialog-actions button { padding: 0.4rem 0.9rem; font-size: 0.9rem; }
-
-        .dialog-actions {
-            margin-top: 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            #abe-container {
-                bottom: 10px;
-                right: 10px;
-                left: 10px;
-                flex-direction: column;
-                align-items: flex-end;
-                max-width: none;
-            }
-            .abe-avatar-img {
-                width: 80px;
-                height: 80px;
-            }
-            #abe-dialog {
-                border-radius: 20px 20px 20px 0;
-                font-size: 0.95rem;
-                max-width: none;
-                width: calc(100% - 20px);
-                align-self: center;
-            }
-            #abe-dialog::after {
-                right: auto;
-                left: 25px;
-                border-width: 15px 15px 0 0;
-            }
-            #abe-dialog::before {
-                right: auto;
-                left: 23px;
-                border-width: 17px 17px 0 0;
-            }
-        }
-
-        .predict-option {
-            background: rgba(0,0,0,0.3);
-            padding: 1.2rem;
-            border-radius: 10px;
-            cursor: pointer;
-            border: 2px solid var(--border-color);
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            transition: all 0.2s;
-            font-size: 1.05rem;
-        }
-
-        .predict-option:hover:not(.disabled) {
-            background: rgba(255,255,255,0.05);
-            border-color: var(--primary);
-        }
-        
-        .predict-option input {
-            margin-top: 5px;
-            transform: scale(1.3);
-            cursor: pointer;
-        }
-        .predict-option.disabled { cursor: default; }
-
-        #btn-lihat-hint {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            border-radius: 30px;
-            padding: 10px 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            display: none;
-        }
-
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand">
-            💾 DATA RESCUE
-        </div>
+        <div class="brand">💾 DATA RESCUE</div>
         <div class="dashboard">
-            <div class="stat-box">
-                Misi: <span id="mission-level">1/3</span>
-            </div>
-            <div class="stat-box">
-                <span class="xp-text">⚡XP:</span> <span id="xp-score">0</span>
-            </div>
-            <button class="secondary" onclick="resetCurrentMission()" style="padding: 4px 10px; font-size: 0.85rem;">🔄 Set Semula Misi</button>
+            <div class="stat-box">Misi: <span id="mission-level">Intro</span></div>
+            <div class="stat-box"><span class="xp-text">⚡XP:</span> <span id="xp-score">0</span></div>
             <div id="badge-container" class="badge-list"></div>
         </div>
     </header>
 
-    <div class="container">
-        <!-- Pengenalan & Nota Penyelidikan -->
-        <div id="intro-panel" class="panel">
-            <h2>Selamat Datang, Jurutera Pangkalan Data!</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted); font-size: 1.1rem;">
-                Sistem rekod universiti sedang mengalami krisis integriti data! Jadual bercelaru, data berulang, dan maklumat hilang.
-                Misi anda adalah untuk menyiasat masalah, mencari kebergantungan fungsi, dan menormalisasikan pangkalan data daripada tahap 1NF ke 3NF.
-            </p>
-            <div style="background: rgba(56, 189, 248, 0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--highlight-fd);">
-                <strong>Nota Mod Interaktif & Penilaian Tepat:</strong>
-                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-muted); font-size: 1.05rem;">
-                    <li><strong>Perhatikan Dahulu:</strong> Jadual perlu diteliti sebelum sebarang tindakan.</li>
-                    <li><strong>Ramalan Wajib:</strong> Uji hipotesis anda berdasarkan logik Penormalan. Soalan wajib dijawab.</li>
-                    <li><strong>Abe Jamal:</strong> Mentor anda yang akan mengaitkan masalah data dengan realiti.</li>
-                </ul>
-            </div>
-            <button onclick="startGame()" style="font-size: 1.2rem; padding: 0.8rem 2.5rem;">🚀 Mulakan Misi 1</button>
-        </div>
+    <div id="custom-alert">Selesaikan ramalan semasa dahulu sebelum meneruskan misi.</div>
 
-        <div id="mission-area" class="hidden">
-            <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-                    <h2 id="mission-title" style="font-size: 1.4rem;">Misi 1: Database Disaster</h2>
-                    <button id="btn-xray" class="warning hidden" onclick="toggleXRay()">🔍 Database X-Ray</button>
-                </div>
-                <p id="mission-desc" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem;"></p>
+    <div class="main-layout">
+        <div class="content-area">
+            
+            <div id="intro-panel" class="panel">
+                <h2 style="font-size: 2rem; color: var(--highlight-fd); margin-bottom: 1rem;">Selamat Datang, Jurutera Pangkalan Data!</h2>
+                <p style="margin: 1rem 0; color: var(--text-muted); font-size: 1.2rem;">
+                    Sistem rekod universiti sedang mengalami krisis integriti data! Jadual bercelaru, data berulang, dan maklumat pelajar berisiko hilang.
+                    Misi anda adalah untuk menyiasat masalah, mencari kebergantungan fungsi, dan menormalisasikan pangkalan data daripada tahap 1NF ke 3NF.
+                </p>
+                <button onclick="startGame()" class="success" style="font-size: 1.2rem; padding: 1rem 2rem; margin-top: 1rem;">🚀 Mulakan Misi Penyelamatan</button>
                 
-                <!-- Pemapar Jadual sentiasa di atas -->
-                <div id="tables-viewer"></div>
+                <div id="ulang-kaji-btn-area"></div>
+            </div>
 
-                <!-- Ruang Interaksi disembunyikan sehingga soalan ramalan dijawab -->
-                <div id="interactive-workspace" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);">
-                    <!-- Butang aksi diletakkan sini secara dinamik -->
+            <div id="review-panel" class="hidden panel" style="border: 2px solid var(--warning);">
+                <h2 style="color: var(--warning); margin-bottom: 1rem;">📚 Ulang Kaji Adaptif</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Jom semak semula soalan yang anda pernah jawab kurang tepat sebelum ini.</p>
+                <div id="review-content"></div>
+            </div>
+
+            <div id="mission-area" class="hidden">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+                        <h2 id="mission-title" style="font-size: 1.6rem; color: var(--primary);"></h2>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-xray" class="warning" onclick="toggleXRay()">🔍 X-Ray</button>
+                            <button id="btn-change-data" class="outline" onclick="changeDataset()">🔄 Cuba Data Lain</button>
+                            <button id="btn-reset-mission" class="outline" onclick="resetCurrentMission()">⏮️ Set Semula</button>
+                        </div>
+                    </div>
+                    <p id="mission-desc" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.1rem;"></p>
+                    
+                    <div id="tables-viewer"></div>
+
+                    <div id="observation-ui" class="hidden">
+                        <span style="color: white; font-weight: 500; font-size: 1.1rem;">
+                            👀 Perhatikan jadual selama 10 saat sebelum menjawab... 
+                            <span id="obs-countdown" style="color: var(--highlight-pk); font-size: 1.5rem; font-weight: bold; margin-left: 10px;">10</span>s
+                        </span>
+                        <button onclick="skipObservation()" class="success" style="padding: 8px 16px; font-size: 1rem; border-radius: 8px;">Saya Bersedia!</button>
+                    </div>
+                    
+                    <div id="predict-area" class="hidden" style="margin-top: 1.5rem; transition: 0.3s;"></div>
+
+                    <div id="interaction-workspace" class="hidden" style="margin-top: 1.5rem; border-top: 2px dashed var(--border-color); padding-top: 1.5rem; transition: 0.3s;"></div>
+
+                    <div id="feedback-box" class="hidden feedback-msg"></div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button id="btn-check" class="hidden outline" onclick="checkMission()">Semak Tindakan Di Ruang Kerja</button>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Maklum balas -->
-                <div id="feedback-box" class="hidden feedback-msg"></div>
+            <div id="ik-panel" class="hidden panel" style="margin-top: 1rem; background: rgba(16, 185, 129, 0.1);">
+                <div id="ik-content"></div>
+            </div>
+
+        </div>
+
+        <div class="side-panel" id="side-panel">
+            <div id="abe-container" class="hidden">
+                <button id="btn-toggle-hint" class="hidden warning" onclick="toggleAbeHint()">💡 Lihat Hint Abe Jamal</button>
                 
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button id="btn-next" class="success hidden" onclick="nextMission()">Misi Seterusnya ➡️</button>
+                <div id="abe-dialog" class="speech-bubble hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <strong style="color: var(--primary); font-size: 1.05rem;">Abe Jamal Mentor</strong>
+                        <button onclick="hideAbeDialog()" style="background: none; color: var(--text-muted); border: none; padding: 0 5px; font-size: 1.4rem; line-height: 1; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'" title="Tutup Bantuan">&times;</button>
+                    </div>
+                    <div id="abe-text" style="margin-bottom: 15px; color: #1e293b;"></div>
+                    <div id="abe-actions" style="text-align: right; display: none;">
+                        <button id="btn-faham-hint" class="success" style="font-size: 0.95rem; padding: 8px 16px; border-radius: 8px;">👍 Saya Faham</button>
+                    </div>
+                </div>
+                
+                <div id="abe-avatar" class="abe-jamal-svg" onclick="toggleAbeHint()" title="Klik untuk membuka/menutup hint!">
+                    <svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="95" fill="rgba(59, 130, 246, 0.15)" stroke="var(--primary)" stroke-width="2" />
+                        <path d="M 30 85 C 30 20, 170 20, 170 85 Z" fill="#fbbf24" stroke="#d97706" stroke-width="4"/>
+                        <rect x="20" y="80" width="160" height="15" rx="6" fill="#f59e0b" stroke="#d97706" stroke-width="4"/>
+                        <path d="M 90 35 L 110 35 L 110 48 L 90 48 Z" fill="#d97706"/>
+                        <path d="M 50 95 C 50 170, 150 170, 150 95 Z" fill="#fcd34d" stroke="#ca8a04" stroke-width="4"/>
+                        <rect x="55" y="100" width="35" height="25" rx="5" fill="rgba(255,255,255,0.9)" stroke="#334155" stroke-width="5"/>
+                        <rect x="110" y="100" width="35" height="25" rx="5" fill="rgba(255,255,255,0.9)" stroke="#334155" stroke-width="5"/>
+                        <line x1="90" y1="112" x2="110" y2="112" stroke="#334155" stroke-width="5"/>
+                        <line x1="55" y1="112" x2="40" y2="112" stroke="#334155" stroke-width="5"/>
+                        <line x1="145" y1="112" x2="160" y2="112" stroke="#334155" stroke-width="5"/>
+                        <circle cx="72" cy="112" r="5" fill="#0f172a"/>
+                        <circle cx="127" cy="112" r="5" fill="#0f172a"/>
+                        <path d="M 95 125 L 100 135 L 105 125" fill="none" stroke="#ca8a04" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 75 145 Q 100 165 125 145" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 40 200 C 40 160, 60 150, 100 150 C 140 150, 160 160, 160 200 Z" fill="#38bdf8" stroke="#0284c7" stroke-width="4"/>
+                        <path d="M 90 150 L 110 150 L 120 190 L 100 200 L 80 190 Z" fill="#1e293b"/>
+                    </svg>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- UI Pemerhatian -->
-    <div id="observation-ui" class="hidden" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); padding: 15px 30px; border-radius: 40px; z-index: 1000; display: flex; align-items: center; gap: 20px; border: 2px solid var(--highlight-pk); box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
-        <span style="color: white; font-weight: 500; font-size: 1.2rem;">👀 Perhatikan jadual sebelum menjawab... <span id="obs-countdown" style="color: var(--highlight-pk); font-size: 1.4rem; font-weight: bold; margin-left: 5px;">5</span>s</span>
-        <button onclick="skipObservationTimer()" class="warning" style="padding: 8px 20px; border-radius: 20px;">Saya Dah Sedia</button>
-    </div>
-
-    <!-- Butang Lihat Hint (Floating) -->
-    <button id="btn-lihat-hint" class="warning" onclick="reopenHint()">💡 Lihat Hint Abe Jamal</button>
-
-    <!-- Avatar Abe Jamal -->
-    <div id="abe-container" class="hidden">
-        <div id="abe-dialog">
-            <button id="abe-close" class="abe-close" onclick="hideAbeDialog()" title="Tutup">✕</button>
-            <div id="abe-text" class="abe-scroll"></div>
-            <div id="abe-actions" class="dialog-actions">
-                <!-- Butang dimuatkan secara dinamik -->
-            </div>
-        </div>
-        
-        <!-- SVG Avatar Abe Jamal -->
-        <svg viewBox="0 0 200 200" class="abe-avatar-img" onclick="toggleHintIfAvailable()" title="Abe Jamal - Jurutera Pangkalan Data">
-            <!-- Background glow -->
-            <circle cx="100" cy="100" r="95" fill="rgba(59, 130, 246, 0.2)" />
-            <!-- Shoulders/Body -->
-            <path d="M 30 200 Q 30 140 100 130 Q 170 140 170 200 Z" fill="#334155" />
-            <path d="M 45 200 L 45 160 L 155 160 L 155 200 Z" fill="#1e293b" />
-            <path d="M 85 160 L 100 180 L 115 160 Z" fill="#fbbf24" /> <!-- tie/accent -->
-            <!-- Face -->
-            <rect x="65" y="70" width="70" height="80" rx="25" fill="#fde047" />
-            <path d="M 65 100 Q 100 130 135 100 Z" fill="#fef08a" /> <!-- beard/jaw highlight -->
-            <!-- Ears -->
-            <circle cx="60" cy="110" r="10" fill="#fde047" />
-            <circle cx="140" cy="110" r="10" fill="#fde047" />
-            <!-- Hard Hat (Engineer) -->
-            <path d="M 40 75 C 40 20, 160 20, 160 75 L 175 75 L 175 85 L 25 85 L 25 75 Z" fill="#eab308" />
-            <path d="M 70 35 L 130 35 L 120 20 L 80 20 Z" fill="#ca8a04" opacity="0.5" />
-            <!-- Glasses -->
-            <circle cx="85" cy="105" r="14" fill="rgba(255,255,255,0.2)" stroke="#0f172a" stroke-width="4"/>
-            <circle cx="115" cy="105" r="14" fill="rgba(255,255,255,0.2)" stroke="#0f172a" stroke-width="4"/>
-            <line x1="99" y1="105" x2="101" y2="105" stroke="#0f172a" stroke-width="4"/>
-            <line x1="71" y1="105" x2="55" y2="100" stroke="#0f172a" stroke-width="3"/>
-            <line x1="129" y1="105" x2="145" y2="100" stroke="#0f172a" stroke-width="3"/>
-            <!-- Eyes -->
-            <circle cx="85" cy="105" r="3" fill="#0f172a" />
-            <circle cx="115" cy="105" r="3" fill="#0f172a" />
-            <!-- Smile -->
-            <path d="M 85 130 Q 100 145 115 130" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-    </div>
-
-    <!-- Mod Ramal Dahulu (Predict First) -->
-    <div id="predict-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 style="color: var(--highlight-fd); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">🔍 Cabaran Ramal Dahulu!</h2>
-            <div id="predict-content"></div>
         </div>
     </div>
 
     <div id="summary-modal" class="modal-overlay">
-        <div class="modal-content" style="text-align: center;">
+        <div class="modal-content">
             <h2 id="summary-title" style="color: var(--success); margin-bottom: 1rem; font-size: 1.8rem;">Misi Selesai!</h2>
-            <div id="summary-content" style="margin-bottom: 1.5rem; font-size: 1.1rem; line-height: 1.7;"></div>
-            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; border-left: 4px solid var(--highlight-pk);">
+            <div id="summary-content" style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-muted);"></div>
+            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
                 <strong>Soalan Refleksi:</strong>
-                <p id="reflection-question" style="color: var(--text-main); margin-top: 0.5rem;"></p>
+                <p id="reflection-question" style="color: var(--highlight-pk); margin-top: 0.5rem; font-size: 1.1rem;"></p>
             </div>
-            <button onclick="closeSummaryModal()" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Teruskan</button>
+            <button class="success" onclick="closeSummaryModal()" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Teruskan ➡️</button>
         </div>
     </div>
 
     <script>
-        // State Pengurusan
+        const STORAGE_KEY = "dataRescue_wrongQuestions_v1";
+
         let gameState = {
             mission: 0,
             xp: 0,
             xrayActive: false,
             badges: [],
             currentData: {},
-            // Status soalan: 'unanswered', 'answered', 'reviewed', 'completed'
-            predictions: { 1: 'unanswered', 2: 'unanswered', 3: 'unanswered' },
-            m1State: { tested: 0, done: false },
+            questionState: { 1: 'unanswered', 2: 'unanswered', 3: 'unanswered' },
+            m1State: { tested: 0 },
             m2Tables: [],
             m2Columns: [],
             m3Tables: [],
             m3Done: false,
-            hintLevel: { 1: 0, 2: 0, 3: 0 }
+            ikLevel: 0,
+            ikIndex: 0,
+            reviewQs: [],
+            reviewIndex: 0
         };
 
+        let currentLevel = 0;
         let observationTimer = null;
+        let activeHintText = "";
         let selectedCols = [];
-        let abeTimer = null;
+        let currentDatasetIndex = 0;
 
-        // Data & Hint Setup
-        const abeHints = {
-            1: "Data peribadi pelajar tersangkut dengan pendaftaran kursus! Ibarat satu rumah, kalau penyewa keluar, terus roboh dinding biliknya. Ini bahaya! (Anomali Pemadaman / <strong>Deletion Anomaly</strong> - rekod utama hilang jika rekod transit dihapus).",
-            2: "Lihat jadual ini, Kunci Primer ialah gabungan <em>PelajarID + KodKursus</em>. Tapi maklumat macam Nama Pelajar hanya perlukan PelajarID. Macam bawa geran rumah tiap kali pergi kedai runcit! Kita kena asingkannya ke jadual khas (Kebergantungan Separa / <strong>Partial Dependency</strong> ke arah <strong>2NF</strong>).",
-            3: "Dalam jadual Pelajar, Fakulti bergantung kepada Program, bukan terus kepada PelajarID. Ibarat posmen hantar surat ke rumah kawan penyewa, bukan penyewa sebenar. Kita mesti pisahkannya supaya tidak tersalah alamat (Kebergantungan Transitif / <strong>Transitive Dependency</strong> ke arah <strong>3NF</strong>)."
-        };
+        const datasets = [
+            { // Set 0: Original Computer Science Data
+                rawTable: {
+                    name: "Pendaftaran_Universiti (Jadual Asal - Set A)",
+                    columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+                    rows: [
+                        ["S01", "Ahmad Ali", "CS", "FTMK", "K01", "Pangkalan Data", "A"],
+                        ["S01", "Ahmad Ali", "CS", "FTMK", "K02", "Rangkaian", "B"],
+                        ["S02", "Siti Aminah", "IT", "FTMK", "K01", "Pangkalan Data", "A-"],
+                        ["S03", "John Doe", "CS", "FTMK", "K03", "Pengaturcaraan C", "B+"]
+                    ]
+                },
+                abeData: {
+                    1: { id: "DS0_M1", topic: "1NF (Deletion Anomaly)", hint: "Sila perhatikan jadual rekod ini. Semua maklumat (pelajar dan kursus) disumbat sekali. Cuba fikir, apa akan berlaku jika kita memadamkan kursus K03?", question: "Berdasarkan jadual asal di atas, apakah kesan terburuk jika kita memadam rekod pendaftaran kursus (K03) untuk John Doe?", options: ["Hanya KodKursus dan Gred dipadam, maklumat peribadi dikekalkan secara automatik.", "Keseluruhan rekod terpadam, menyebabkan universiti hilang terus identiti John Doe (Deletion Anomaly).", "Sistem akan memindahkan maklumat pelajar ke jadual lain dengan sendirinya.", "Sistem akan menolak pemadaman tersebut kerana data berulang dilarang."], answer: 1, explanation: "Tepat sekali! Jika kita memadam kelas tersebut, maklumat peribadi pelajar turut ghaib secara tidak sengaja. Ini dipanggil <strong>Anomali Pemadaman (Deletion Anomaly)</strong> akibat struktur 1NF yang lemah." },
+                    2: { id: "DS0_M2", topic: "2NF (Partial Dependency)", hint: "Bagus! Kunci utama kita sekarang ialah gabungan komposit (PelajarID + KodKursus). Cuba cari atribut yang HANYA bergantung pada PelajarID, bukannya kedua-duanya.", question: "Atribut manakah yang menunjukkan Kebergantungan Separa (Partial Dependency) kerana ia hanya perlukan PelajarID untuk dikenal pasti?", options: ["Gred, kerana ia bergantung pada kedua-dua kunci tersebut.", "Semua atribut yang mempunyai data berulang automatik melanggar 2NF.", "NamaPelajar, Program, dan Fakulti.", "Tiada. Setiap penguraian jadual pasti menghasilkan struktur yang betul."], answer: 2, explanation: "Betul! NamaPelajar, Program dan Fakulti cuma perlukan PelajarID. Ini dinamakan <strong>Kebergantungan Separa (Partial Dependency)</strong> yang mesti dipisahkan untuk capai tahap 2NF!" },
+                    3: { id: "DS0_M3", topic: "3NF (Transitive Dependency)", hint: "Dalam Jadual Pelajar (2NF) ini, perhatikan hubungan Fakulti. Adakah Fakulti bergantung terus kepada PelajarID, atau bergantung kepada Program?", question: "Fakulti didapati sentiasa bergantung pada Program, bukan PelajarID. Apakah jenis masalah ini dan langkah seterusnya?", options: ["Ia adalah Kebergantungan Transitif. Kita mesti menguraikan Fakulti ke dalam jadual Program (3NF).", "Ia sudah mematuhi 3NF kerana setiap sel dalam jadual hanya mempunyai satu nilai atomik.", "Ia adalah Kebergantungan Separa yang sepatutnya diselesaikan pada langkah 2NF.", "Data berulang sentiasa dibenarkan dalam 3NF asalkan ada Kunci Asing."], answer: 0, explanation: "Hebat! Apabila atribut bukan kunci (Fakulti) bergantung pada atribut bukan kunci lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Kita mesti asingkannya untuk capai 3NF." }
+                }
+            },
+            { // Set 1: Alternative Engineering Data
+                rawTable: {
+                    name: "Pendaftaran_Universiti (Jadual Asal - Set B)",
+                    columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+                    rows: [
+                        ["S11", "Sarah Lee", "AI", "FTSM", "K10", "Machine Learning", "A"],
+                        ["S11", "Sarah Lee", "AI", "FTSM", "K11", "Deep Learning", "A-"],
+                        ["S12", "Muthu", "SE", "FTSM", "K10", "Machine Learning", "B+"],
+                        ["S13", "Chong Wei", "AI", "FTSM", "K12", "Data Mining", "B"]
+                    ]
+                },
+                abeData: {
+                    1: { id: "DS1_M1", topic: "1NF (Deletion Anomaly)", hint: "Perhatikan jadual Set B ini. Apa akan berlaku jika kita terpaksa batalkan kelas Data Mining (K12) yang diambil oleh Chong Wei?", question: "Apakah akan berlaku jika rekod pendaftaran K12 untuk Chong Wei dipadam?", options: ["Maklumat peribadi Chong Wei (Nama, Program, Fakulti) akan terpadam sama (Deletion Anomaly).", "Chong Wei akan ditukarkan ke kursus lain secara automatik.", "Sistem menyimpan namanya di tempat lain jadi tiada masalah.", "Hanya rekod kelas dipadam tanpa menjejaskan identiti Chong Wei."], answer: 0, explanation: "Tepat! Kita akan hilang maklumat tentang Chong Wei sepenuhnya kerana jadual 1NF tidak memisahkan entiti dengan betul." },
+                    2: { id: "DS1_M2", topic: "2NF (Partial Dependency)", hint: "Kunci utama ialah gabungan komposit (PelajarID + KodKursus). Ada atribut yang hanya bergantung kepada PelajarID, bukan KodKursus. Bolehkah anda kenal pasti?", question: "Antara berikut, yang manakah mengalami Kebergantungan Separa (Partial Dependency)?", options: ["Gred sahaja.", "NamaPelajar, Program, dan Fakulti.", "Hanya NamaKursus.", "Semua atribut bergantung sepenuhnya kepada komposit key."], answer: 1, explanation: "Betul! NamaPelajar, Program dan Fakulti cuma perlukan PelajarID. Ini dipanggil <strong>Kebergantungan Separa</strong> dan mesti dipisahkan ke jadual baharu!" },
+                    3: { id: "DS1_M3", topic: "3NF (Transitive Dependency)", hint: "Lihat Jadual Pelajar. Adakah Fakulti 'FTSM' bergantung langsung pada PelajarID, atau sebenarnya ia mengikut Program (AI, SE)?", question: "Apakah masalah utama dengan mengekalkan Fakulti di dalam Jadual Pelajar?", options: ["Tiada masalah, ia dibenarkan dalam 3NF.", "Ia mencipta Kebergantungan Transitif kerana Fakulti bergantung kepada Program, bukan PelajarID.", "Ia melanggar syarat kunci komposit 2NF.", "Fakulti tidak sepatutnya wujud dalam pangkalan data."], answer: 1, explanation: "Betul! Fakulti bergantung kepada Program (atribut bukan kunci). Apabila atribut bukan kunci bergantung pada atribut bukan kunci yang lain, ia adalah <strong>Kebergantungan Transitif</strong> dan harus dipisahkan." }
+                }
+            }
+        ];
 
-        // Hint berperingkat (Hint 1 = abeHints, kemudian hint di bawah)
-        const abeExtraHints = {
+        const imbasKembaliData = {
             1: [
-                "Klik ketiga-tiga butang ujian dan perhatikan jadual selepas setiap satu. Insert = tambah data, Update = ubah data, Delete = buang data.",
-                "Punca ketiga-tiga masalah sama: maklumat pelajar DAN kursus disimpan dalam satu baris. Bila satu berubah, yang lain terjejas."
+                { id: "IK_M1_Q1", topic: "Asas Normalisasi", q: "Apakah tujuan utama normalisasi pangkalan data?", options: ["Untuk memadam semua data", "Mengurangkan lewahan (redundancy) data dan anomali", "Menyatukan semua data ke dalam satu jadual", "Membuat data kelihatan lebih rumit"], ans: 1, exp: "Tujuan utama adalah menghapuskan redundancy (data berulang) dan memelihara integriti data." },
+                { id: "IK_M1_Q2", topic: "Anomali Pangkalan Data", q: "Apakah yang dimaksudkan dengan 'Insertion Anomaly'?", options: ["Apabila maklumat hilang secara tak sengaja bila data dipadam.", "Apabila kita terhalang daripada memasukkan rekod baharu akibat ketiadaan maklumat kunci.", "Apabila data diubah di satu tempat tetapi tidak di tempat lain.", "Apabila saiz jadual menjadi terlalu besar."], ans: 1, exp: "Insertion Anomaly berlaku bila data baru tidak boleh dimasukkan kerana kehilangan maklumat kunci wajib (seperti KodKursus tidak boleh NULL)." }
             ],
             2: [
-                "Tanya diri untuk setiap atribut: ia perlukan ID yang mana untuk dikenal pasti? PelajarID sahaja, KodKursus sahaja, atau kedua-duanya?",
-                "Tiga jadual: <strong>Pelajar</strong> (PelajarID + NamaPelajar + Program + Fakulti), <strong>Kursus</strong> (KodKursus + NamaKursus), <strong>Pendaftaran</strong> (PelajarID + KodKursus + Gred)."
+                { id: "IK_M2_Q1", topic: "Konsep 2NF", q: "Apakah matlamat utama langkah normalisasi 2NF?", options: ["Memastikan jadual hanya ada satu lajur.", "Menghapuskan Kebergantungan Separa (Partial Dependency).", "Menghapuskan Kebergantungan Transitif.", "Menggabungkan Kunci Asing (Foreign Key)."], ans: 1, exp: "2NF memfokuskan kepada penghapusan kebergantungan separa di mana atribut bergantung pada sebahagian kunci komposit sahaja." },
+                { id: "IK_M2_Q2", topic: "Kunci Komposit", q: "Mengapakah Kunci Komposit sering mencetuskan masalah Kebergantungan Separa dalam jadual 1NF?", options: ["Kerana kunci komposit terlalu panjang untuk dibaca sistem.", "Kerana sistem menolak gabungan lebih daripada satu kunci.", "Kerana sesetengah atribut mungkin hanya bergantung pada salah satu kunci tersebut, bukan kedua-duanya.", "Kerana ia menyebabkan anomali pendaftaran."], ans: 2, exp: "Atribut bukan kunci seharusnya bergantung pada KESELURUHAN kunci primer, bukan sebahagian daripadanya." }
             ],
             3: [
-                "Fakulti boleh ditentukan oleh Program. Pindahkan pasangan Program + Fakulti ke jadual baharu supaya nama fakulti tidak berulang.",
-                "Tekan butang hijau. Program menjadi Kunci Primer di jadual Program, dan Kunci Asing di jadual Pelajar."
+                { id: "IK_M3_Q1", topic: "Konsep 3NF", q: "Keadaan yang manakah menggambarkan berlakunya Kebergantungan Transitif?", options: ["Atribut bukan kunci bergantung pada Kunci Primer.", "Kunci Asing hilang dari jadual.", "Atribut bukan kunci bergantung pada atribut bukan kunci yang lain.", "Jadual tidak mempunyai Kunci Primer langsung."], ans: 2, exp: "Apabila Atribut A bergantung pada B, dan B pula bergantung pada C (bukan kunci utama), ia dipanggil Transitif." },
+                { id: "IK_M3_Q2", topic: "Penyelesaian 3NF", q: "Bagaimana kita mengekalkan hubungan antara dua jadual selepas memisahkannya untuk mencapai 3NF?", options: ["Menyatukan semula semua data menggunakan paparan asal.", "Menggunakan Kunci Asing (Foreign Key) yang merujuk Kunci Primer jadual lain.", "Menghapuskan Kunci Primer sepenuhnya.", "Membiarkan jadual tanpa sebarang kaitan."], ans: 1, exp: "Kunci Asing bertindak sebagai jambatan penghubung yang mengekalkan rujukan antara rekod yang telah diasingkan." }
             ]
         };
 
-        const abeIntro = {
-            1: "Klik ketiga-tiga butang ujian satu demi satu dan perhatikan jadual. Perlukan bantuan? Tekan 💡 di kiri bawah atau klik saya.",
-            2: "Pilih atribut, beri nama jadual, kemudian tekan 'Bina Jadual Ini'. Bina 3 jadual: Pelajar, Kursus dan Pendaftaran.",
-            3: "Tekan butang hijau untuk mengekstrak jadual Program. Nanti saya terangkan hasilnya."
-        };
-
-        const abeAnomalyTips = {
-            insert: "Nampak tak? Pelajar baharu langsung tak boleh disimpan selagi dia belum daftar kursus. Data pelajar 'terikat' pada data kursus.",
-            update: "Ahmad Ali kini ada dua Program berbeza (AI dan CS). Mana satu yang betul? Data sama yang disimpan berulang kali mudah jadi bercanggah.",
-            delete: "John Doe hilang terus kerana dia hanya ada satu baris. Padam kursus = padam identiti pelajar."
-        };
-
-        const predictQuestions = {
-            1: {
-                question: "🤔 Sebelum menguji anomali, cuba ramalkan: Jika kita membuang pendaftaran kursus (K03) untuk John Doe dari jadual ini, apakah masalah utama yang akan berlaku?",
-                options: [
-                    "Hanya KodKursus dan Gred dipadam, maklumat lain dikekalkan secara ajaib.",
-                    "Seluruh maklumat peribadi tentang John Doe akan hilang terus dari pangkalan data.",
-                    "Sistem akan memecahkan jadual secara automatik untuk menyelamatkannya.",
-                    "Setiap pertindihan data akan hilang tetapi fail menjadi korup."
-                ],
-                answer: 1,
-                explanation: "Tepat! Oleh kerana semua data diikat dalam satu baris (tidak dinormalisasi), memadam rekod kursus (K03) bermaksud keseluruhan baris tersebut dipadamkan. Kita kehilangan maklumat identiti John Doe! Inilah <strong>Deletion Anomaly</strong>."
-            },
-            2: {
-                question: "🤔 Kunci Primer di sini ialah komposit (PelajarID + KodKursus). Atribut manakah yang mengalami Kebergantungan Separa (partial dependency) kerana ia hanya bergantung pada PelajarID?",
-                options: [
-                    "Gred",
-                    "NamaKursus dan Gred",
-                    "NamaPelajar, Program, dan Fakulti",
-                    "Tiada, semua atribut bergantung sepenuhnya pada kunci komposit"
-                ],
-                answer: 2,
-                explanation: "Betul! NamaPelajar, Program, dan Fakulti hanya memerlukan <strong>PelajarID</strong> untuk dikenal pasti. Ini adalah <strong>Kebergantungan Separa</strong>. Mengasingkannya ke jadual baharu membantu kita mencapai <strong>2NF</strong>."
-            },
-            3: {
-                question: "🤔 Dalam Jadual Pelajar (2NF), Fakulti ditentukan oleh Program (Contoh: CS pasti di FTMK). Apakah jenis kebergantungan ini dan bentuk normal apa yang dilanggarnya?",
-                options: [
-                    "Kebergantungan Transitif; melanggar 3NF",
-                    "Kebergantungan Separa; melanggar 2NF",
-                    "Anomali Kemas Kini; jadual sudah 3NF",
-                    "Kebergantungan Fungsi Penuh; tiada pelanggaran"
-                ],
-                answer: 0,
-                explanation: "Tepat sekali! Apabila satu atribut bukan kunci (Fakulti) bergantung kepada atribut bukan kunci yang lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Pisahkannya untuk mencapai <strong>3NF</strong>!"
-            }
-        };
-
-        // Raw Data
-        const rawTable = {
-            name: "Pendaftaran_Asal",
-            columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
-            rows: [
-                ["S01", "Ahmad Ali", "CS", "FTMK", "K01", "Pangkalan Data", "A"],
-                ["S01", "Ahmad Ali", "CS", "FTMK", "K02", "Rangkaian", "B"],
-                ["S02", "Siti Aminah", "IT", "FTMK", "K01", "Pangkalan Data", "A-"],
-                ["S03", "John Doe", "CS", "FTMK", "K03", "Pengaturcaraan C", "B+"]
-            ]
-        };
-
-        function resetAllTimers() {
-            if(observationTimer) clearInterval(observationTimer);
+        function getWrongQs() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
+            catch(e) { return []; }
         }
-
-        function toggleHintIfAvailable() {
-            // Klik avatar: tutup bubble jika terbuka, buka hint jika tertutup
-            const dlg = document.getElementById('abe-dialog');
-            if (dlg.style.display === 'block') {
-                if (document.getElementById('abe-close').style.display !== 'none') hideAbeDialog();
-                return;
-            }
-            if (gameState.predictions[gameState.mission] === 'completed') {
-                reopenHint();
+        function saveWrongQ(qObj) {
+            let qs = getWrongQs();
+            let idx = qs.findIndex(q => q.id === qObj.id);
+            if(idx === -1) {
+                qs.push(qObj);
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(qs)); } catch(e){}
             }
         }
+        function removeWrongQ(id) {
+            let qs = getWrongQs();
+            qs = qs.filter(q => q.id !== id);
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(qs)); } catch(e){}
+        }
 
-        function showAbeDialogFixed(text, buttonsHtml, mandatory) {
-            clearTimeout(abeTimer);
+        window.onload = function() {
+            initUlangKajiCheck();
+        };
+
+        function showCustomAlert(msg) {
+            const alertBox = document.getElementById('custom-alert');
+            alertBox.innerText = msg;
+            alertBox.style.opacity = 1;
+            setTimeout(() => { alertBox.style.opacity = 0; }, 3000);
+        }
+
+        function clearAllTimers() {
+            if(observationTimer) { clearInterval(observationTimer); observationTimer = null; }
+            document.getElementById('observation-ui').classList.add('hidden');
+        }
+
+        function showAbeDialog(text, showAckButton = false, ackCallback = null, btnText = "👍 Saya Faham", retainDisplay = false) {
             document.getElementById('abe-container').classList.remove('hidden');
-            document.getElementById('abe-dialog').style.display = 'block';
+            const dialog = document.getElementById('abe-dialog');
             document.getElementById('abe-text').innerHTML = text;
-            document.getElementById('abe-text').scrollTop = 0;
-            document.getElementById('abe-actions').innerHTML = buttonsHtml || '';
-            // Hint wajib tidak boleh ditutup dengan ✕ (mesti tekan "Saya Faham")
-            document.getElementById('abe-close').style.display = mandatory ? 'none' : 'block';
+            dialog.classList.remove('hidden');
+            document.getElementById('btn-toggle-hint').classList.add('hidden');
+            activeHintText = text;
+
+            const actionDiv = document.getElementById('abe-actions');
+            if (showAckButton) {
+                actionDiv.style.display = 'block';
+                const btn = document.getElementById('btn-faham-hint');
+                btn.innerText = btnText;
+                btn.replaceWith(btn.cloneNode(true));
+                const newBtn = document.getElementById('btn-faham-hint');
+                newBtn.onclick = () => {
+                    if (ackCallback) ackCallback();
+                    if (!retainDisplay) hideAbeDialog();
+                };
+            } else {
+                actionDiv.style.display = 'none';
+            }
         }
 
         function hideAbeDialog() {
-            clearTimeout(abeTimer);
-            document.getElementById('abe-dialog').style.display = 'none';
-        }
-
-        // Abe beri tip ringkas yang hilang sendiri supaya tidak menghalang kandungan
-        function abeSay(text, autoHideMs, withHintBtn) {
-            const btn = withHintBtn ? `<button class="warning" onclick="reopenHint()">💡 Hint</button>` : '';
-            showAbeDialogFixed(text, btn, false);
-            if (autoHideMs) abeTimer = setTimeout(hideAbeDialog, autoHideMs);
-        }
-
-        function abeAdviceM2(sel) {
-            const has = c => sel.includes(c);
-            const stu = ['NamaPelajar', 'Program', 'Fakulti'];
-            const hasStu = stu.some(has);
-            if (has('Gred') && (!has('PelajarID') || !has('KodKursus')))
-                return "Gred bergantung pada <strong>kedua-dua</strong> PelajarID dan KodKursus (gred seorang pelajar bagi satu kursus). Jadual Gred mesti ada kedua-dua ID.";
-            if (hasStu && has('KodKursus'))
-                return "NamaPelajar, Program dan Fakulti hanya perlukan <strong>PelajarID</strong>. Jangan campur dengan KodKursus.";
-            if (has('NamaKursus') && (has('PelajarID') || hasStu))
-                return "NamaKursus hanya bergantung pada <strong>KodKursus</strong>. Asingkan daripada maklumat pelajar.";
-            if (hasStu && !has('PelajarID'))
-                return "Setiap jadual perlukan Kunci Primer. Maklumat pelajar mesti disertakan dengan <strong>PelajarID</strong>.";
-            if (has('NamaKursus') && !has('KodKursus'))
-                return "NamaKursus perlukan <strong>KodKursus</strong> sebagai kunci.";
-            if (hasStu && stu.some(c => !has(c)))
-                return "Hampir betul! NamaPelajar, Program dan Fakulti semuanya bergantung pada PelajarID, jadi letak ketiga-tiganya bersama.";
-            return "Cuba lagi. Tanya diri: atribut ini perlukan ID yang mana untuk dikenal pasti?";
-        }
-
-        function abeNextStepM2() {
-            const keys = {
-                Pelajar: ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(','),
-                Kursus: ['KodKursus', 'NamaKursus'].sort().join(','),
-                Pendaftaran: ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')
-            };
-            const built = gameState.m2Tables.map(t => [...t.columns].sort().join(','));
-            const left = Object.keys(keys).filter(n => !built.includes(keys[n]));
-            return `Bagus! Tinggal ${left.length} jadual lagi: <strong>${left.join(', ')}</strong>.`;
-        }
-
-        function showFeedback(msg, isSuccess) {
-            const fb = document.getElementById('feedback-box');
-            fb.innerHTML = msg;
-            fb.className = 'feedback-msg ' + (isSuccess ? 'feedback-success' : 'feedback-error');
-            fb.classList.remove('hidden');
-        }
-
-        function hideFeedback() {
-            document.getElementById('feedback-box').classList.add('hidden');
-        }
-
-        function addXP(points) {
-            gameState.xp += points;
-            document.getElementById('xp-score').innerText = gameState.xp;
-        }
-
-        function addBadge(name) {
-            if (!gameState.badges.includes(name)) {
-                gameState.badges.push(name);
-                const badgeEl = document.createElement('div');
-                badgeEl.className = 'badge';
-                badgeEl.innerText = name;
-                document.getElementById('badge-container').appendChild(badgeEl);
+            document.getElementById('abe-dialog').classList.add('hidden');
+            if (activeHintText !== "") {
+                document.getElementById('btn-toggle-hint').classList.remove('hidden');
             }
         }
 
-        function toggleXRay() {
-            gameState.xrayActive = !gameState.xrayActive;
-            const viewer = document.getElementById('tables-viewer');
-            if(gameState.xrayActive) {
-                viewer.classList.add('xray-mode');
-                document.getElementById('btn-xray').style.boxShadow = "0 0 10px var(--highlight-pk)";
+        function toggleAbeHint() {
+            const dialog = document.getElementById('abe-dialog');
+            if (dialog.classList.contains('hidden')) { showAbeDialog(activeHintText, false); } 
+            else { hideAbeDialog(); }
+        }
+
+        function initUlangKajiCheck() {
+            let qs = getWrongQs();
+            let area = document.getElementById('ulang-kaji-btn-area');
+            document.getElementById('mission-level').innerText = "Intro";
+            if(qs.length > 0) {
+                area.innerHTML = `
+                    <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 1rem; margin-top: 1.5rem; border-radius: 8px;">
+                        <h3 style="color: var(--warning); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">📚 Ulang Kaji Adaptif</h3>
+                        <p style="margin-bottom: 15px;">Abe Jamal dapati ada <strong>${qs.length} soalan</strong> yang boleh diulang kaji dari misi sebelum ini. Jom uji kembali kefahaman anda!</p>
+                        <button class="warning" onclick="startUlangKaji()">Mula Ulang Kaji (${qs.length})</button>
+                    </div>
+                `;
+            } else { area.innerHTML = ``; }
+        }
+
+        function startUlangKaji() {
+            document.getElementById('intro-panel').classList.add('hidden');
+            document.getElementById('review-panel').classList.remove('hidden');
+            document.getElementById('mission-level').innerText = "Ulang Kaji";
+            gameState.reviewQs = getWrongQs();
+            gameState.reviewIndex = 0;
+            renderReviewQuestion();
+        }
+
+        function renderReviewQuestion() {
+            let idx = gameState.reviewIndex;
+            if(idx >= gameState.reviewQs.length) {
+                document.getElementById('review-content').innerHTML = `
+                    <div style="text-align:center; padding: 2rem;">
+                        <h3 style="color: var(--success); font-size: 1.5rem;">🎉 Selesai Ulang Kaji!</h3>
+                        <p style="margin: 1rem 0;">Bagus! Anda berjaya menguasai soalan-soalan yang sebelum ini mencabar.</p>
+                        <button class="success" onclick="closeUlangKaji()">Kembali Ke Menu Utama</button>
+                    </div>
+                `;
+                return;
+            }
+            let q = gameState.reviewQs[idx];
+            let html = `
+                <div style="margin-bottom: 1rem;">
+                   <h4 style="color: var(--primary);">Topik: ${q.topic}</h4>
+                   <p style="font-size: 1.15rem; font-weight: bold; margin: 15px 0;">${q.text}</p>
+                   <div class="predict-grid">
+                       ${q.options.map((opt, i) => `
+                           <label class="predict-option rev-option" onclick="selectRevOption(this, ${i})">
+                               <input type="radio" name="rev-predict" value="${i}" style="pointer-events:none;">
+                               <span>${opt}</span>
+                           </label>
+                       `).join('')}
+                   </div>
+                   <div id="rev-feedback" class="hidden" style="margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: 500;"></div>
+                   <button id="btn-rev-check" class="outline" onclick="checkRevQuestion()" disabled style="margin-top: 15px; opacity:0.5; cursor:not-allowed;">Semak Jawapan</button>
+                   <button id="btn-rev-next" class="success hidden" onclick="nextRevQuestion()" style="margin-top: 15px;">Seterusnya</button>
+                </div>
+            `;
+            document.getElementById('review-content').innerHTML = html;
+            showAbeDialog("Baca dan cuba jawab semula. Ingat, baca pilihan dengan teliti!", false);
+        }
+
+        function selectRevOption(el, val) {
+            if(document.getElementById('btn-rev-next').classList.contains('hidden') === false) return;
+            document.querySelectorAll('.rev-option').forEach(e => {
+                e.style.borderColor = 'var(--border-color)'; e.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                e.querySelector('input').checked = false;
+            });
+            el.style.borderColor = 'var(--highlight-pk)'; el.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+            el.querySelector('input').checked = true;
+            let btn = document.getElementById('btn-rev-check');
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.className = 'success';
+        }
+
+        function checkRevQuestion() {
+            let input = document.querySelector('input[name="rev-predict"]:checked');
+            if(!input) return;
+            let val = parseInt(input.value);
+            let q = gameState.reviewQs[gameState.reviewIndex];
+            
+            document.querySelectorAll('.rev-option').forEach(e => e.style.pointerEvents = "none");
+            let fbArea = document.getElementById('rev-feedback');
+            fbArea.classList.remove('hidden');
+            
+            document.getElementById('btn-rev-check').classList.add('hidden');
+            document.getElementById('btn-rev-next').classList.remove('hidden');
+
+            if(val === q.answer) {
+                fbArea.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; fbArea.style.borderLeft = "4px solid var(--success)";
+                fbArea.innerHTML = `<strong style="color: var(--success);">Tepat Sekali!</strong><br>${q.explanation}`;
+                removeWrongQ(q.id);
+                showAbeDialog("Mantap! Anda sudah mula kuasai konsep ni. Kita buang soalan ini dari senarai ulang kaji.", false);
             } else {
-                viewer.classList.remove('xray-mode');
-                document.getElementById('btn-xray').style.boxShadow = "none";
+                fbArea.style.backgroundColor = "rgba(239, 68, 68, 0.2)"; fbArea.style.borderLeft = "4px solid var(--warning)";
+                fbArea.innerHTML = `<strong style="color: var(--warning);">Kurang Tepat.</strong> Jawapan sepatutnya: <strong>${q.options[q.answer]}</strong><br><br>Penerangan: ${q.explanation}`;
+                showAbeDialog("Tidak mengapa, baca penerangan dengan teliti. Soalan ini akan dikekalkan untuk diulang kaji di masa depan.", false);
             }
+        }
+
+        function nextRevQuestion() { gameState.reviewIndex++; renderReviewQuestion(); }
+        function closeUlangKaji() {
+            document.getElementById('review-panel').classList.add('hidden');
+            document.getElementById('intro-panel').classList.remove('hidden');
+            initUlangKajiCheck();
+        }
+
+        function changeDataset() {
+            currentDatasetIndex = (currentDatasetIndex + 1) % datasets.length;
+            showCustomAlert("🔄 Set data telah ditukar secara rawak! Mengatur semula jadual...");
+            resetCurrentMission();
         }
 
         function startGame() {
@@ -738,238 +501,185 @@
         }
 
         function resetCurrentMission() {
-            const level = gameState.mission;
-            if (level === 0) return;
+            if (!currentLevel) return;
+            clearAllTimers();
+            gameState.questionState[currentLevel] = 'unanswered';
+            if (currentLevel === 1) gameState.m1State = { tested: 0 };
+            if (currentLevel === 2) { gameState.m2Tables = []; selectedCols = []; }
+            if (currentLevel === 3) gameState.m3Done = false;
             
-            // Reset status
-            gameState.predictions[level] = 'unanswered';
-            gameState.hintLevel[level] = 0;
-            if (level === 1) gameState.m1State = { tested: 0, done: false };
-            if (level === 2) { gameState.m2Tables = []; selectedCols = []; }
-            if (level === 3) gameState.m3Done = false;
+            hideAbeDialog(); hideFeedback();
+            const predictArea = document.getElementById('predict-area');
+            predictArea.classList.add('hidden'); predictArea.innerHTML = '';
+            document.getElementById('ik-panel').classList.add('hidden');
             
-            loadMission(level);
-        }
-
-        function nextMission() {
-            if (gameState.mission < 3) {
-                // Halang pemain dari skip jika ramalan belum selesai (walaupun butang tertekan melalui exploit)
-                if (gameState.predictions[gameState.mission + 1] === 'unanswered') {
-                    // It's a new mission, allow it to load
-                    loadMission(gameState.mission + 1);
-                } else if (gameState.predictions[gameState.mission] !== 'completed') {
-                    alert("Selesaikan ramalan semasa dahulu sebelum meneruskan misi.");
-                } else {
-                    loadMission(gameState.mission + 1);
-                }
-            }
+            // Remove Blur cleanly
+            document.getElementById('tables-viewer').classList.remove('blur-mode');
+            document.getElementById('interaction-workspace').classList.remove('blur-mode');
+            document.getElementById('predict-area').classList.remove('blur-mode');
+            
+            loadMission(currentLevel);
         }
 
         function loadMission(level) {
-            resetAllTimers();
-            hideAbeDialog();
-            hideFeedback();
-            document.getElementById('btn-lihat-hint').style.display = 'none';
-            document.getElementById('observation-ui').classList.add('hidden');
-            document.getElementById('predict-modal').classList.remove('active');
-            
+            currentLevel = level;
             gameState.mission = level;
+            hideFeedback(); clearAllTimers();
+            
+            document.getElementById('btn-check').classList.add('hidden');
             document.getElementById('mission-level').innerText = `${level}/3`;
-            document.getElementById('btn-next').classList.add('hidden');
+            document.getElementById('predict-area').classList.add('hidden');
             
-            // Konfigurasi tajuk dan huraian
-            const missionsData = [
-                {
-                    title: "Misi 1: Database Disaster (Menemui Anomali)",
-                    desc: "Jadual ini mengandungi semua data dalam satu tempat (Data tidak ternormal). Cuba lakukan tindakan di bawah untuk melihat bagaimana struktur yang buruk menyebabkan <strong>Insertion Anomaly</strong>, <strong>Update Anomaly</strong>, dan <strong>Deletion Anomaly</strong>."
-                },
-                {
-                    title: "Misi 2: Table Surgery (Menuju 1NF & 2NF)",
-                    desc: "Kunci primer komposit adalah <strong>(PelajarID, KodKursus)</strong>.<br><strong>Kebergantungan Separa (Partial Dependency):</strong> NamaPelajar, Program, Fakulti hanya bergantung pada <em>PelajarID</em>. NamaKursus bergantung pada <em>KodKursus</em>. Gred bergantung pada kedua-duanya.<br><br><strong>Tugasan:</strong> Asingkan atribut ke dalam 3 jadual baharu: Jadual Pelajar, Jadual Kursus, dan Jadual Pendaftaran. Pilih atribut, pilih mana yang akan jadi Kunci Primer (PK), dan cipta jadual."
-                },
-                {
-                    title: "Misi 3: Integrity Rescue (Menuju 3NF)",
-                    desc: "Dalam Jadual Pelajar, <strong>Program</strong> menentukan <strong>Fakulti</strong>. Ini dipanggil <strong>Kebergantungan Transitif (Transitive Dependency)</strong> kerana Fakulti bergantung kepada Program, bukan secara langsung kepada PelajarID.<br><br><strong>Tugasan:</strong> Ekstrak jadual baharu untuk Program bagi mengelakkan pertindihan nama Fakulti."
-                }
-            ];
-
-            const mData = missionsData[level-1];
-            document.getElementById('mission-title').innerText = mData.title;
-            document.getElementById('mission-desc').innerHTML = mData.desc;
-            
+            const mTitle = document.getElementById('mission-title');
+            const mDesc = document.getElementById('mission-desc');
+            const ws = document.getElementById('interaction-workspace');
+            ws.innerHTML = ''; ws.classList.add('hidden'); 
             document.getElementById('tables-viewer').innerHTML = '';
-            const interactiveWs = document.getElementById('interactive-workspace');
-            interactiveWs.innerHTML = '';
-            interactiveWs.classList.add('hidden');
 
-            // Setup Specific Mission UI
-            if (level === 1) setupMission1();
-            if (level === 2) setupMission2();
-            if (level === 3) setupMission3();
+            let rawTbl = datasets[currentDatasetIndex].rawTable;
 
-            // Toggle X-Ray visibility
-            document.getElementById('btn-xray').classList.toggle('hidden', level === 1);
+            if (level === 1) {
+                mTitle.innerText = "Misi 1: Database Disaster (Menemui Anomali)";
+                mDesc.innerHTML = "Jadual di bawah mengandungi semua data dalam satu tempat. Perhatikan anomali, buat ramalan, dan lakukan ujian di ruang kerja.";
+                setupMission1(rawTbl);
+            } else if (level === 2) {
+                mTitle.innerText = "Misi 2: Table Surgery (Menuju 2NF)";
+                mDesc.innerHTML = "Kunci komposit ialah (PelajarID, KodKursus). Asingkan atribut bagi memecahkan kebergantungan separa.";
+                setupMission2(rawTbl);
+            } else if (level === 3) {
+                mTitle.innerText = "Misi 3: Integrity Rescue (Menuju 3NF)";
+                mDesc.innerHTML = "Selesaikan masalah Kebergantungan Transitif di mana Fakulti bergantung pada Program.";
+                setupMission3();
+            }
 
-            // Aliran Pemerhatian & Ramalan
-            if (gameState.predictions[level] === 'completed') {
-                // Buka UI terus jika dah siap ramal
-                interactiveWs.classList.remove('hidden');
-                document.getElementById('btn-lihat-hint').style.display = 'block';
-                document.getElementById('abe-container').classList.remove('hidden');
-            } else {
-                startObservationPhase(level);
+            if (gameState.questionState[level] === 'unanswered') {
+                document.getElementById('abe-container').classList.remove('hidden'); 
+                hideAbeDialog();
+                setTimeout(() => startObservationPhase(level), 400);
+            } else if (gameState.questionState[level] === 'completed') {
+                ws.classList.remove('hidden');
+                if(level !== 3) document.getElementById('btn-check').classList.remove('hidden');
+                showAbeDialog("Kerja penyelamatan diteruskan! Sila gunakan ruang kerja di bawah untuk menyelesaikan tugasan.", false);
             }
         }
 
         function startObservationPhase(level) {
-            let timeLeft = 5;
+            clearAllTimers();
+            let timeLeft = 10;
             const ui = document.getElementById('observation-ui');
             const countdownEl = document.getElementById('obs-countdown');
-            
-            ui.classList.remove('hidden');
-            countdownEl.innerText = timeLeft;
-            document.getElementById('abe-container').classList.add('hidden');
-
+            ui.classList.remove('hidden'); countdownEl.innerText = timeLeft;
             observationTimer = setInterval(() => {
-                timeLeft--;
-                countdownEl.innerText = timeLeft;
-                if(timeLeft <= 0) {
-                    skipObservationTimer();
-                }
+                timeLeft--; countdownEl.innerText = timeLeft;
+                if(timeLeft <= 0) skipObservation();
             }, 1000);
         }
 
-        function skipObservationTimer() {
-            resetAllTimers();
-            document.getElementById('observation-ui').classList.add('hidden');
-            showMandatoryHintPhase(gameState.mission);
+        function skipObservation() {
+            clearAllTimers(); showAbeHintPhase(currentLevel);
         }
 
-        function showMandatoryHintPhase(level) {
-            // Hint tidak hilang automatik. Wajib tekan "Saya Faham"
-            const hintText = abeHints[level];
-            const btnHtml = `<button class="success" onclick="openPredictModal(${level})">Saya Faham ➡️</button>`;
-            showAbeDialogFixed(hintText, btnHtml, true);
+        function showAbeHintPhase(level) {
+            let qData = datasets[currentDatasetIndex].abeData[level];
+            showAbeDialog(qData.hint, true, function() {
+                showPredictArea(level, qData);
+            }, "👍 Saya Dah Sedia", true); 
         }
 
-        function reopenHint() {
-            const level = gameState.mission;
-            const texts = [abeHints[level], ...abeExtraHints[level]];
-            const idx = Math.min(gameState.hintLevel[level] || 0, texts.length - 1);
-            const label = `<small style="color:#64748b;">Hint ${idx + 1}/${texts.length}</small><br>`;
-            let btnHtml = '';
-            if (idx < texts.length - 1) btnHtml += `<button class="warning" onclick="nextHint()">Hint seterusnya 💡</button>`;
-            btnHtml += `<button class="secondary" onclick="hideAbeDialog()">Tutup</button>`;
-            showAbeDialogFixed(label + texts[idx], btnHtml, false);
-        }
-
-        function nextHint() {
-            const l = gameState.mission;
-            gameState.hintLevel[l] = (gameState.hintLevel[l] || 0) + 1;
-            reopenHint();
-        }
-
-        function openPredictModal(level) {
-            hideAbeDialog(); // Sembunyikan bubble dialog supaya tak ganggu
-            const q = predictQuestions[level];
-            
-            let html = `
-                <p style="margin-bottom: 1.5rem; font-size: 1.15rem; font-weight: 500; line-height: 1.6;">${q.question}</p>
-                <div id="predict-options" style="display:flex; flex-direction:column; gap:12px;">
-                    ${q.options.map((opt, i) => `
-                        <label class="predict-option" id="opt-label-${i}">
-                            <input type="radio" name="predict" value="${i}"> 
-                            <span>${opt}</span>
-                        </label>
-                    `).join('')}
-                </div>
-                <div id="predict-feedback" class="hidden feedback-msg" style="margin-top: 1.5rem;"></div>
-                <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                    <button id="btn-predict-check" onclick="checkPrediction(${level})" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Semak Ramalan</button>
-                    <button id="btn-predict-continue" class="hidden success" onclick="completePrediction(${level})" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Teruskan Misi ➡️</button>
+        function showPredictArea(level, q) {
+            if (gameState.questionState[level] === 'completed') return;
+            gameState.questionState[level] = 'answered';
+            const html = `
+                <div style="border: 2px solid var(--highlight-fd); padding: 1.5rem; border-radius: 8px; background: rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+                        <h3 style="color: var(--highlight-fd); font-size: 1.4rem; display: inline-flex; align-items: center; gap: 8px;"><span>🧠</span> Ramal Dahulu</h3>
+                    </div>
+                    <p style="margin-bottom: 1.5rem; font-size: 1.15rem; font-weight: 600;">${q.question}</p>
+                    <div class="predict-grid">
+                        ${q.options.map((opt, i) => `
+                            <label class="predict-option pred-opt-${level}" onclick="selectPredictOption(this, ${i}, ${level})">
+                                <input type="radio" name="predict-${level}" value="${i}" style="pointer-events:none;"> <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="predict-feedback-area" class="hidden" style="margin-top: 1.5rem; padding: 1.2rem; border-radius: 8px; font-weight: 500; line-height: 1.5;"></div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button id="btn-predict-check" onclick="checkPrediction(${level})" disabled class="outline" style="opacity: 0.5; cursor: not-allowed; padding: 0.8rem 1.5rem;">Semak Ramalan</button>
+                        <button id="btn-predict-continue" class="hidden success" onclick="continueAfterPrediction(${level})" style="padding: 0.8rem 1.5rem;">Teruskan ➡️</button>
+                    </div>
                 </div>
             `;
-            
-            document.getElementById('predict-content').innerHTML = html;
-            document.getElementById('predict-modal').classList.add('active');
-            gameState.predictions[level] = 'unanswered';
+            const pa = document.getElementById('predict-area');
+            pa.innerHTML = html; pa.classList.remove('hidden');
+            showAbeDialog("Pilih ramalan anda di panel 'Ramal Dahulu' berdasarkan pemerhatian tadi.", false);
+        }
 
-            // Select effect
-            document.querySelectorAll('.predict-option').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    if (gameState.predictions[level] !== 'unanswered' && gameState.predictions[level] !== 'answered') return;
-                    
-                    document.querySelectorAll('.predict-option').forEach(e => {
-                        e.style.borderColor = 'var(--border-color)';
-                        e.style.backgroundColor = 'rgba(0,0,0,0.3)';
-                    });
-                    
-                    // The radio gets checked automatically if clicking label
-                    const radio = this.querySelector('input');
-                    radio.checked = true;
-                    this.style.borderColor = 'var(--highlight-pk)';
-                    this.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
-                    gameState.predictions[level] = 'answered';
-                });
+        function selectPredictOption(el, val, level) {
+            if (document.getElementById('btn-predict-continue').classList.contains('hidden') === false) return;
+            document.querySelectorAll(`.pred-opt-${level}`).forEach(e => {
+                e.style.borderColor = 'var(--border-color)'; e.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                e.querySelector('input').checked = false;
             });
+            el.style.borderColor = 'var(--highlight-pk)'; el.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+            el.querySelector('input').checked = true;
+            const btn = document.getElementById('btn-predict-check');
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.className = 'success';
         }
 
         function checkPrediction(level) {
-            const selected = document.querySelector('input[name="predict"]:checked');
-            const fb = document.getElementById('predict-feedback');
+            const input = document.querySelector(`input[name="predict-${level}"]:checked`);
+            if (!input) return;
+            const val = parseInt(input.value);
+            const q = datasets[currentDatasetIndex].abeData[level];
+            gameState.questionState[level] = 'reviewed';
             
-            if (!selected) {
-                fb.innerHTML = "Sila pilih satu ramalan dahulu sebelum menyemak.";
-                fb.className = "feedback-msg feedback-warning";
-                fb.classList.remove('hidden');
-                return;
-            }
-            
-            const val = parseInt(selected.value);
-            const q = predictQuestions[level];
-            
-            // Ubah UI Pilihan
-            document.querySelectorAll('.predict-option').forEach((label, idx) => {
-                label.classList.add('disabled');
-                label.querySelector('input').disabled = true;
-                
-                if (idx === q.answer) {
-                    label.style.borderColor = "var(--success)";
-                    label.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
-                } else if (idx === val && val !== q.answer) {
-                    label.style.borderColor = "var(--danger)";
-                    label.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
-                    label.style.opacity = "0.7";
-                } else {
-                    label.style.opacity = "0.5";
-                }
+            document.querySelectorAll(`input[name="predict-${level}"]`).forEach(inp => {
+                const label = inp.parentElement;
+                label.style.pointerEvents = "none";
+                if (parseInt(inp.value) === q.answer) { label.style.borderColor = "var(--success)"; label.style.backgroundColor = "rgba(16, 185, 129, 0.15)"; } 
+                else if (inp.checked && val !== q.answer) { label.style.borderColor = "var(--danger)"; label.style.backgroundColor = "rgba(239, 68, 68, 0.15)"; label.style.opacity = "0.8"; }
             });
-            
-            // Paparkan Penerangan (Tetap di skrin)
-            if (val === q.answer) {
-                fb.innerHTML = `<strong>🌟 Tepat sekali!</strong><br><br>${q.explanation}`;
-                fb.className = "feedback-msg feedback-success";
-            } else {
-                fb.innerHTML = `<strong>💡 Kurang tepat. Mari semak konsep ini:</strong><br><br>${q.explanation}`;
-                fb.className = "feedback-msg feedback-warning";
-            }
-            fb.classList.remove('hidden');
             
             document.getElementById('btn-predict-check').classList.add('hidden');
             document.getElementById('btn-predict-continue').classList.remove('hidden');
             
-            gameState.predictions[level] = 'reviewed';
+            const fb = document.getElementById('predict-feedback-area');
+            fb.classList.remove('hidden');
+            
+            if (val === q.answer) {
+                fb.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; fb.style.borderLeft = "4px solid var(--success)";
+                fb.innerHTML = `<strong style="color: var(--success); font-size: 1.1rem;">Tepat Sekali!</strong><br>${q.explanation}`;
+                showAbeDialog("Bagus! Anda berjaya meramal dengan tepat. Tekan 'Teruskan' untuk langkah seterusnya.", false);
+            } else {
+                fb.style.backgroundColor = "rgba(245, 158, 11, 0.2)"; fb.style.borderLeft = "4px solid var(--warning)";
+                fb.innerHTML = `<strong style="color: var(--warning); font-size: 1.1rem;">Kurang Tepat.</strong> Jawapan: ${q.options[q.answer]}<br><br>${q.explanation}`;
+                showAbeDialog("Tidak mengapa, kita belajar dari kesilapan. Sistem akan simpan soalan ini untuk Ulang Kaji Adaptif nanti.", false);
+                
+                // Simpan untuk ulang kaji
+                saveWrongQ({
+                    id: q.id, topic: q.topic, type: 'Ramal Dahulu', text: q.question, options: q.options, answer: q.answer, explanation: q.explanation
+                });
+            }
         }
 
-        function completePrediction(level) {
-            document.getElementById('predict-modal').classList.remove('active');
-            gameState.predictions[level] = 'completed';
+        function continueAfterPrediction(level) {
+            gameState.questionState[level] = 'completed';
+            const pa = document.getElementById('predict-area');
+            const fbHTML = document.getElementById('predict-feedback-area').outerHTML;
+            pa.innerHTML = `<div style="border: 1px solid var(--success); padding: 1rem; border-radius: 8px; background: rgba(16, 185, 129, 0.1);"><h4 style="color: var(--success); margin-bottom: 10px;">✅ Ramalan Selesai</h4>${fbHTML}</div>`;
             
-            // Tunjukkan ruang interaksi misi
-            document.getElementById('interactive-workspace').classList.remove('hidden');
-            document.getElementById('btn-lihat-hint').style.display = 'block';
-            document.getElementById('abe-container').classList.remove('hidden');
-            abeSay(abeIntro[level], 12000); // Arahan ringkas, hilang sendiri
+            const ws = document.getElementById('interaction-workspace');
+            ws.classList.remove('hidden');
+            if (level !== 3) document.getElementById('btn-check').classList.remove('hidden');
+            showAbeDialog("Selesai menganalisis! Sila gunakan ruang kerja di bawah jadual untuk ujian sebenar.", false);
+        }
+
+        function checkMissionCompletionLock() {
+            if (gameState.questionState[currentLevel] !== 'completed') {
+                showCustomAlert("Selesaikan ramalan semasa dahulu sebelum melakukan tindakan.");
+                return false;
+            }
+            return true;
         }
 
         function renderTable(tableData, containerId) {
@@ -978,10 +688,8 @@
                 let classes = [];
                 if(tableData.pk && tableData.pk.includes(col)) classes.push('pk');
                 if(tableData.fk && tableData.fk.includes(col)) classes.push('fk');
-                // X-Ray markers
                 if(gameState.mission === 2 && ['NamaPelajar','Program','Fakulti','NamaKursus'].includes(col)) classes.push('dep-partial');
                 if(gameState.mission === 3 && col === 'Fakulti') classes.push('dep-transitive');
-                
                 html += `<th class="${classes.join(' ')}" title="${classes.includes('pk')?'Kunci Primer':''}">${col}</th>`;
             });
             html += `</tr></thead><tbody>`;
@@ -994,294 +702,336 @@
             document.getElementById(containerId).innerHTML += html;
         }
 
-        function setupMission1() {
-            renderTable(rawTable, 'tables-viewer');
-            
-            const ws = document.getElementById('interactive-workspace');
-            ws.innerHTML = `
-                <h3 style="margin-bottom: 1rem;">Ujian Integriti (1NF)</h3>
-                <div class="flex-row">
-                    <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar (Tiada Kursus)</button>
-                    <button class="warning" onclick="triggerAnomaly('update')">Uji: Tukar Program Ahmad Ali</button>
-                    <button class="danger" onclick="triggerAnomaly('delete')">Uji: Buang Pendaftaran John Doe</button>
+        function setupMission1(rawTbl) {
+            renderTable(rawTbl, 'tables-viewer');
+            let name1 = rawTbl.rows[0][1]; // Dynamic names from current dataset
+            let name2 = rawTbl.rows[3][1];
+            document.getElementById('interaction-workspace').innerHTML = `
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar Baharu (Tiada Kursus)</button>
+                    <button class="warning" onclick="triggerAnomaly('update', '${name1}')">Uji: Tukar Program ${name1}</button>
+                    <button class="danger" onclick="triggerAnomaly('delete', '${name2}')">Uji: Buang Pendaftaran ${name2}</button>
                 </div>
             `;
         }
 
-        function triggerAnomaly(type) {
+        function triggerAnomaly(type, dynName = "") {
+            if (!checkMissionCompletionLock()) return;
             hideFeedback();
-            let tempTable = JSON.parse(JSON.stringify(rawTable));
-
-            if (type === 'insert') {
-                showFeedback("❌ <strong>Insertion Anomaly:</strong> Pelajar baharu tidak boleh dimasukkan tanpa mendaftarkan kursus (KodKursus, sebagai sebahagian Kunci Primer, tidak boleh NULL).", false);
-                gameState.m1State.tested |= 1;
-            } else if (type === 'update') {
-                tempTable.rows[0][2] = "AI"; // Change CS to AI only on row 1
-                document.getElementById('tables-viewer').innerHTML = '';
-                renderTable(tempTable, 'tables-viewer');
-                showFeedback("❌ <strong>Update Anomaly:</strong> Program Ahmad ditukar di satu rekod, tapi rekod pendaftarannya yang lain masih merekodkan 'CS'. Data bercanggah!", false);
-                gameState.m1State.tested |= 2;
-            } else if (type === 'delete') {
-                tempTable.rows.pop(); // Remove John Doe
-                document.getElementById('tables-viewer').innerHTML = '';
-                renderTable(tempTable, 'tables-viewer');
-                showFeedback("❌ <strong>Deletion Anomaly:</strong> Padam rekod kursus K03 menyebabkan kita kehilangan SEMUA maklumat identiti John Doe!", false);
-                gameState.m1State.tested |= 4;
-            }
-
-            const left = 3 - [1, 2, 4].filter(b => gameState.m1State.tested & b).length;
-            if (left > 0) abeSay(abeAnomalyTips[type] + `<br><br><em>Tinggal ${left} ujian lagi.</em>`, 14000);
-            checkMission1Progress();
-        }
-
-        function checkMission1Progress() {
-            if (gameState.m1State.tested === 7 && !gameState.m1State.done) {
-                gameState.m1State.done = true;
-                addXP(50);
-                addBadge("Anomaly Hunter");
-                showFeedback("✅ Syabas! Anda telah membuktikan struktur ini rapuh. Ia perlu dipecahkan (dinormalisasikan)!", true);
-                
-                setTimeout(() => {
-                    showSummaryModal(
-                        "Penemuan Anomali", 
-                        "Jadual tidak normal menyebabkan kerosakan data apabila diubah. Kunci penyelesaiannya adalah mengasingkan atribut mengikut Kebergantungan Fungsi.",
-                        "Mengapakah kehilangan maklumat pelajar berlaku apabila kita hanya mahu membatalkan pendaftaran kursusnya?"
-                    );
-                    document.getElementById('btn-next').classList.remove('hidden');
-                }, 1500);
-            }
-        }
-
-        function setupMission2() {
-            gameState.m2Tables = [];
-            gameState.m2Columns = [...rawTable.columns];
+            let rawTbl = datasets[currentDatasetIndex].rawTable;
+            let tempTable = JSON.parse(JSON.stringify(rawTbl));
             
-            // renderWorkspaceM2 sudah memaparkan jadual rujukan (rawTable)
-            renderWorkspaceM2();
+            if (type === 'insert') {
+                showFeedback("❌ <strong>Insertion Anomaly:</strong> Gagal memasukkan rekod! KodKursus (PK) tidak boleh kosong (NULL).", false);
+                gameState.m1State.tested |= 1;
+                showAbeDialog("Sistem tolak data pelajar baharu sebab tiada subjek didaftarkan. Kunci komposit perlukan KodKursus! (Insertion Anomaly)", false);
+            } else if (type === 'update') {
+                tempTable.rows[0][2] = "Biologi"; 
+                document.getElementById('tables-viewer').innerHTML = '';
+                renderTable(tempTable, 'tables-viewer');
+                showFeedback(`❌ <strong>Update Anomaly:</strong> Program ${dynName} diubah pada baris 1, tapi kekal lama pada baris 2.`, false);
+                gameState.m1State.tested |= 2;
+                showAbeDialog("Bahaya ni! Bila ubah satu tempat, tempat lain tertinggal. Data dah korup dan berulang. (Update Anomaly)", false);
+            } else if (type === 'delete') {
+                tempTable.rows.pop(); 
+                document.getElementById('tables-viewer').innerHTML = '';
+                renderTable(tempTable, 'tables-viewer');
+                showFeedback(`❌ <strong>Deletion Anomaly:</strong> Rekod kelas dipadam, identiti penuh ${dynName} juga hilang!`, false);
+                gameState.m1State.tested |= 4;
+                showAbeDialog("Bencana! Kita cuma batalkan kelas, tapi identiti pelajar terpadam terus! (Deletion Anomaly)", false);
+            }
         }
 
-        function renderWorkspaceM2() {
-            const ws = document.getElementById('interactive-workspace');
-            ws.innerHTML = `
-                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px;">
-                    <h4 style="margin-bottom: 10px;">Pilih atribut untuk jadual baharu:</h4>
-                    <div class="attribute-pool" id="pool-available">
-                        ${gameState.m2Columns.map(col => `<div class="attr-pill" onclick="toggleSelect('${col}', this)">${col}</div>`).join('')}
+        function setupMission2(rawTbl) {
+            gameState.m2Columns = [...rawTbl.columns];
+            renderTable(rawTbl, 'tables-viewer');
+            document.getElementById('interaction-workspace').innerHTML = `
+                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 10px; color: var(--highlight-fd);">Pilih atribut dan bina jadual berasingan (2NF):</h4>
+                    <div class="attribute-pool" id="pool-available"></div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="new-table-name" placeholder="Nama Jadual (cth: Pelajar)" style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; width: 250px; font-size: 1rem;">
+                        <button onclick="createTableM2()" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Bina Jadual Baharu</button>
                     </div>
-                    
-                    <div style="margin-top: 1rem; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <input type="text" id="new-table-name" placeholder="Nama Jadual (cth: Pelajar)" style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; min-width: 250px;">
-                        <button onclick="createTableM2()">Bina Jadual Ini</button>
-                    </div>
-                    <p style="font-size: 0.9rem; color: var(--warning); margin-top: 10px;">* Klik pada atribut untuk memilih. Atribut yang logik menjadi Kunci Primer akan dikesan secara automatik.</p>
                 </div>
             `;
-            
-            // Refresh table views
-            document.getElementById('tables-viewer').innerHTML = '';
-            if (gameState.m2Tables.length === 0) {
-                renderTable(rawTable, 'tables-viewer');
-            } else {
+            renderWorkspaceM2Pool();
+        }
+
+        function renderWorkspaceM2Pool() {
+            const pool = document.getElementById('pool-available');
+            if (pool) pool.innerHTML = gameState.m2Columns.map(col => `<div class="attr-pill" onclick="toggleSelect('${col}', this)">${col}</div>`).join('');
+            if (gameState.m2Tables.length > 0) {
+                const viewer = document.getElementById('tables-viewer'); viewer.innerHTML = '';
                 gameState.m2Tables.forEach(t => renderTable(t, 'tables-viewer'));
             }
         }
 
         function toggleSelect(col, el) {
+            if (!checkMissionCompletionLock()) return;
             const idx = selectedCols.indexOf(col);
-            if (idx > -1) {
-                selectedCols.splice(idx, 1);
-                el.classList.remove('selected');
-                el.innerHTML = col;
-            } else {
-                selectedCols.push(col);
-                el.classList.add('selected');
-                el.innerHTML = `✓ ${col}`;
-            }
+            if (idx > -1) { selectedCols.splice(idx, 1); el.classList.remove('selected'); el.innerHTML = col; } 
+            else { selectedCols.push(col); el.classList.add('selected'); if(selectedCols.length === 1) el.innerHTML = `🔑 ${col} (PK)`; }
         }
 
         function createTableM2() {
+            if (!checkMissionCompletionLock()) return;
             const tableName = document.getElementById('new-table-name').value.trim();
-            if(!tableName || selectedCols.length === 0) {
-                showFeedback("Sila masukkan nama jadual dan pilih atribut.", false);
-                return;
-            }
+            if(!tableName || selectedCols.length === 0) { showFeedback("Sila masukkan nama dan atribut.", false); return; }
 
-            if (gameState.m2Tables.length >= 3) {
-                showFeedback("Semua 3 jadual telah dibina. Klik 'Misi Seterusnya'.", false);
-                return;
-            }
+            const setStr = [...selectedCols].sort().join(',');
+            let isValid = false; let pks = [];
 
-            const sortedSel = [...selectedCols].sort();
-            const setStr = sortedSel.join(',');
-            
-            let isValid = false;
-            let expectedMsg = "";
-            let pks = [];
+            if (gameState.m2Tables.some(t => [...t.columns].sort().join(',') === setStr)) { showFeedback("❌ Jadual sudah wujud.", false); selectedCols = []; renderWorkspaceM2Pool(); return; }
 
-            // Validation Logic (2NF)
-            if (setStr === ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(',')) {
-                isValid = true; pks = ['PelajarID'];
-            } else if (setStr === ['KodKursus', 'NamaKursus'].sort().join(',')) {
-                isValid = true; pks = ['KodKursus'];
-            } else if (setStr === ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')) {
-                isValid = true; pks = ['PelajarID', 'KodKursus'];
-            } else {
-                expectedMsg = "Kumpulan atribut tidak tepat mengikut kebergantungan fungsi. Cth: Semua maklumat pelajar mesti bersama PelajarID. Maklumat gred perlukan KEDUA-DUA ID.";
-            }
+            if (setStr === ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(',')) { isValid = true; pks = ['PelajarID']; } 
+            else if (setStr === ['KodKursus', 'NamaKursus'].sort().join(',')) { isValid = true; pks = ['KodKursus']; } 
+            else if (setStr === ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')) { isValid = true; pks = ['PelajarID', 'KodKursus']; }
 
             if (!isValid) {
-                showFeedback(`❌ Penguraian salah: ${expectedMsg}`, false);
-                abeSay(abeAdviceM2([...selectedCols]), 20000, true);
-                selectedCols = [];
-                renderWorkspaceM2();
+                showFeedback("❌ Gabungan atribut salah. Asingkan mengikut Kunci Primer yang sah.", false);
+                selectedCols = []; renderWorkspaceM2Pool();
                 return;
             }
 
-            // Halang jadual yang sama dibina berulang kali
-            if (gameState.m2Tables.some(t => [...t.columns].sort().join(',') === setStr)) {
-                showFeedback("❌ Jadual ini sudah dibina. Bina jadual yang lain.", false);
-                selectedCols = [];
-                renderWorkspaceM2();
-                return;
-            }
-
-            // Extract unique rows based on selected columns
+            let rawTbl = datasets[currentDatasetIndex].rawTable;
             let newRows = [];
-            rawTable.rows.forEach(r => {
+            rawTbl.rows.forEach(r => {
                 let newRow = [];
-                selectedCols.forEach(col => {
-                    newRow.push(r[rawTable.columns.indexOf(col)]);
-                });
-                if(!newRows.some(er => JSON.stringify(er) === JSON.stringify(newRow))) {
-                    newRows.push(newRow);
-                }
+                selectedCols.forEach(col => newRow.push(r[rawTbl.columns.indexOf(col)]));
+                if(!newRows.some(er => JSON.stringify(er) === JSON.stringify(newRow))) newRows.push(newRow);
             });
 
-            gameState.m2Tables.push({
-                name: tableName,
-                columns: [...selectedCols],
-                pk: pks,
-                rows: newRows
-            });
+            gameState.m2Tables.push({ name: tableName, columns: [...selectedCols], pk: pks, rows: newRows });
+            
+            if (pks.length === 1) { 
+               selectedCols.forEach(col => { if (!pks.includes(col)) { const i = gameState.m2Columns.indexOf(col); if(i > -1) gameState.m2Columns.splice(i, 1); } });
+            } else { const i = gameState.m2Columns.indexOf('Gred'); if(i > -1) gameState.m2Columns.splice(i, 1); }
 
-            selectedCols = [];
-            showFeedback(`✅ Jadual ${tableName} berjaya dibina mengikut syarat kebergantungan!`, true);
-            addXP(30);
-            renderWorkspaceM2();
-            checkMission2Progress();
-            if (gameState.m2Tables.length < 3) abeSay(abeNextStepM2(), 10000);
-        }
-
-        function checkMission2Progress() {
-            if (gameState.m2Tables.length === 3) {
-                addXP(100);
-                addBadge("Surgeon 2NF");
-                document.getElementById('btn-next').classList.remove('hidden');
-                
-                gameState.currentData.pelajarTable = gameState.m2Tables.find(t => t.columns.includes('NamaPelajar'));
-                
-                setTimeout(() => {
-                    showSummaryModal(
-                        "Mencapai 2NF", 
-                        "Anda telah memecahkan jadual menggunakan <strong>Kunci Primer</strong>. Atribut yang hanya bergantung pada sebahagian kunci komposit telah diasingkan. Ini menyelesaikan anomali insertion!",
-                        "Adakah kita kehilangan data asal dengan pecahan ini? (Jawapan: Tidak, kita masih boleh MENGGABUNGKAN (JOIN) jadual menggunakan Kunci Primer dan Kunci Asing)."
-                    );
-                }, 1500);
-            }
+            selectedCols = []; document.getElementById('new-table-name').value = '';
+            showFeedback(`✅ Jadual ${tableName} berjaya dibina!`, true);
+            renderWorkspaceM2Pool();
         }
 
         function setupMission3() {
-            gameState.m3Tables = [];
-            const tPelajar = gameState.currentData.pelajarTable || {
-                name: "Pelajar",
-                columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti"],
-                pk: ["PelajarID"],
-                rows: [ ["S01", "Ahmad Ali", "CS", "FTMK"], ["S02", "Siti Aminah", "IT", "FTMK"], ["S03", "John Doe", "CS", "FTMK"] ]
-            };
-            
-            const ws = document.getElementById('interactive-workspace');
-            ws.innerHTML = `
-                <div style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.1);">
-                    <strong>Ujian Integriti:</strong> Lihat Jadual Pelajar di bawah. <em>Fakulti</em> bergantung pada <em>Program</em>, bukan <em>PelajarID</em> secara langsung.
-                </div>
-                <button class="success" onclick="extractTransitive()">Ekstrak Jadual Program (Hapus Kebergantungan Transitif)</button>
-            `;
+            let dynRows = [];
+            datasets[currentDatasetIndex].rawTable.rows.forEach(r => {
+                let dynRow = [r[0], r[1], r[2], r[3]];
+                if(!dynRows.some(er => JSON.stringify(er) === JSON.stringify(dynRow))) dynRows.push(dynRow);
+            });
 
-            document.getElementById('tables-viewer').innerHTML = '';
+            const tPelajar = gameState.currentData.pelajarTable || {
+                name: "Pelajar (2NF)", columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti"], pk: ["PelajarID"], rows: dynRows
+            };
+            gameState.currentData.pelajarTable = tPelajar;
             renderTable(tPelajar, 'tables-viewer');
+            
+            let progVal1 = dynRows[0][2];
+            let fakVal = dynRows[0][3];
+            document.getElementById('interaction-workspace').innerHTML = `
+                <div style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.1);">
+                    Periksa Jadual Pelajar. Fakulti bergantung pada Program, bukan terus pada PelajarID. Ini Kebergantungan Transitif!
+                </div>
+                <button id="btn-extract-3nf" class="success" onclick="extractTransitive()" style="padding: 1rem 2rem; font-size: 1.1rem;">✂️ Ekstrak Jadual Program (Hapus Kebergantungan Transitif)</button>
+            `;
         }
 
         function extractTransitive() {
+            if (!checkMissionCompletionLock()) return;
             if (gameState.m3Done) return;
 
-            const tProgram = {
-                name: "Program",
-                columns: ["Program", "Fakulti"],
-                pk: ["Program"],
-                rows: [ ["CS", "FTMK"], ["IT", "FTMK"] ]
-            };
+            let progs = []; let pils = []; let seenProgs = []; let seenPils = [];
+            gameState.currentData.pelajarTable.rows.forEach(r => {
+                let pid = r[0], pnama = r[1], prog = r[2], fak = r[3];
+                if(!seenProgs.includes(prog)) { seenProgs.push(prog); progs.push([prog, fak]); }
+                if(!seenPils.includes(pid)) { seenPils.push(pid); pils.push([pid, pnama, prog]); }
+            });
 
-            const tPelajarNew = {
-                name: "Pelajar (3NF)",
-                columns: ["PelajarID", "NamaPelajar", "Program"],
-                pk: ["PelajarID"],
-                fk: ["Program"],
-                rows: [ ["S01", "Ahmad Ali", "CS"], ["S02", "Siti Aminah", "IT"], ["S03", "John Doe", "CS"] ]
-            };
+            const tProgram = { name: "Program (3NF Baru)", columns: ["Program", "Fakulti"], pk: ["Program"], rows: progs };
+            const tPelajarNew = { name: "Pelajar (3NF)", columns: ["PelajarID", "NamaPelajar", "Program"], pk: ["PelajarID"], fk: ["Program"], rows: pils };
 
             gameState.m3Tables = [tPelajarNew, tProgram];
-            
             document.getElementById('tables-viewer').innerHTML = '';
-            renderTable(tPelajarNew, 'tables-viewer');
-            renderTable(tProgram, 'tables-viewer');
+            renderTable(tPelajarNew, 'tables-viewer'); renderTable(tProgram, 'tables-viewer');
             
-            showFeedback("✅ Kebergantungan Transitif disingkirkan! Atribut Fakulti dipindahkan ke jadual Program. 'Program' kini bertindak sebagai Kunci Asing (Foreign Key).", true);
+            showFeedback("✅ Kebergantungan Transitif disingkirkan! 'Program' kini bertindak sebagai Kunci Asing (FK).", true);
+            
             gameState.m3Done = true;
-            
-            addXP(150);
-            addBadge("Master 3NF");
-            
-            setTimeout(() => {
-                showSummaryModal(
-                    "Pangkalan Data Diselamatkan!", 
-                    "Anda telah mencapai Bentuk Normal Ketiga (3NF). Jadual anda kini bebas daripada anomali pengemaskinian. Semua atribut bukan kunci bergantung SEPENUHNYA dan LANGSUNG kepada Kunci Primer.",
-                    "Bagaimana Kunci Asing (Foreign Key) membantu mengekalkan integriti rujukan antara jadual yang dipecahkan?"
-                );
-            }, 2000);
+            document.getElementById('btn-extract-3nf').classList.add('hidden');
+            checkMission(); // Call check directly to trigger Imbas Kembali
         }
 
-        function showSummaryModal(title, text, reflection) {
-            hideAbeDialog();
-            document.getElementById('summary-title').innerText = title;
-            document.getElementById('summary-content').innerHTML = text;
-            document.getElementById('reflection-question').innerText = reflection;
-            document.getElementById('summary-modal').classList.add('active');
-        }
-
-        function closeSummaryModal() {
-            document.getElementById('summary-modal').classList.remove('active');
-            if (gameState.mission === 3 && gameState.m3Done) {
-                const ws = document.getElementById('interactive-workspace');
-                ws.innerHTML = `
-                    <div style="text-align:center; padding: 3rem;">
-                        <h2 style="color: var(--success); font-size: 2rem; margin-bottom:1rem;">🏆 Misi Selesai Sepenuhnya!</h2>
-                        <p style="margin-bottom: 2rem; font-size: 1.1rem;">Anda telah berjaya menyelamatkan pangkalan data dan mencapai 3NF. Jumlah XP: ${gameState.xp}</p>
-                        <button onclick="location.reload()">🔄 Main Semula</button>
-                    </div>
-                `;
+        function checkMission() {
+            if (!checkMissionCompletionLock()) return;
+            if (gameState.mission === 1) {
+                if (gameState.m1State.tested === 7) { 
+                    addXP(50); addBadge("Anomaly Hunter");
+                    document.getElementById('btn-check').classList.add('hidden');
+                    startImbasKembali(1); // Trigger Imbas Kembali
+                } else showFeedback("Sila uji kesemua 3 jenis anomali sebelum mengesahkan tindakan.", false);
+            } else if (gameState.mission === 2) {
+                if (gameState.m2Tables.length >= 3) {
+                    addXP(100); addBadge("Surgeon 2NF");
+                    document.getElementById('btn-check').classList.add('hidden');
+                    gameState.currentData.pelajarTable = gameState.m2Tables.find(t => t.columns.includes('NamaPelajar'));
+                    startImbasKembali(2); // Trigger Imbas Kembali
+                } else showFeedback("Sila bina 3 jadual yang lengkap sebelum membuat pengesahan.", false);
+            } else if (gameState.mission === 3) {
+                 if(gameState.m3Done) {
+                     addXP(150); addBadge("Master 3NF");
+                     startImbasKembali(3);
+                 }
             }
         }
 
-        // Pastikan kandungan boleh di-scroll melepasi Abe Jamal (ruang bawah mengikut saiz bubble)
-        (function () {
-            const c = document.getElementById('abe-container');
-            const update = () => {
-                const h = c.classList.contains('hidden') ? 0 : c.offsetHeight;
-                document.body.style.paddingBottom = Math.max(80, h + 40) + 'px';
-            };
-            new ResizeObserver(update).observe(c);
-            update();
-        })();
+        function startImbasKembali(level) {
+            gameState.ikLevel = level;
+            gameState.ikIndex = 0;
+            
+            // Blur area untuk elak tipu
+            document.getElementById('tables-viewer').classList.add('blur-mode');
+            document.getElementById('interaction-workspace').classList.add('blur-mode');
+            document.getElementById('predict-area').classList.add('blur-mode');
+            
+            document.getElementById('ik-panel').classList.remove('hidden');
+            showAbeDialog("Misi hampir selesai! Tapi tunggu... Jom uji ingatan kau tanpa tengok jadual. Jawab soalan Imbas Kembali ni dahulu!", false);
+            renderIKQuestion();
+        }
+
+        function renderIKQuestion() {
+            let level = gameState.ikLevel; let idx = gameState.ikIndex;
+            let questions = imbasKembaliData[level];
+            
+            if (idx >= questions.length) { finishImbasKembali(level); return; }
+            let q = questions[idx];
+            
+            let html = `
+                <div style="padding: 1rem;">
+                   <h3 style="color: var(--highlight-pk); border-bottom: 2px dashed var(--success); padding-bottom:10px; margin-bottom: 15px;">
+                       🧠 Imbas Kembali (${idx+1}/${questions.length})
+                   </h3>
+                   <p style="font-size: 1.15rem; font-weight: 600; margin: 10px 0;">${q.q}</p>
+                   <div class="predict-grid">
+                       ${q.options.map((opt, i) => `
+                           <label class="predict-option ik-option" onclick="selectIKOption(this, ${i})">
+                               <input type="radio" name="ik-predict" value="${i}" style="pointer-events:none;">
+                               <span>${opt}</span>
+                           </label>
+                       `).join('')}
+                   </div>
+                   <div id="ik-feedback" class="hidden" style="margin-top: 15px; padding: 15px; border-radius: 8px;"></div>
+                   <button id="btn-ik-check" class="outline" onclick="checkIKQuestion()" disabled style="margin-top: 15px; opacity:0.5; cursor:not-allowed;">Semak Jawapan</button>
+                   <button id="btn-ik-next" class="success hidden" onclick="nextIKQuestion()" style="margin-top: 15px;">Seterusnya ➡️</button>
+                </div>
+            `;
+            document.getElementById('ik-content').innerHTML = html;
+        }
+
+        function selectIKOption(el, val) {
+            if(document.getElementById('btn-ik-next').classList.contains('hidden') === false) return;
+            document.querySelectorAll('.ik-option').forEach(e => {
+                e.style.borderColor = 'var(--border-color)'; e.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                e.querySelector('input').checked = false;
+            });
+            el.style.borderColor = 'var(--highlight-pk)'; el.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+            el.querySelector('input').checked = true;
+            let btn = document.getElementById('btn-ik-check');
+            btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.className = 'success';
+        }
+
+        function checkIKQuestion() {
+            let input = document.querySelector('input[name="ik-predict"]:checked');
+            if(!input) return;
+            let val = parseInt(input.value);
+            let level = gameState.ikLevel; let idx = gameState.ikIndex;
+            let q = imbasKembaliData[level][idx];
+            
+            document.querySelectorAll('.ik-option').forEach(e => e.style.pointerEvents = "none");
+            let fb = document.getElementById('ik-feedback'); fb.classList.remove('hidden');
+            document.getElementById('btn-ik-check').classList.add('hidden');
+            document.getElementById('btn-ik-next').classList.remove('hidden');
+
+            if(val === q.ans) {
+                fb.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; fb.style.borderLeft = "4px solid var(--success)";
+                fb.innerHTML = `<strong style="color: var(--success);">Tepat!</strong><br>${q.exp}`;
+            } else {
+                fb.style.backgroundColor = "rgba(239, 68, 68, 0.2)"; fb.style.borderLeft = "4px solid var(--warning)";
+                fb.innerHTML = `<strong style="color: var(--warning);">Salah.</strong> Jawapan: ${q.options[q.ans]}<br><br>${q.exp}`;
+                saveWrongQ({
+                    id: q.id, topic: q.topic, type: 'Imbas Kembali', text: q.q, options: q.options, answer: q.ans, explanation: q.exp
+                });
+            }
+        }
+
+        function nextIKQuestion() { gameState.ikIndex++; renderIKQuestion(); }
+
+        function finishImbasKembali(level) {
+            document.getElementById('ik-panel').classList.add('hidden');
+            // Remove Blur
+            document.getElementById('tables-viewer').classList.remove('blur-mode');
+            document.getElementById('interaction-workspace').classList.remove('blur-mode');
+            document.getElementById('predict-area').classList.remove('blur-mode');
+
+            // Proceed to standard summary
+            if(level === 1) {
+                showAbeDialog("Syabas! Anda berjaya membuktikan kelemahan jadual. Mari baiki struktur ini di Misi 2.", false);
+                showSummaryModal("Penemuan Anomali Selesai", "Jadual asal sangat terdedah kepada Insertion, Update, dan Deletion Anomaly.", "Mengapakah identiti pelajar hilang apabila rekod kelas dipadam?");
+            } else if (level === 2) {
+                showAbeDialog("Kerja cemerlang! Kita telah memecahkan kebergantungan separa (2NF).", false);
+                showSummaryModal("Kejayaan Mencapai 2NF", "Kebergantungan separa diatasi dengan mengasingkan atribut yang hanya bergantung pada sebahagian kunci primer.", "Bolehkah kita kenalpasti nama pelajar sekarang tanpa merujuk kepada KodKursus?");
+            } else if (level === 3) {
+                showAbeDialog("Selesai! Sistem kini bebas kerosakan (3NF)!", false);
+                nextMission(); // Show final victory directly
+            }
+        }
+
+        function nextMission() {
+            if (!checkMissionCompletionLock()) return;
+            if(gameState.mission < 3) {
+                loadMission(gameState.mission + 1);
+                document.getElementById('summary-modal').classList.remove('active');
+            } else {
+                document.getElementById('mission-area').innerHTML = `
+                    <div class="panel" style="text-align:center; padding: 4rem 2rem;">
+                        <h2 style="color: var(--success); font-size: 2.5rem; margin-bottom: 1rem;">🏆 Semua Misi Selesai!</h2>
+                        <p style="margin: 1rem 0; font-size: 1.2rem;">Sistem rekod universiti berjaya diselamatkan dan dinormalisasikan sehingga Tahap 3 (3NF).</p>
+                        <p style="color: var(--highlight-pk); font-weight: bold; margin-bottom: 2rem; font-size: 1.5rem;">Jumlah Markah XP: ${gameState.xp}</p>
+                        <button onclick="location.reload()" class="success" style="font-size: 1.2rem; padding: 1rem 2.5rem;">Main Semula dari Mula</button>
+                    </div>`;
+            }
+        }
+
+        function addXP(points) { gameState.xp += points; document.getElementById('xp-score').innerText = gameState.xp; }
+        function addBadge(name) {
+            if (!gameState.badges.includes(name)) {
+                gameState.badges.push(name);
+                const b = document.createElement('div'); b.className = 'badge'; b.innerText = name;
+                document.getElementById('badge-container').appendChild(b);
+            }
+        }
+        
+        function showFeedback(msg, isSuccess) {
+            const fb = document.getElementById('feedback-box');
+            fb.innerHTML = msg; fb.className = 'feedback-msg ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+            fb.classList.remove('hidden');
+        }
+        function hideFeedback() { document.getElementById('feedback-box').classList.add('hidden'); }
+        
+        function toggleXRay() {
+            gameState.xrayActive = !gameState.xrayActive;
+            const viewer = document.getElementById('tables-viewer');
+            if(gameState.xrayActive) { viewer.classList.add('xray-mode'); document.getElementById('btn-xray').style.boxShadow = "0 0 15px var(--highlight-pk)"; } 
+            else { viewer.classList.remove('xray-mode'); document.getElementById('btn-xray').style.boxShadow = "none"; }
+        }
+
+        function showSummaryModal(title, content, q) {
+            document.getElementById('summary-title').innerText = title;
+            document.getElementById('summary-content').innerHTML = content;
+            document.getElementById('reflection-question').innerText = q;
+            document.getElementById('summary-modal').classList.add('active');
+        }
+        function closeSummaryModal() { document.getElementById('summary-modal').classList.remove('active'); nextMission(); }
+
     </script>
 </body>
 </html>
