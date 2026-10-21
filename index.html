@@ -33,6 +33,7 @@
             color: var(--text-main);
             line-height: 1.6;
             overflow-x: hidden;
+            padding-bottom: 200px; /* Ruang untuk avatar di bawah */
         }
 
         header {
@@ -59,8 +60,9 @@
 
         .dashboard {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .stat-box {
@@ -90,16 +92,18 @@
             border: 1px solid var(--border-color);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
+            position: relative;
         }
 
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1.2rem;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 1rem;
             transition: all 0.2s;
         }
 
@@ -111,7 +115,9 @@
         button.danger { background-color: var(--danger); }
         button.success { background-color: var(--success); }
         button.warning { background-color: var(--warning); color: #000; }
-        button:disabled { background-color: var(--text-muted); cursor: not-allowed; transform: none; }
+        button.secondary { background-color: transparent; border: 2px solid var(--border-color); }
+        button.secondary:hover { background-color: var(--border-color); }
+        button:disabled { background-color: var(--text-muted); cursor: not-allowed; transform: none; color: #333; }
 
         .table-container {
             overflow-x: auto;
@@ -119,6 +125,7 @@
             background: rgba(0,0,0,0.2);
             border-radius: 8px;
             padding: 1rem;
+            border: 1px solid var(--border-color);
         }
 
         table {
@@ -161,12 +168,14 @@
 
         .attr-pill {
             background-color: var(--border-color);
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1rem;
             border-radius: 20px;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
             border: 2px solid transparent;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         .attr-pill:hover { background-color: var(--primary); }
@@ -175,14 +184,15 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(15, 23, 42, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 3000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
 
         .modal-overlay.active {
@@ -192,26 +202,187 @@
 
         .modal-content {
             background: var(--bg-panel);
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 600px;
+            padding: 2.5rem;
+            border-radius: 16px;
+            max-width: 650px;
             width: 90%;
             border: 1px solid var(--border-color);
-            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .badge-list { display: flex; gap: 10px; margin-top: 10px; }
-        .badge { background: var(--warning); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .badge { background: var(--warning); color: #000; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; }
 
-        .feedback-msg { margin: 1rem 0; padding: 1rem; border-radius: 8px; font-weight: bold; }
-        .feedback-success { background: rgba(16, 185, 129, 0.2); border-left: 4px solid var(--success); }
-        .feedback-error { background: rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger); }
-        .feedback-warning { background: rgba(245, 158, 11, 0.2); border-left: 4px solid var(--warning); color: var(--text-main); }
+        .feedback-msg { margin: 1rem 0; padding: 1.2rem; border-radius: 8px; font-weight: 500; line-height: 1.5; font-size: 1.05rem; }
+        .feedback-success { background: rgba(16, 185, 129, 0.15); border-left: 5px solid var(--success); }
+        .feedback-error { background: rgba(239, 68, 68, 0.15); border-left: 5px solid var(--danger); }
+        .feedback-warning { background: rgba(245, 158, 11, 0.15); border-left: 5px solid var(--warning); color: var(--text-main); }
 
         .hidden { display: none !important; }
-        
         .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .flex-1 { flex: 1; min-width: 300px; }
+        
+        #abe-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 2000;
+            max-width: 420px;
+            transition: all 0.3s ease;
+            pointer-events: none; /* ruang kosong tidak menghalang klik pada kandungan */
+        }
+
+        #abe-container > * { pointer-events: auto; }
+        
+        #abe-dialog {
+            background: white;
+            color: #0f172a;
+            padding: 14px 16px 12px;
+            max-width: 300px;
+            border-radius: 20px 20px 0 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            display: none;
+            border: 3px solid var(--primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        #abe-dialog::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            right: 25px;
+            border-width: 15px 0 0 15px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+        
+        #abe-dialog::before {
+            content: '';
+            position: absolute;
+            bottom: -19px;
+            right: 23px;
+            border-width: 17px 0 0 17px;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent transparent;
+            z-index: -1;
+        }
+
+        .abe-avatar-img {
+            width: 110px;
+            height: 110px;
+            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.4));
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .abe-avatar-img:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+
+        .abe-scroll {
+            max-height: 32vh;
+            overflow-y: auto;
+            padding-right: 18px;
+        }
+
+        .abe-close {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            background: transparent;
+            color: #475569;
+            padding: 2px 8px;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .abe-close:hover { background: #e2e8f0; transform: none; }
+
+        #abe-dialog button.secondary { color: #0f172a; border-color: #94a3b8; }
+        #abe-dialog button.secondary:hover { color: #darkblue; }
+        #abe-dialog .dialog-actions button { padding: 0.4rem 0.9rem; font-size: 0.9rem; }
+
+        .dialog-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #abe-container {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                flex-direction: column;
+                align-items: flex-end;
+                max-width: none;
+            }
+            .abe-avatar-img {
+                width: 80px;
+                height: 80px;
+            }
+            #abe-dialog {
+                border-radius: 20px 20px 20px 0;
+                font-size: 0.95rem;
+                max-width: none;
+                width: calc(100% - 20px);
+                align-self: center;
+            }
+            #abe-dialog::after {
+                right: auto;
+                left: 25px;
+                border-width: 15px 15px 0 0;
+            }
+            #abe-dialog::before {
+                right: auto;
+                left: 23px;
+                border-width: 17px 17px 0 0;
+            }
+        }
+
+        .predict-option {
+            background: rgba(0,0,0,0.3);
+            padding: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+        }
+
+        .predict-option:hover:not(.disabled) {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--primary);
+        }
+        
+        .predict-option input {
+            margin-top: 5px;
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+        .predict-option.disabled { cursor: default; }
+
+        #btn-lihat-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            border-radius: 30px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+        }
 
     </style>
 </head>
@@ -228,6 +399,7 @@
             <div class="stat-box">
                 <span class="xp-text">⚡XP:</span> <span id="xp-score">0</span>
             </div>
+            <button class="secondary" onclick="resetCurrentMission()" style="padding: 4px 10px; font-size: 0.85rem;">🔄 Set Semula Misi</button>
             <div id="badge-container" class="badge-list"></div>
         </div>
     </header>
@@ -236,76 +408,211 @@
         <!-- Pengenalan & Nota Penyelidikan -->
         <div id="intro-panel" class="panel">
             <h2>Selamat Datang, Jurutera Pangkalan Data!</h2>
-            <p style="margin: 1rem 0; color: var(--text-muted);">
+            <p style="margin: 1rem 0; color: var(--text-muted); font-size: 1.1rem;">
                 Sistem rekod universiti sedang mengalami krisis integriti data! Jadual bercelaru, data berulang, dan maklumat hilang.
                 Misi anda adalah untuk menyiasat masalah, mencari kebergantungan fungsi, dan menormalisasikan pangkalan data daripada tahap 1NF ke 3NF.
             </p>
-            <div style="background: rgba(56, 189, 248, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--highlight-fd);">
-                <strong>Nota Adaptasi Kajian:</strong> Simulator ini mengaplikasikan dapatan kajian lepas melalui:
-                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-muted);">
-                    <li><strong>Penguraian interaktif:</strong> Memilih dan memindahkan atribut untuk membina jadual (adaptasi dari kaedah drag-and-drop).</li>
-                    <li><strong>Maklum balas automatik:</strong> Mesej ralat spesifik beserta semakan logik kebergantungan fungsi.</li>
-                    <li><strong>Papan pemuka bergamifikasi:</strong> Mata pengalaman (XP) dan pencapaian (Lencana) untuk motivasi.</li>
+            <div style="background: rgba(56, 189, 248, 0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--highlight-fd);">
+                <strong>Nota Mod Interaktif & Penilaian Tepat:</strong>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-muted); font-size: 1.05rem;">
+                    <li><strong>Perhatikan Dahulu:</strong> Jadual perlu diteliti sebelum sebarang tindakan.</li>
+                    <li><strong>Ramalan Wajib:</strong> Uji hipotesis anda berdasarkan logik Penormalan. Soalan wajib dijawab.</li>
+                    <li><strong>Abe Jamal:</strong> Mentor anda yang akan mengaitkan masalah data dengan realiti.</li>
                 </ul>
             </div>
-            <button onclick="startGame()" style="font-size: 1.1rem; padding: 0.75rem 2rem;">🚀 Mulakan Misi 1</button>
+            <button onclick="startGame()" style="font-size: 1.2rem; padding: 0.8rem 2.5rem;">🚀 Mulakan Misi 1</button>
         </div>
 
         <div id="mission-area" class="hidden">
             <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 id="mission-title">Misi 1: Database Disaster</h2>
-                    <button id="btn-xray" class="warning" onclick="toggleXRay()">🔍 Database X-Ray</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
+                    <h2 id="mission-title" style="font-size: 1.4rem;">Misi 1: Database Disaster</h2>
+                    <button id="btn-xray" class="warning hidden" onclick="toggleXRay()">🔍 Database X-Ray</button>
                 </div>
-                <p id="mission-desc" style="color: var(--text-muted); margin-bottom: 1.5rem;"></p>
+                <p id="mission-desc" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem;"></p>
                 
-                <!-- Ruang Interaksi -->
-                <div id="interaction-workspace"></div>
-
-                <!-- Pemapar Jadual -->
+                <!-- Pemapar Jadual sentiasa di atas -->
                 <div id="tables-viewer"></div>
 
-                <!-- Maklum balas & Kawalan -->
+                <!-- Ruang Interaksi disembunyikan sehingga soalan ramalan dijawab -->
+                <div id="interactive-workspace" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);">
+                    <!-- Butang aksi diletakkan sini secara dinamik -->
+                </div>
+
+                <!-- Maklum balas -->
                 <div id="feedback-box" class="hidden feedback-msg"></div>
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button id="btn-check" onclick="checkMission()">Sahkan Tindakan</button>
+                
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
                     <button id="btn-next" class="success hidden" onclick="nextMission()">Misi Seterusnya ➡️</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="summary-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="summary-title" style="color: var(--success); margin-bottom: 1rem;">Misi Selesai!</h2>
-            <div id="summary-content" style="margin-bottom: 1.5rem;"></div>
-            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <strong>Soalan Refleksi:</strong>
-                <p id="reflection-question" style="color: var(--highlight-pk); margin-top: 0.5rem;"></p>
+    <!-- UI Pemerhatian -->
+    <div id="observation-ui" class="hidden" style="position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); padding: 15px 30px; border-radius: 40px; z-index: 1000; display: flex; align-items: center; gap: 20px; border: 2px solid var(--highlight-pk); box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+        <span style="color: white; font-weight: 500; font-size: 1.2rem;">👀 Perhatikan jadual sebelum menjawab... <span id="obs-countdown" style="color: var(--highlight-pk); font-size: 1.4rem; font-weight: bold; margin-left: 5px;">5</span>s</span>
+        <button onclick="skipObservationTimer()" class="warning" style="padding: 8px 20px; border-radius: 20px;">Saya Dah Sedia</button>
+    </div>
+
+    <!-- Butang Lihat Hint (Floating) -->
+    <button id="btn-lihat-hint" class="warning" onclick="reopenHint()">💡 Lihat Hint Abe Jamal</button>
+
+    <!-- Avatar Abe Jamal -->
+    <div id="abe-container" class="hidden">
+        <div id="abe-dialog">
+            <button id="abe-close" class="abe-close" onclick="hideAbeDialog()" title="Tutup">✕</button>
+            <div id="abe-text" class="abe-scroll"></div>
+            <div id="abe-actions" class="dialog-actions">
+                <!-- Butang dimuatkan secara dinamik -->
             </div>
-            <button onclick="closeSummaryModal()">Teruskan</button>
         </div>
+        
+        <!-- SVG Avatar Abe Jamal -->
+        <svg viewBox="0 0 200 200" class="abe-avatar-img" onclick="toggleHintIfAvailable()" title="Abe Jamal - Jurutera Pangkalan Data">
+            <!-- Background glow -->
+            <circle cx="100" cy="100" r="95" fill="rgba(59, 130, 246, 0.2)" />
+            <!-- Shoulders/Body -->
+            <path d="M 30 200 Q 30 140 100 130 Q 170 140 170 200 Z" fill="#334155" />
+            <path d="M 45 200 L 45 160 L 155 160 L 155 200 Z" fill="#1e293b" />
+            <path d="M 85 160 L 100 180 L 115 160 Z" fill="#fbbf24" /> <!-- tie/accent -->
+            <!-- Face -->
+            <rect x="65" y="70" width="70" height="80" rx="25" fill="#fde047" />
+            <path d="M 65 100 Q 100 130 135 100 Z" fill="#fef08a" /> <!-- beard/jaw highlight -->
+            <!-- Ears -->
+            <circle cx="60" cy="110" r="10" fill="#fde047" />
+            <circle cx="140" cy="110" r="10" fill="#fde047" />
+            <!-- Hard Hat (Engineer) -->
+            <path d="M 40 75 C 40 20, 160 20, 160 75 L 175 75 L 175 85 L 25 85 L 25 75 Z" fill="#eab308" />
+            <path d="M 70 35 L 130 35 L 120 20 L 80 20 Z" fill="#ca8a04" opacity="0.5" />
+            <!-- Glasses -->
+            <circle cx="85" cy="105" r="14" fill="rgba(255,255,255,0.2)" stroke="#0f172a" stroke-width="4"/>
+            <circle cx="115" cy="105" r="14" fill="rgba(255,255,255,0.2)" stroke="#0f172a" stroke-width="4"/>
+            <line x1="99" y1="105" x2="101" y2="105" stroke="#0f172a" stroke-width="4"/>
+            <line x1="71" y1="105" x2="55" y2="100" stroke="#0f172a" stroke-width="3"/>
+            <line x1="129" y1="105" x2="145" y2="100" stroke="#0f172a" stroke-width="3"/>
+            <!-- Eyes -->
+            <circle cx="85" cy="105" r="3" fill="#0f172a" />
+            <circle cx="115" cy="105" r="3" fill="#0f172a" />
+            <!-- Smile -->
+            <path d="M 85 130 Q 100 145 115 130" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+        </svg>
     </div>
 
     <!-- Mod Ramal Dahulu (Predict First) -->
     <div id="predict-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content">
+            <h2 style="color: var(--highlight-fd); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">🔍 Cabaran Ramal Dahulu!</h2>
             <div id="predict-content"></div>
         </div>
     </div>
 
+    <div id="summary-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h2 id="summary-title" style="color: var(--success); margin-bottom: 1rem; font-size: 1.8rem;">Misi Selesai!</h2>
+            <div id="summary-content" style="margin-bottom: 1.5rem; font-size: 1.1rem; line-height: 1.7;"></div>
+            <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left; border-left: 4px solid var(--highlight-pk);">
+                <strong>Soalan Refleksi:</strong>
+                <p id="reflection-question" style="color: var(--text-main); margin-top: 0.5rem;"></p>
+            </div>
+            <button onclick="closeSummaryModal()" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Teruskan</button>
+        </div>
+    </div>
+
     <script>
-        // Data Utama Permainan
+        // State Pengurusan
         let gameState = {
             mission: 0,
             xp: 0,
             xrayActive: false,
             badges: [],
             currentData: {},
-            predictState: { 1: false, 2: false, 3: false }
+            // Status soalan: 'unanswered', 'answered', 'reviewed', 'completed'
+            predictions: { 1: 'unanswered', 2: 'unanswered', 3: 'unanswered' },
+            m1State: { tested: 0, done: false },
+            m2Tables: [],
+            m2Columns: [],
+            m3Tables: [],
+            m3Done: false,
+            hintLevel: { 1: 0, 2: 0, 3: 0 }
         };
 
-        // Jadual Tidak Dinormalisasi (0NF/1NF asas)
+        let observationTimer = null;
+        let selectedCols = [];
+        let abeTimer = null;
+
+        // Data & Hint Setup
+        const abeHints = {
+            1: "Data peribadi pelajar tersangkut dengan pendaftaran kursus! Ibarat satu rumah, kalau penyewa keluar, terus roboh dinding biliknya. Ini bahaya! (Anomali Pemadaman / <strong>Deletion Anomaly</strong> - rekod utama hilang jika rekod transit dihapus).",
+            2: "Lihat jadual ini, Kunci Primer ialah gabungan <em>PelajarID + KodKursus</em>. Tapi maklumat macam Nama Pelajar hanya perlukan PelajarID. Macam bawa geran rumah tiap kali pergi kedai runcit! Kita kena asingkannya ke jadual khas (Kebergantungan Separa / <strong>Partial Dependency</strong> ke arah <strong>2NF</strong>).",
+            3: "Dalam jadual Pelajar, Fakulti bergantung kepada Program, bukan terus kepada PelajarID. Ibarat posmen hantar surat ke rumah kawan penyewa, bukan penyewa sebenar. Kita mesti pisahkannya supaya tidak tersalah alamat (Kebergantungan Transitif / <strong>Transitive Dependency</strong> ke arah <strong>3NF</strong>)."
+        };
+
+        // Hint berperingkat (Hint 1 = abeHints, kemudian hint di bawah)
+        const abeExtraHints = {
+            1: [
+                "Klik ketiga-tiga butang ujian dan perhatikan jadual selepas setiap satu. Insert = tambah data, Update = ubah data, Delete = buang data.",
+                "Punca ketiga-tiga masalah sama: maklumat pelajar DAN kursus disimpan dalam satu baris. Bila satu berubah, yang lain terjejas."
+            ],
+            2: [
+                "Tanya diri untuk setiap atribut: ia perlukan ID yang mana untuk dikenal pasti? PelajarID sahaja, KodKursus sahaja, atau kedua-duanya?",
+                "Tiga jadual: <strong>Pelajar</strong> (PelajarID + NamaPelajar + Program + Fakulti), <strong>Kursus</strong> (KodKursus + NamaKursus), <strong>Pendaftaran</strong> (PelajarID + KodKursus + Gred)."
+            ],
+            3: [
+                "Fakulti boleh ditentukan oleh Program. Pindahkan pasangan Program + Fakulti ke jadual baharu supaya nama fakulti tidak berulang.",
+                "Tekan butang hijau. Program menjadi Kunci Primer di jadual Program, dan Kunci Asing di jadual Pelajar."
+            ]
+        };
+
+        const abeIntro = {
+            1: "Klik ketiga-tiga butang ujian satu demi satu dan perhatikan jadual. Perlukan bantuan? Tekan 💡 di kiri bawah atau klik saya.",
+            2: "Pilih atribut, beri nama jadual, kemudian tekan 'Bina Jadual Ini'. Bina 3 jadual: Pelajar, Kursus dan Pendaftaran.",
+            3: "Tekan butang hijau untuk mengekstrak jadual Program. Nanti saya terangkan hasilnya."
+        };
+
+        const abeAnomalyTips = {
+            insert: "Nampak tak? Pelajar baharu langsung tak boleh disimpan selagi dia belum daftar kursus. Data pelajar 'terikat' pada data kursus.",
+            update: "Ahmad Ali kini ada dua Program berbeza (AI dan CS). Mana satu yang betul? Data sama yang disimpan berulang kali mudah jadi bercanggah.",
+            delete: "John Doe hilang terus kerana dia hanya ada satu baris. Padam kursus = padam identiti pelajar."
+        };
+
+        const predictQuestions = {
+            1: {
+                question: "🤔 Sebelum menguji anomali, cuba ramalkan: Jika kita membuang pendaftaran kursus (K03) untuk John Doe dari jadual ini, apakah masalah utama yang akan berlaku?",
+                options: [
+                    "Hanya KodKursus dan Gred dipadam, maklumat lain dikekalkan secara ajaib.",
+                    "Seluruh maklumat peribadi tentang John Doe akan hilang terus dari pangkalan data.",
+                    "Sistem akan memecahkan jadual secara automatik untuk menyelamatkannya.",
+                    "Setiap pertindihan data akan hilang tetapi fail menjadi korup."
+                ],
+                answer: 1,
+                explanation: "Tepat! Oleh kerana semua data diikat dalam satu baris (tidak dinormalisasi), memadam rekod kursus (K03) bermaksud keseluruhan baris tersebut dipadamkan. Kita kehilangan maklumat identiti John Doe! Inilah <strong>Deletion Anomaly</strong>."
+            },
+            2: {
+                question: "🤔 Kunci Primer di sini ialah komposit (PelajarID + KodKursus). Atribut manakah yang mengalami Kebergantungan Separa (partial dependency) kerana ia hanya bergantung pada PelajarID?",
+                options: [
+                    "Gred",
+                    "NamaKursus dan Gred",
+                    "NamaPelajar, Program, dan Fakulti",
+                    "Tiada, semua atribut bergantung sepenuhnya pada kunci komposit"
+                ],
+                answer: 2,
+                explanation: "Betul! NamaPelajar, Program, dan Fakulti hanya memerlukan <strong>PelajarID</strong> untuk dikenal pasti. Ini adalah <strong>Kebergantungan Separa</strong>. Mengasingkannya ke jadual baharu membantu kita mencapai <strong>2NF</strong>."
+            },
+            3: {
+                question: "🤔 Dalam Jadual Pelajar (2NF), Fakulti ditentukan oleh Program (Contoh: CS pasti di FTMK). Apakah jenis kebergantungan ini dan bentuk normal apa yang dilanggarnya?",
+                options: [
+                    "Kebergantungan Transitif; melanggar 3NF",
+                    "Kebergantungan Separa; melanggar 2NF",
+                    "Anomali Kemas Kini; jadual sudah 3NF",
+                    "Kebergantungan Fungsi Penuh; tiada pelanggaran"
+                ],
+                answer: 0,
+                explanation: "Tepat sekali! Apabila satu atribut bukan kunci (Fakulti) bergantung kepada atribut bukan kunci yang lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Pisahkannya untuk mencapai <strong>3NF</strong>!"
+            }
+        };
+
+        // Raw Data
         const rawTable = {
             name: "Pendaftaran_Asal",
             columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
@@ -317,45 +624,73 @@
             ]
         };
 
-        const missions = [
-            {
-                id: 1,
-                title: "Misi 1: Database Disaster (Menemui Anomali)",
-                desc: "Jadual ini mengandungi semua data dalam satu tempat (Data tidak ternormal). Cuba lakukan tindakan di bawah untuk melihat bagaimana struktur yang buruk menyebabkan <strong>Insertion Anomaly</strong>, <strong>Update Anomaly</strong>, dan <strong>Deletion Anomaly</strong>.",
-                setup: setupMission1,
-                check: checkMission1
-            },
-            {
-                id: 2,
-                title: "Misi 2: Table Surgery (Menuju 1NF & 2NF)",
-                desc: "Kunci primer komposit adalah <strong>(PelajarID, KodKursus)</strong>.<br><strong>Kebergantungan Separa (Partial Dependency):</strong> NamaPelajar, Program, Fakulti hanya bergantung pada <em>PelajarID</em>. NamaKursus bergantung pada <em>KodKursus</em>. Gred bergantung pada kedua-duanya.<br><br><strong>Tugasan:</strong> Asingkan atribut ke dalam 3 jadual baharu: Jadual Pelajar, Jadual Kursus, dan Jadual Pendaftaran. Pilih atribut, pilih mana yang akan jadi Kunci Primer (PK), dan cipta jadual.",
-                setup: setupMission2,
-                check: checkMission2
-            },
-            {
-                id: 3,
-                title: "Misi 3: Integrity Rescue (Menuju 3NF)",
-                desc: "Dalam Jadual Pelajar, <strong>Program</strong> menentukan <strong>Fakulti</strong>. Ini dipanggil <strong>Kebergantungan Transitif (Transitive Dependency)</strong> kerana Fakulti bergantung kepada Program, bukan secara langsung kepada PelajarID.<br><br><strong>Tugasan:</strong> Ekstrak jadual baharu untuk Program bagi mengelakkan pertindihan nama Fakulti.",
-                setup: setupMission3,
-                check: checkMission3
-            }
-        ];
-
-        function addXP(points) {
-            gameState.xp += points;
-            document.getElementById('xp-score').innerText = gameState.xp;
-            document.getElementById('xp-score').style.transform = 'scale(1.5)';
-            setTimeout(() => { document.getElementById('xp-score').style.transform = 'scale(1)'; }, 300);
+        function resetAllTimers() {
+            if(observationTimer) clearInterval(observationTimer);
         }
 
-        function addBadge(name) {
-            if (!gameState.badges.includes(name)) {
-                gameState.badges.push(name);
-                const badgeEl = document.createElement('div');
-                badgeEl.className = 'badge';
-                badgeEl.innerText = name;
-                document.getElementById('badge-container').appendChild(badgeEl);
+        function toggleHintIfAvailable() {
+            // Klik avatar: tutup bubble jika terbuka, buka hint jika tertutup
+            const dlg = document.getElementById('abe-dialog');
+            if (dlg.style.display === 'block') {
+                if (document.getElementById('abe-close').style.display !== 'none') hideAbeDialog();
+                return;
             }
+            if (gameState.predictions[gameState.mission] === 'completed') {
+                reopenHint();
+            }
+        }
+
+        function showAbeDialogFixed(text, buttonsHtml, mandatory) {
+            clearTimeout(abeTimer);
+            document.getElementById('abe-container').classList.remove('hidden');
+            document.getElementById('abe-dialog').style.display = 'block';
+            document.getElementById('abe-text').innerHTML = text;
+            document.getElementById('abe-text').scrollTop = 0;
+            document.getElementById('abe-actions').innerHTML = buttonsHtml || '';
+            // Hint wajib tidak boleh ditutup dengan ✕ (mesti tekan "Saya Faham")
+            document.getElementById('abe-close').style.display = mandatory ? 'none' : 'block';
+        }
+
+        function hideAbeDialog() {
+            clearTimeout(abeTimer);
+            document.getElementById('abe-dialog').style.display = 'none';
+        }
+
+        // Abe beri tip ringkas yang hilang sendiri supaya tidak menghalang kandungan
+        function abeSay(text, autoHideMs, withHintBtn) {
+            const btn = withHintBtn ? `<button class="warning" onclick="reopenHint()">💡 Hint</button>` : '';
+            showAbeDialogFixed(text, btn, false);
+            if (autoHideMs) abeTimer = setTimeout(hideAbeDialog, autoHideMs);
+        }
+
+        function abeAdviceM2(sel) {
+            const has = c => sel.includes(c);
+            const stu = ['NamaPelajar', 'Program', 'Fakulti'];
+            const hasStu = stu.some(has);
+            if (has('Gred') && (!has('PelajarID') || !has('KodKursus')))
+                return "Gred bergantung pada <strong>kedua-dua</strong> PelajarID dan KodKursus (gred seorang pelajar bagi satu kursus). Jadual Gred mesti ada kedua-dua ID.";
+            if (hasStu && has('KodKursus'))
+                return "NamaPelajar, Program dan Fakulti hanya perlukan <strong>PelajarID</strong>. Jangan campur dengan KodKursus.";
+            if (has('NamaKursus') && (has('PelajarID') || hasStu))
+                return "NamaKursus hanya bergantung pada <strong>KodKursus</strong>. Asingkan daripada maklumat pelajar.";
+            if (hasStu && !has('PelajarID'))
+                return "Setiap jadual perlukan Kunci Primer. Maklumat pelajar mesti disertakan dengan <strong>PelajarID</strong>.";
+            if (has('NamaKursus') && !has('KodKursus'))
+                return "NamaKursus perlukan <strong>KodKursus</strong> sebagai kunci.";
+            if (hasStu && stu.some(c => !has(c)))
+                return "Hampir betul! NamaPelajar, Program dan Fakulti semuanya bergantung pada PelajarID, jadi letak ketiga-tiganya bersama.";
+            return "Cuba lagi. Tanya diri: atribut ini perlukan ID yang mana untuk dikenal pasti?";
+        }
+
+        function abeNextStepM2() {
+            const keys = {
+                Pelajar: ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(','),
+                Kursus: ['KodKursus', 'NamaKursus'].sort().join(','),
+                Pendaftaran: ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')
+            };
+            const built = gameState.m2Tables.map(t => [...t.columns].sort().join(','));
+            const left = Object.keys(keys).filter(n => !built.includes(keys[n]));
+            return `Bagus! Tinggal ${left.length} jadual lagi: <strong>${left.join(', ')}</strong>.`;
         }
 
         function showFeedback(msg, isSuccess) {
@@ -367,6 +702,21 @@
 
         function hideFeedback() {
             document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        function addXP(points) {
+            gameState.xp += points;
+            document.getElementById('xp-score').innerText = gameState.xp;
+        }
+
+        function addBadge(name) {
+            if (!gameState.badges.includes(name)) {
+                gameState.badges.push(name);
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'badge';
+                badgeEl.innerText = name;
+                document.getElementById('badge-container').appendChild(badgeEl);
+            }
         }
 
         function toggleXRay() {
@@ -387,36 +737,239 @@
             loadMission(1);
         }
 
-        function loadMission(level) {
-            gameState.mission = level;
-            hideFeedback();
-            document.getElementById('btn-next').classList.add('hidden');
-            document.getElementById('btn-check').classList.remove('hidden');
-            document.getElementById('mission-level').innerText = `${level}/3`;
+        function resetCurrentMission() {
+            const level = gameState.mission;
+            if (level === 0) return;
             
-            const m = missions[level-1];
-            document.getElementById('mission-title').innerText = m.title;
-            document.getElementById('mission-desc').innerHTML = m.desc;
+            // Reset status
+            gameState.predictions[level] = 'unanswered';
+            gameState.hintLevel[level] = 0;
+            if (level === 1) gameState.m1State = { tested: 0, done: false };
+            if (level === 2) { gameState.m2Tables = []; selectedCols = []; }
+            if (level === 3) gameState.m3Done = false;
             
-            // Padam ruang kerja lama
-            document.getElementById('interaction-workspace').innerHTML = '';
-            document.getElementById('tables-viewer').innerHTML = '';
-            
-            m.setup();
+            loadMission(level);
+        }
 
-            if (!gameState.predictState[level]) {
-                setTimeout(() => showPredictModal(level), 300);
+        function nextMission() {
+            if (gameState.mission < 3) {
+                // Halang pemain dari skip jika ramalan belum selesai (walaupun butang tertekan melalui exploit)
+                if (gameState.predictions[gameState.mission + 1] === 'unanswered') {
+                    // It's a new mission, allow it to load
+                    loadMission(gameState.mission + 1);
+                } else if (gameState.predictions[gameState.mission] !== 'completed') {
+                    alert("Selesaikan ramalan semasa dahulu sebelum meneruskan misi.");
+                } else {
+                    loadMission(gameState.mission + 1);
+                }
             }
         }
 
-        function checkMission() {
-            if (gameState.mission === 1) {
-                checkMission1();
-            } else if (gameState.mission === 2) {
-                checkMission2();
-            } else if (gameState.mission === 3) {
-                checkMission3();
+        function loadMission(level) {
+            resetAllTimers();
+            hideAbeDialog();
+            hideFeedback();
+            document.getElementById('btn-lihat-hint').style.display = 'none';
+            document.getElementById('observation-ui').classList.add('hidden');
+            document.getElementById('predict-modal').classList.remove('active');
+            
+            gameState.mission = level;
+            document.getElementById('mission-level').innerText = `${level}/3`;
+            document.getElementById('btn-next').classList.add('hidden');
+            
+            // Konfigurasi tajuk dan huraian
+            const missionsData = [
+                {
+                    title: "Misi 1: Database Disaster (Menemui Anomali)",
+                    desc: "Jadual ini mengandungi semua data dalam satu tempat (Data tidak ternormal). Cuba lakukan tindakan di bawah untuk melihat bagaimana struktur yang buruk menyebabkan <strong>Insertion Anomaly</strong>, <strong>Update Anomaly</strong>, dan <strong>Deletion Anomaly</strong>."
+                },
+                {
+                    title: "Misi 2: Table Surgery (Menuju 1NF & 2NF)",
+                    desc: "Kunci primer komposit adalah <strong>(PelajarID, KodKursus)</strong>.<br><strong>Kebergantungan Separa (Partial Dependency):</strong> NamaPelajar, Program, Fakulti hanya bergantung pada <em>PelajarID</em>. NamaKursus bergantung pada <em>KodKursus</em>. Gred bergantung pada kedua-duanya.<br><br><strong>Tugasan:</strong> Asingkan atribut ke dalam 3 jadual baharu: Jadual Pelajar, Jadual Kursus, dan Jadual Pendaftaran. Pilih atribut, pilih mana yang akan jadi Kunci Primer (PK), dan cipta jadual."
+                },
+                {
+                    title: "Misi 3: Integrity Rescue (Menuju 3NF)",
+                    desc: "Dalam Jadual Pelajar, <strong>Program</strong> menentukan <strong>Fakulti</strong>. Ini dipanggil <strong>Kebergantungan Transitif (Transitive Dependency)</strong> kerana Fakulti bergantung kepada Program, bukan secara langsung kepada PelajarID.<br><br><strong>Tugasan:</strong> Ekstrak jadual baharu untuk Program bagi mengelakkan pertindihan nama Fakulti."
+                }
+            ];
+
+            const mData = missionsData[level-1];
+            document.getElementById('mission-title').innerText = mData.title;
+            document.getElementById('mission-desc').innerHTML = mData.desc;
+            
+            document.getElementById('tables-viewer').innerHTML = '';
+            const interactiveWs = document.getElementById('interactive-workspace');
+            interactiveWs.innerHTML = '';
+            interactiveWs.classList.add('hidden');
+
+            // Setup Specific Mission UI
+            if (level === 1) setupMission1();
+            if (level === 2) setupMission2();
+            if (level === 3) setupMission3();
+
+            // Toggle X-Ray visibility
+            document.getElementById('btn-xray').classList.toggle('hidden', level === 1);
+
+            // Aliran Pemerhatian & Ramalan
+            if (gameState.predictions[level] === 'completed') {
+                // Buka UI terus jika dah siap ramal
+                interactiveWs.classList.remove('hidden');
+                document.getElementById('btn-lihat-hint').style.display = 'block';
+                document.getElementById('abe-container').classList.remove('hidden');
+            } else {
+                startObservationPhase(level);
             }
+        }
+
+        function startObservationPhase(level) {
+            let timeLeft = 5;
+            const ui = document.getElementById('observation-ui');
+            const countdownEl = document.getElementById('obs-countdown');
+            
+            ui.classList.remove('hidden');
+            countdownEl.innerText = timeLeft;
+            document.getElementById('abe-container').classList.add('hidden');
+
+            observationTimer = setInterval(() => {
+                timeLeft--;
+                countdownEl.innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    skipObservationTimer();
+                }
+            }, 1000);
+        }
+
+        function skipObservationTimer() {
+            resetAllTimers();
+            document.getElementById('observation-ui').classList.add('hidden');
+            showMandatoryHintPhase(gameState.mission);
+        }
+
+        function showMandatoryHintPhase(level) {
+            // Hint tidak hilang automatik. Wajib tekan "Saya Faham"
+            const hintText = abeHints[level];
+            const btnHtml = `<button class="success" onclick="openPredictModal(${level})">Saya Faham ➡️</button>`;
+            showAbeDialogFixed(hintText, btnHtml, true);
+        }
+
+        function reopenHint() {
+            const level = gameState.mission;
+            const texts = [abeHints[level], ...abeExtraHints[level]];
+            const idx = Math.min(gameState.hintLevel[level] || 0, texts.length - 1);
+            const label = `<small style="color:#64748b;">Hint ${idx + 1}/${texts.length}</small><br>`;
+            let btnHtml = '';
+            if (idx < texts.length - 1) btnHtml += `<button class="warning" onclick="nextHint()">Hint seterusnya 💡</button>`;
+            btnHtml += `<button class="secondary" onclick="hideAbeDialog()">Tutup</button>`;
+            showAbeDialogFixed(label + texts[idx], btnHtml, false);
+        }
+
+        function nextHint() {
+            const l = gameState.mission;
+            gameState.hintLevel[l] = (gameState.hintLevel[l] || 0) + 1;
+            reopenHint();
+        }
+
+        function openPredictModal(level) {
+            hideAbeDialog(); // Sembunyikan bubble dialog supaya tak ganggu
+            const q = predictQuestions[level];
+            
+            let html = `
+                <p style="margin-bottom: 1.5rem; font-size: 1.15rem; font-weight: 500; line-height: 1.6;">${q.question}</p>
+                <div id="predict-options" style="display:flex; flex-direction:column; gap:12px;">
+                    ${q.options.map((opt, i) => `
+                        <label class="predict-option" id="opt-label-${i}">
+                            <input type="radio" name="predict" value="${i}"> 
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div id="predict-feedback" class="hidden feedback-msg" style="margin-top: 1.5rem;"></div>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <button id="btn-predict-check" onclick="checkPrediction(${level})" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Semak Ramalan</button>
+                    <button id="btn-predict-continue" class="hidden success" onclick="completePrediction(${level})" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Teruskan Misi ➡️</button>
+                </div>
+            `;
+            
+            document.getElementById('predict-content').innerHTML = html;
+            document.getElementById('predict-modal').classList.add('active');
+            gameState.predictions[level] = 'unanswered';
+
+            // Select effect
+            document.querySelectorAll('.predict-option').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    if (gameState.predictions[level] !== 'unanswered' && gameState.predictions[level] !== 'answered') return;
+                    
+                    document.querySelectorAll('.predict-option').forEach(e => {
+                        e.style.borderColor = 'var(--border-color)';
+                        e.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                    });
+                    
+                    // The radio gets checked automatically if clicking label
+                    const radio = this.querySelector('input');
+                    radio.checked = true;
+                    this.style.borderColor = 'var(--highlight-pk)';
+                    this.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
+                    gameState.predictions[level] = 'answered';
+                });
+            });
+        }
+
+        function checkPrediction(level) {
+            const selected = document.querySelector('input[name="predict"]:checked');
+            const fb = document.getElementById('predict-feedback');
+            
+            if (!selected) {
+                fb.innerHTML = "Sila pilih satu ramalan dahulu sebelum menyemak.";
+                fb.className = "feedback-msg feedback-warning";
+                fb.classList.remove('hidden');
+                return;
+            }
+            
+            const val = parseInt(selected.value);
+            const q = predictQuestions[level];
+            
+            // Ubah UI Pilihan
+            document.querySelectorAll('.predict-option').forEach((label, idx) => {
+                label.classList.add('disabled');
+                label.querySelector('input').disabled = true;
+                
+                if (idx === q.answer) {
+                    label.style.borderColor = "var(--success)";
+                    label.style.backgroundColor = "rgba(16, 185, 129, 0.15)";
+                } else if (idx === val && val !== q.answer) {
+                    label.style.borderColor = "var(--danger)";
+                    label.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                    label.style.opacity = "0.7";
+                } else {
+                    label.style.opacity = "0.5";
+                }
+            });
+            
+            // Paparkan Penerangan (Tetap di skrin)
+            if (val === q.answer) {
+                fb.innerHTML = `<strong>🌟 Tepat sekali!</strong><br><br>${q.explanation}`;
+                fb.className = "feedback-msg feedback-success";
+            } else {
+                fb.innerHTML = `<strong>💡 Kurang tepat. Mari semak konsep ini:</strong><br><br>${q.explanation}`;
+                fb.className = "feedback-msg feedback-warning";
+            }
+            fb.classList.remove('hidden');
+            
+            document.getElementById('btn-predict-check').classList.add('hidden');
+            document.getElementById('btn-predict-continue').classList.remove('hidden');
+            
+            gameState.predictions[level] = 'reviewed';
+        }
+
+        function completePrediction(level) {
+            document.getElementById('predict-modal').classList.remove('active');
+            gameState.predictions[level] = 'completed';
+            
+            // Tunjukkan ruang interaksi misi
+            document.getElementById('interactive-workspace').classList.remove('hidden');
+            document.getElementById('btn-lihat-hint').style.display = 'block';
+            document.getElementById('abe-container').classList.remove('hidden');
+            abeSay(abeIntro[level], 12000); // Arahan ringkas, hilang sendiri
         }
 
         function renderTable(tableData, containerId) {
@@ -425,7 +978,7 @@
                 let classes = [];
                 if(tableData.pk && tableData.pk.includes(col)) classes.push('pk');
                 if(tableData.fk && tableData.fk.includes(col)) classes.push('fk');
-                // X-Ray markers based on current mission logic
+                // X-Ray markers
                 if(gameState.mission === 2 && ['NamaPelajar','Program','Fakulti','NamaKursus'].includes(col)) classes.push('dep-partial');
                 if(gameState.mission === 3 && col === 'Fakulti') classes.push('dep-transitive');
                 
@@ -442,13 +995,13 @@
         }
 
         function setupMission1() {
-            gameState.m1State = { tested: 0 };
             renderTable(rawTable, 'tables-viewer');
             
-            const ws = document.getElementById('interaction-workspace');
+            const ws = document.getElementById('interactive-workspace');
             ws.innerHTML = `
-                <div class="flex-row" style="margin-bottom: 1rem;">
-                    <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar Baharu (Tiada Kursus)</button>
+                <h3 style="margin-bottom: 1rem;">Ujian Integriti (1NF)</h3>
+                <div class="flex-row">
+                    <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar (Tiada Kursus)</button>
                     <button class="warning" onclick="triggerAnomaly('update')">Uji: Tukar Program Ahmad Ali</button>
                     <button class="danger" onclick="triggerAnomaly('delete')">Uji: Buang Pendaftaran John Doe</button>
                 </div>
@@ -458,40 +1011,44 @@
         function triggerAnomaly(type) {
             hideFeedback();
             let tempTable = JSON.parse(JSON.stringify(rawTable));
-            
+
             if (type === 'insert') {
-                showFeedback("❌ <strong>Insertion Anomaly:</strong> Anda tidak boleh memasukkan pelajar baharu ke dalam sistem tanpa mendaftarkan kursus (KodKursus adalah sebahagian daripada Kunci Primer dan tidak boleh NULL).", false);
+                showFeedback("❌ <strong>Insertion Anomaly:</strong> Pelajar baharu tidak boleh dimasukkan tanpa mendaftarkan kursus (KodKursus, sebagai sebahagian Kunci Primer, tidak boleh NULL).", false);
                 gameState.m1State.tested |= 1;
             } else if (type === 'update') {
-                // Update only one record of Ali to show inconsistency
                 tempTable.rows[0][2] = "AI"; // Change CS to AI only on row 1
                 document.getElementById('tables-viewer').innerHTML = '';
                 renderTable(tempTable, 'tables-viewer');
-                showFeedback("❌ <strong>Update Anomaly:</strong> Program Ahmad Ali ditukar kepada 'AI', tetapi pendaftaran kursusnya yang lain (baris kedua) masih merekodkan 'CS'. Data menjadi tidak konsisten!", false);
+                showFeedback("❌ <strong>Update Anomaly:</strong> Program Ahmad ditukar di satu rekod, tapi rekod pendaftarannya yang lain masih merekodkan 'CS'. Data bercanggah!", false);
                 gameState.m1State.tested |= 2;
             } else if (type === 'delete') {
                 tempTable.rows.pop(); // Remove John Doe
                 document.getElementById('tables-viewer').innerHTML = '';
                 renderTable(tempTable, 'tables-viewer');
-                showFeedback("❌ <strong>Deletion Anomaly:</strong> Dengan memadam rekod kursus K03, kita telah kehilangan SEMUA maklumat tentang pelajar John Doe dari pangkalan data!", false);
+                showFeedback("❌ <strong>Deletion Anomaly:</strong> Padam rekod kursus K03 menyebabkan kita kehilangan SEMUA maklumat identiti John Doe!", false);
                 gameState.m1State.tested |= 4;
             }
+
+            const left = 3 - [1, 2, 4].filter(b => gameState.m1State.tested & b).length;
+            if (left > 0) abeSay(abeAnomalyTips[type] + `<br><br><em>Tinggal ${left} ujian lagi.</em>`, 14000);
+            checkMission1Progress();
         }
 
-        function checkMission1() {
-            if (gameState.m1State.tested === 7) { // All 3 buttons clicked
+        function checkMission1Progress() {
+            if (gameState.m1State.tested === 7 && !gameState.m1State.done) {
+                gameState.m1State.done = true;
                 addXP(50);
                 addBadge("Anomaly Hunter");
-                showFeedback("✅ Syabas! Anda telah mengenalpasti ketiga-tiga anomali. Jadual ini perlu dipecahkan (dinormalisasikan)!", true);
-                document.getElementById('btn-next').classList.remove('hidden');
-                document.getElementById('btn-check').classList.add('hidden');
-                showSummaryModal(
-                    "Penemuan Anomali", 
-                    "Jadual yang tidak normal menyebabkan kerosakan data apabila maklumat dikemas kini, ditambah, atau dipadam. Kunci utamanya adalah mencari kebergantungan fungsi.",
-                    "Mengapakah kehilangan maklumat pelajar berlaku apabila kita hanya mahu membatalkan pendaftaran kursusnya?"
-                );
-            } else {
-                showFeedback("Sila uji kesemua 3 jenis anomali (Tambah, Tukar, Buang) sebelum meneruskan.", false);
+                showFeedback("✅ Syabas! Anda telah membuktikan struktur ini rapuh. Ia perlu dipecahkan (dinormalisasikan)!", true);
+                
+                setTimeout(() => {
+                    showSummaryModal(
+                        "Penemuan Anomali", 
+                        "Jadual tidak normal menyebabkan kerosakan data apabila diubah. Kunci penyelesaiannya adalah mengasingkan atribut mengikut Kebergantungan Fungsi.",
+                        "Mengapakah kehilangan maklumat pelajar berlaku apabila kita hanya mahu membatalkan pendaftaran kursusnya?"
+                    );
+                    document.getElementById('btn-next').classList.remove('hidden');
+                }, 1500);
             }
         }
 
@@ -499,34 +1056,36 @@
             gameState.m2Tables = [];
             gameState.m2Columns = [...rawTable.columns];
             
+            // renderWorkspaceM2 sudah memaparkan jadual rujukan (rawTable)
             renderWorkspaceM2();
         }
 
         function renderWorkspaceM2() {
-            const ws = document.getElementById('interaction-workspace');
-            
-            let html = `
-                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
-                    <h4>Atribut Tersedia:</h4>
+            const ws = document.getElementById('interactive-workspace');
+            ws.innerHTML = `
+                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px;">Pilih atribut untuk jadual baharu:</h4>
                     <div class="attribute-pool" id="pool-available">
                         ${gameState.m2Columns.map(col => `<div class="attr-pill" onclick="toggleSelect('${col}', this)">${col}</div>`).join('')}
                     </div>
                     
-                    <div style="margin-top: 1rem;">
-                        <input type="text" id="new-table-name" placeholder="Nama Jadual Baharu (cth: Pelajar)" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white;">
-                        <button onclick="createTableM2()">Bina Jadual</button>
+                    <div style="margin-top: 1rem; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="new-table-name" placeholder="Nama Jadual (cth: Pelajar)" style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; min-width: 250px;">
+                        <button onclick="createTableM2()">Bina Jadual Ini</button>
                     </div>
-                    <p style="font-size: 0.85rem; color: var(--warning); margin-top: 5px;">* Klik pada atribut untuk memilih. Atribut pertama yang dipilih secara automatik dianggap Kunci Primer (PK).</p>
+                    <p style="font-size: 0.9rem; color: var(--warning); margin-top: 10px;">* Klik pada atribut untuk memilih. Atribut yang logik menjadi Kunci Primer akan dikesan secara automatik.</p>
                 </div>
             `;
-            ws.innerHTML = html;
             
-            const viewer = document.getElementById('tables-viewer');
-            viewer.innerHTML = '';
-            gameState.m2Tables.forEach(t => renderTable(t, 'tables-viewer'));
+            // Refresh table views
+            document.getElementById('tables-viewer').innerHTML = '';
+            if (gameState.m2Tables.length === 0) {
+                renderTable(rawTable, 'tables-viewer');
+            } else {
+                gameState.m2Tables.forEach(t => renderTable(t, 'tables-viewer'));
+            }
         }
 
-        let selectedCols = [];
         function toggleSelect(col, el) {
             const idx = selectedCols.indexOf(col);
             if (idx > -1) {
@@ -536,27 +1095,22 @@
             } else {
                 selectedCols.push(col);
                 el.classList.add('selected');
-                if(selectedCols.length === 1) el.innerHTML = `🔑 ${col} (PK)`;
-                if(selectedCols.length === 2 && document.getElementById('new-table-name').value.toLowerCase() === 'pendaftaran') {
-                    // special visual hint for composite key
-                    el.innerHTML = `🔑 ${col} (PK)`;
-                }
+                el.innerHTML = `✓ ${col}`;
             }
         }
 
         function createTableM2() {
             const tableName = document.getElementById('new-table-name').value.trim();
             if(!tableName || selectedCols.length === 0) {
-                showFeedback("Sila masukkan nama jadual dan pilih sekurang-kurangnya satu atribut.", false);
+                showFeedback("Sila masukkan nama jadual dan pilih atribut.", false);
                 return;
             }
 
-            // Logic Validation for 2NF
-            // Expected subsets: 
-            // Pelajar: PelajarID(PK), NamaPelajar, Program, Fakulti
-            // Kursus: KodKursus(PK), NamaKursus
-            // Pendaftaran: PelajarID(PK), KodKursus(PK), Gred
-            
+            if (gameState.m2Tables.length >= 3) {
+                showFeedback("Semua 3 jadual telah dibina. Klik 'Misi Seterusnya'.", false);
+                return;
+            }
+
             const sortedSel = [...selectedCols].sort();
             const setStr = sortedSel.join(',');
             
@@ -564,6 +1118,7 @@
             let expectedMsg = "";
             let pks = [];
 
+            // Validation Logic (2NF)
             if (setStr === ['Fakulti', 'NamaPelajar', 'PelajarID', 'Program'].sort().join(',')) {
                 isValid = true; pks = ['PelajarID'];
             } else if (setStr === ['KodKursus', 'NamaKursus'].sort().join(',')) {
@@ -571,19 +1126,27 @@
             } else if (setStr === ['Gred', 'KodKursus', 'PelajarID'].sort().join(',')) {
                 isValid = true; pks = ['PelajarID', 'KodKursus'];
             } else {
-                expectedMsg = "Kumpulan atribut tidak tepat mengikut kebergantungan fungsi. Cth: Semua maklumat pelajar mesti bersama PelajarID. Maklumat gred perlukan KEDUA-DUA PelajarID dan KodKursus.";
+                expectedMsg = "Kumpulan atribut tidak tepat mengikut kebergantungan fungsi. Cth: Semua maklumat pelajar mesti bersama PelajarID. Maklumat gred perlukan KEDUA-DUA ID.";
             }
 
             if (!isValid) {
-                showFeedback("❌ Penguraian salah: " + expectedMsg, false);
+                showFeedback(`❌ Penguraian salah: ${expectedMsg}`, false);
+                abeSay(abeAdviceM2([...selectedCols]), 20000, true);
                 selectedCols = [];
                 renderWorkspaceM2();
                 return;
             }
 
-            // Valid decomposition
+            // Halang jadual yang sama dibina berulang kali
+            if (gameState.m2Tables.some(t => [...t.columns].sort().join(',') === setStr)) {
+                showFeedback("❌ Jadual ini sudah dibina. Bina jadual yang lain.", false);
+                selectedCols = [];
+                renderWorkspaceM2();
+                return;
+            }
+
+            // Extract unique rows based on selected columns
             let newRows = [];
-            // Basic extraction (unique rows)
             rawTable.rows.forEach(r => {
                 let newRow = [];
                 selectedCols.forEach(col => {
@@ -601,46 +1164,45 @@
                 rows: newRows
             });
 
-            // Remove extracted columns from pool, EXCEPT keys which might be needed for relationship
-            // Actually, in standard UI, we allow reusing PKs as FKs. 
-            // Let's just reset selected cols, and keep pool as is, but maybe gray out fully assigned non-key attributes?
-            // For simplicity, just reset selection.
             selectedCols = [];
             showFeedback(`✅ Jadual ${tableName} berjaya dibina mengikut syarat kebergantungan!`, true);
             addXP(30);
             renderWorkspaceM2();
+            checkMission2Progress();
+            if (gameState.m2Tables.length < 3) abeSay(abeNextStepM2(), 10000);
         }
 
-        function checkMission2() {
+        function checkMission2Progress() {
             if (gameState.m2Tables.length === 3) {
                 addXP(100);
                 addBadge("Surgeon 2NF");
                 document.getElementById('btn-next').classList.remove('hidden');
-                document.getElementById('btn-check').classList.add('hidden');
-                showFeedback("🎉 Tahniah! Pangkalan data kini mencapai tahap 2NF. Tiada lagi Kebergantungan Separa.", true);
                 
-                // Set data for Mission 3 based on this success
                 gameState.currentData.pelajarTable = gameState.m2Tables.find(t => t.columns.includes('NamaPelajar'));
                 
-                showSummaryModal(
-                    "Mencapai 2NF", 
-                    "Anda telah memecahkan jadual menggunakan <strong>Kunci Primer</strong>. Atribut yang hanya bergantung pada sebahagian kunci komposit (seperti Nama bergantung pada PelajarID sahaja) telah diasingkan. Ini menyelesaikan anomali insertion!",
-                    "Adakah kita kehilangan data asal dengan pecahan ini? (Jawapan: Tidak, kita masih boleh MENGGABUNGKAN jadual menggunakan Kunci Primer dan Kunci Asing)."
-                );
-            } else {
-                showFeedback("❌ Sila bina ketiga-tiga jadual yang diperlukan (Pelajar, Kursus, Pendaftaran) untuk melepasi Misi 2.", false);
+                setTimeout(() => {
+                    showSummaryModal(
+                        "Mencapai 2NF", 
+                        "Anda telah memecahkan jadual menggunakan <strong>Kunci Primer</strong>. Atribut yang hanya bergantung pada sebahagian kunci komposit telah diasingkan. Ini menyelesaikan anomali insertion!",
+                        "Adakah kita kehilangan data asal dengan pecahan ini? (Jawapan: Tidak, kita masih boleh MENGGABUNGKAN (JOIN) jadual menggunakan Kunci Primer dan Kunci Asing)."
+                    );
+                }, 1500);
             }
         }
 
         function setupMission3() {
             gameState.m3Tables = [];
-            // We use the Pelajar table from M2
-            const tPelajar = gameState.currentData.pelajarTable;
+            const tPelajar = gameState.currentData.pelajarTable || {
+                name: "Pelajar",
+                columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti"],
+                pk: ["PelajarID"],
+                rows: [ ["S01", "Ahmad Ali", "CS", "FTMK"], ["S02", "Siti Aminah", "IT", "FTMK"], ["S03", "John Doe", "CS", "FTMK"] ]
+            };
             
-            const ws = document.getElementById('interaction-workspace');
+            const ws = document.getElementById('interactive-workspace');
             ws.innerHTML = `
                 <div style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.1);">
-                    <strong>Ujian Integriti:</strong> Lihat Jadual Pelajar di bawah. Perhatikan bahawa <em>Fakulti FTMK</em> berulang untuk program <em>CS</em> dan <em>IT</em>. Fakulti sebenarnya bergantung pada Program, bukan PelajarID.
+                    <strong>Ujian Integriti:</strong> Lihat Jadual Pelajar di bawah. <em>Fakulti</em> bergantung pada <em>Program</em>, bukan <em>PelajarID</em> secara langsung.
                 </div>
                 <button class="success" onclick="extractTransitive()">Ekstrak Jadual Program (Hapus Kebergantungan Transitif)</button>
             `;
@@ -650,16 +1212,13 @@
         }
 
         function extractTransitive() {
-            const tPelajarOld = gameState.currentData.pelajarTable;
-            
+            if (gameState.m3Done) return;
+
             const tProgram = {
                 name: "Program",
                 columns: ["Program", "Fakulti"],
                 pk: ["Program"],
-                rows: [
-                    ["CS", "FTMK"],
-                    ["IT", "FTMK"]
-                ]
+                rows: [ ["CS", "FTMK"], ["IT", "FTMK"] ]
             };
 
             const tPelajarNew = {
@@ -667,11 +1226,7 @@
                 columns: ["PelajarID", "NamaPelajar", "Program"],
                 pk: ["PelajarID"],
                 fk: ["Program"],
-                rows: [
-                    ["S01", "Ahmad Ali", "CS"],
-                    ["S02", "Siti Aminah", "IT"],
-                    ["S03", "John Doe", "CS"]
-                ]
+                rows: [ ["S01", "Ahmad Ali", "CS"], ["S02", "Siti Aminah", "IT"], ["S03", "John Doe", "CS"] ]
             };
 
             gameState.m3Tables = [tPelajarNew, tProgram];
@@ -680,33 +1235,23 @@
             renderTable(tPelajarNew, 'tables-viewer');
             renderTable(tProgram, 'tables-viewer');
             
-            showFeedback("✅ Kebergantungan Transitif disingkirkan! Atribut Fakulti telah dipindahkan ke jadual Program. 'Program' di jadual Pelajar kini bertindak sebagai Kunci Asing (Foreign Key).", true);
+            showFeedback("✅ Kebergantungan Transitif disingkirkan! Atribut Fakulti dipindahkan ke jadual Program. 'Program' kini bertindak sebagai Kunci Asing (Foreign Key).", true);
             gameState.m3Done = true;
-        }
-
-        function checkMission3() {
-            if (gameState.m3Done) {
-                addXP(150);
-                addBadge("Master 3NF");
-                document.getElementById('btn-check').classList.add('hidden');
-                
+            
+            addXP(150);
+            addBadge("Master 3NF");
+            
+            setTimeout(() => {
                 showSummaryModal(
                     "Pangkalan Data Diselamatkan!", 
-                    "Anda telah mencapai Bentuk Normal Ketiga (3NF). Jadual anda kini bebas daripada anomali pengemaskinian dan pertindihan data yang tidak perlu. Semua atribut bukan kunci bergantung SEPENUHNYA dan LANGSUNG kepada Kunci Primer.",
+                    "Anda telah mencapai Bentuk Normal Ketiga (3NF). Jadual anda kini bebas daripada anomali pengemaskinian. Semua atribut bukan kunci bergantung SEPENUHNYA dan LANGSUNG kepada Kunci Primer.",
                     "Bagaimana Kunci Asing (Foreign Key) membantu mengekalkan integriti rujukan antara jadual yang dipecahkan?"
                 );
-            } else {
-                showFeedback("Sila laksanakan pengekstrakan jadual Program terlebih dahulu.", false);
-            }
-        }
-
-        function nextMission() {
-            if(gameState.mission < 3) {
-                loadMission(gameState.mission + 1);
-            }
+            }, 2000);
         }
 
         function showSummaryModal(title, text, reflection) {
+            hideAbeDialog();
             document.getElementById('summary-title').innerText = title;
             document.getElementById('summary-content').innerHTML = text;
             document.getElementById('reflection-question').innerText = reflection;
@@ -716,128 +1261,27 @@
         function closeSummaryModal() {
             document.getElementById('summary-modal').classList.remove('active');
             if (gameState.mission === 3 && gameState.m3Done) {
-                document.getElementById('interaction-workspace').innerHTML = `
+                const ws = document.getElementById('interactive-workspace');
+                ws.innerHTML = `
                     <div style="text-align:center; padding: 3rem;">
-                        <h2 style="color: var(--success); font-size: 2rem;">🏆 Misi Selesai Sepenuhnya!</h2>
-                        <p style="margin: 1rem 0;">Anda telah membuktikan kecekapan sebagai Jurutera Pangkalan Data.</p>
-                        <button onclick="location.reload()">Main Semula</button>
+                        <h2 style="color: var(--success); font-size: 2rem; margin-bottom:1rem;">🏆 Misi Selesai Sepenuhnya!</h2>
+                        <p style="margin-bottom: 2rem; font-size: 1.1rem;">Anda telah berjaya menyelamatkan pangkalan data dan mencapai 3NF. Jumlah XP: ${gameState.xp}</p>
+                        <button onclick="location.reload()">🔄 Main Semula</button>
                     </div>
                 `;
-                document.getElementById('tables-viewer').innerHTML = '';
             }
         }
 
-        const predictQuestions = {
-            1: {
-                question: "🤔 RAMAL DAHULU: Sebelum menguji anomali, cuba ramalkan. Jika kita membuang pendaftaran kursus (K03) untuk John Doe dari jadual ini, apakah masalah utama yang akan berlaku?",
-                options: [
-                    "Hanya KodKursus dan Gred dipadam, maklumat lain dikekalkan secara ajaib.",
-                    "Seluruh maklumat tentang John Doe akan hilang dari pangkalan data.",
-                    "Sistem akan memecahkan jadual secara automatik untuk menyelamatkannya.",
-                    "Ralat akan berlaku dan sistem menghalang pemadaman tersebut."
-                ],
-                answer: 1,
-                explanation: "Oleh kerana semua data diikat dalam satu baris (tidak dinormalisasi), memadam rekod kursus (K03) bermaksud keseluruhan baris tersebut dipadamkan. Ini menyebabkan kita kehilangan maklumat identiti John Doe! Inilah yang dipanggil <strong>Deletion Anomaly</strong>.<br><br><div style='text-align:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; font-family:monospace;'>S03 | John Doe | CS | FTMK | <del style='color:var(--danger)'>K03 | Pengaturcaraan C | B+</del> ➔ Keseluruhan baris terhapus!</div>"
-            },
-            2: {
-                question: "🤔 RAMAL DAHULU: Kunci Primer di sini ialah komposit (PelajarID + KodKursus). Atribut manakah yang mengalami Kebergantungan Separa (partial dependency) kerana ia hanya bergantung pada PelajarID?",
-                options: [
-                    "Gred",
-                    "NamaKursus dan Gred",
-                    "NamaPelajar, Program, dan Fakulti",
-                    "Tiada, semua atribut bergantung sepenuhnya pada kunci komposit"
-                ],
-                answer: 2,
-                explanation: "NamaPelajar, Program, dan Fakulti hanya menerangkan identiti pelajar tersebut, jadi ia hanya memerlukan <strong>PelajarID</strong> untuk dikenal pasti, bukan KodKursus. Ini adalah <strong>Kebergantungan Separa</strong> yang perlu diasingkan untuk mencapai 2NF. Gred pula bergantung kepada kedua-dua ID dan Kursus.<br><br><div style='background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; display:inline-block;'><span style='color:var(--highlight-pk)'>🔑 PelajarID</span> ➔ NamaPelajar, Program, Fakulti</div>"
-            },
-            3: {
-                question: "🤔 RAMAL DAHULU: Dalam Jadual Pelajar (2NF), Fakulti ditentukan oleh Program (Contoh: CS pasti di FTMK). Apakah jenis kebergantungan ini dan bentuk normal apa yang dilanggarnya?",
-                options: [
-                    "Kebergantungan Transitif; melanggar 3NF",
-                    "Kebergantungan Separa; melanggar 2NF",
-                    "Anomali Kemas Kini; jadual sudah 3NF",
-                    "Kebergantungan Fungsi Penuh; tiada pelanggaran"
-                ],
-                answer: 0,
-                explanation: "Apabila satu atribut bukan kunci (Fakulti) bergantung kepada atribut bukan kunci yang lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Fakulti bergantung pada Program, dan Program bergantung pada PelajarID. Mengasingkannya akan membawa pangkalan data kita ke tahap <strong>3NF</strong> yang lebih mantap.<br><br><div style='background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; display:inline-block;'><span style='color:var(--highlight-fk)'>Program (Bukan Kunci)</span> ➔ Fakulti <br><span style='font-size:0.85rem; color:var(--text-muted)'>(Kebergantungan Transitif)</span></div>"
-            }
-        };
-
-        function showPredictModal(level) {
-            const q = predictQuestions[level];
-            const html = `
-                <h2 style="color: var(--highlight-fd); margin-bottom: 1rem;">🔍 Cabaran Ramal Dahulu!</h2>
-                <p style="margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 500;">${q.question}</p>
-                <div id="predict-options" style="display:flex; flex-direction:column; gap:10px;">
-                    ${q.options.map((opt, i) => `
-                        <label class="predict-option" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); display: block; transition: all 0.2s;">
-                            <input type="radio" name="predict" value="${i}" style="margin-right: 10px; transform: scale(1.2);"> ${opt}
-                        </label>
-                    `).join('')}
-                </div>
-                <div id="predict-feedback" class="hidden feedback-msg" style="margin-top: 1rem;"></div>
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button id="btn-predict-check" onclick="checkPrediction(${level})">Semak Ramalan</button>
-                    <button id="btn-predict-continue" class="hidden success" onclick="closePredictModal(${level})">Teruskan Misi ➡️</button>
-                </div>
-            `;
-            document.getElementById('predict-content').innerHTML = html;
-            document.getElementById('predict-modal').classList.add('active');
-            
-            // Interaksi klik untuk label radio
-            document.querySelectorAll('.predict-option').forEach(el => {
-                el.addEventListener('click', function() {
-                    if (this.querySelector('input').disabled) return;
-                    document.querySelectorAll('.predict-option').forEach(e => e.style.borderColor = 'var(--border-color)');
-                    this.style.borderColor = 'var(--highlight-pk)';
-                });
-            });
-        }
-
-        function checkPrediction(level) {
-            const selected = document.querySelector('input[name="predict"]:checked');
-            const fb = document.getElementById('predict-feedback');
-            
-            if (!selected) {
-                fb.innerHTML = "Sila pilih satu ramalan dahulu untuk meneruskan.";
-                fb.className = "feedback-msg feedback-warning";
-                fb.classList.remove('hidden');
-                return;
-            }
-            
-            const val = parseInt(selected.value);
-            const q = predictQuestions[level];
-            
-            if (val === q.answer) {
-                fb.innerHTML = `<strong>🌟 Tepat sekali! Pemahaman yang sangat baik.</strong><br><br>${q.explanation}`;
-                fb.className = "feedback-msg feedback-success";
-            } else {
-                fb.innerHTML = `<strong>💡 Hampir tepat! Mari kita perhalusi konsep ini.</strong><br><br>${q.explanation}`;
-                fb.className = "feedback-msg feedback-warning";
-            }
-            fb.classList.remove('hidden');
-            
-            // Kunci pilihan selepas semakan dan serlahkan jawapan betul
-            document.querySelectorAll('input[name="predict"]').forEach(input => {
-                input.disabled = true;
-                const label = input.parentElement;
-                if (parseInt(input.value) === q.answer) {
-                    label.style.borderColor = "var(--success)";
-                    label.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
-                } else if (input.checked && val !== q.answer) {
-                    label.style.borderColor = "var(--warning)";
-                    label.style.opacity = "0.7";
-                }
-            });
-            
-            document.getElementById('btn-predict-check').classList.add('hidden');
-            document.getElementById('btn-predict-continue').classList.remove('hidden');
-        }
-
-        function closePredictModal(level) {
-            document.getElementById('predict-modal').classList.remove('active');
-            gameState.predictState[level] = true;
-        }
+        // Pastikan kandungan boleh di-scroll melepasi Abe Jamal (ruang bawah mengikut saiz bubble)
+        (function () {
+            const c = document.getElementById('abe-container');
+            const update = () => {
+                const h = c.classList.contains('hidden') ? 0 : c.offsetHeight;
+                document.body.style.paddingBottom = Math.max(80, h + 40) + 'px';
+            };
+            new ResizeObserver(update).observe(c);
+            update();
+        })();
     </script>
 </body>
 </html>
