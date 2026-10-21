@@ -206,6 +206,7 @@
         .feedback-msg { margin: 1rem 0; padding: 1rem; border-radius: 8px; font-weight: bold; }
         .feedback-success { background: rgba(16, 185, 129, 0.2); border-left: 4px solid var(--success); }
         .feedback-error { background: rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger); }
+        .feedback-warning { background: rgba(245, 158, 11, 0.2); border-left: 4px solid var(--warning); color: var(--text-main); }
 
         .hidden { display: none !important; }
         
@@ -286,6 +287,13 @@
         </div>
     </div>
 
+    <!-- Mod Ramal Dahulu (Predict First) -->
+    <div id="predict-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div id="predict-content"></div>
+        </div>
+    </div>
+
     <script>
         // Data Utama Permainan
         let gameState = {
@@ -293,7 +301,8 @@
             xp: 0,
             xrayActive: false,
             badges: [],
-            currentData: {}
+            currentData: {},
+            predictState: { 1: false, 2: false, 3: false }
         };
 
         // Jadual Tidak Dinormalisasi (0NF/1NF asas)
@@ -394,6 +403,10 @@
             document.getElementById('tables-viewer').innerHTML = '';
             
             m.setup();
+
+            if (!gameState.predictState[level]) {
+                setTimeout(() => showPredictModal(level), 300);
+            }
         }
 
         function checkMission() {
@@ -712,6 +725,118 @@
                 `;
                 document.getElementById('tables-viewer').innerHTML = '';
             }
+        }
+
+        const predictQuestions = {
+            1: {
+                question: "🤔 RAMAL DAHULU: Sebelum menguji anomali, cuba ramalkan. Jika kita membuang pendaftaran kursus (K03) untuk John Doe dari jadual ini, apakah masalah utama yang akan berlaku?",
+                options: [
+                    "Hanya KodKursus dan Gred dipadam, maklumat lain dikekalkan secara ajaib.",
+                    "Seluruh maklumat tentang John Doe akan hilang dari pangkalan data.",
+                    "Sistem akan memecahkan jadual secara automatik untuk menyelamatkannya.",
+                    "Ralat akan berlaku dan sistem menghalang pemadaman tersebut."
+                ],
+                answer: 1,
+                explanation: "Oleh kerana semua data diikat dalam satu baris (tidak dinormalisasi), memadam rekod kursus (K03) bermaksud keseluruhan baris tersebut dipadamkan. Ini menyebabkan kita kehilangan maklumat identiti John Doe! Inilah yang dipanggil <strong>Deletion Anomaly</strong>.<br><br><div style='text-align:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; font-family:monospace;'>S03 | John Doe | CS | FTMK | <del style='color:var(--danger)'>K03 | Pengaturcaraan C | B+</del> ➔ Keseluruhan baris terhapus!</div>"
+            },
+            2: {
+                question: "🤔 RAMAL DAHULU: Kunci Primer di sini ialah komposit (PelajarID + KodKursus). Atribut manakah yang mengalami Kebergantungan Separa (partial dependency) kerana ia hanya bergantung pada PelajarID?",
+                options: [
+                    "Gred",
+                    "NamaKursus dan Gred",
+                    "NamaPelajar, Program, dan Fakulti",
+                    "Tiada, semua atribut bergantung sepenuhnya pada kunci komposit"
+                ],
+                answer: 2,
+                explanation: "NamaPelajar, Program, dan Fakulti hanya menerangkan identiti pelajar tersebut, jadi ia hanya memerlukan <strong>PelajarID</strong> untuk dikenal pasti, bukan KodKursus. Ini adalah <strong>Kebergantungan Separa</strong> yang perlu diasingkan untuk mencapai 2NF. Gred pula bergantung kepada kedua-dua ID dan Kursus.<br><br><div style='background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; display:inline-block;'><span style='color:var(--highlight-pk)'>🔑 PelajarID</span> ➔ NamaPelajar, Program, Fakulti</div>"
+            },
+            3: {
+                question: "🤔 RAMAL DAHULU: Dalam Jadual Pelajar (2NF), Fakulti ditentukan oleh Program (Contoh: CS pasti di FTMK). Apakah jenis kebergantungan ini dan bentuk normal apa yang dilanggarnya?",
+                options: [
+                    "Kebergantungan Transitif; melanggar 3NF",
+                    "Kebergantungan Separa; melanggar 2NF",
+                    "Anomali Kemas Kini; jadual sudah 3NF",
+                    "Kebergantungan Fungsi Penuh; tiada pelanggaran"
+                ],
+                answer: 0,
+                explanation: "Apabila satu atribut bukan kunci (Fakulti) bergantung kepada atribut bukan kunci yang lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Fakulti bergantung pada Program, dan Program bergantung pada PelajarID. Mengasingkannya akan membawa pangkalan data kita ke tahap <strong>3NF</strong> yang lebih mantap.<br><br><div style='background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin-top:10px; display:inline-block;'><span style='color:var(--highlight-fk)'>Program (Bukan Kunci)</span> ➔ Fakulti <br><span style='font-size:0.85rem; color:var(--text-muted)'>(Kebergantungan Transitif)</span></div>"
+            }
+        };
+
+        function showPredictModal(level) {
+            const q = predictQuestions[level];
+            const html = `
+                <h2 style="color: var(--highlight-fd); margin-bottom: 1rem;">🔍 Cabaran Ramal Dahulu!</h2>
+                <p style="margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 500;">${q.question}</p>
+                <div id="predict-options" style="display:flex; flex-direction:column; gap:10px;">
+                    ${q.options.map((opt, i) => `
+                        <label class="predict-option" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-color); display: block; transition: all 0.2s;">
+                            <input type="radio" name="predict" value="${i}" style="margin-right: 10px; transform: scale(1.2);"> ${opt}
+                        </label>
+                    `).join('')}
+                </div>
+                <div id="predict-feedback" class="hidden feedback-msg" style="margin-top: 1rem;"></div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button id="btn-predict-check" onclick="checkPrediction(${level})">Semak Ramalan</button>
+                    <button id="btn-predict-continue" class="hidden success" onclick="closePredictModal(${level})">Teruskan Misi ➡️</button>
+                </div>
+            `;
+            document.getElementById('predict-content').innerHTML = html;
+            document.getElementById('predict-modal').classList.add('active');
+            
+            // Interaksi klik untuk label radio
+            document.querySelectorAll('.predict-option').forEach(el => {
+                el.addEventListener('click', function() {
+                    if (this.querySelector('input').disabled) return;
+                    document.querySelectorAll('.predict-option').forEach(e => e.style.borderColor = 'var(--border-color)');
+                    this.style.borderColor = 'var(--highlight-pk)';
+                });
+            });
+        }
+
+        function checkPrediction(level) {
+            const selected = document.querySelector('input[name="predict"]:checked');
+            const fb = document.getElementById('predict-feedback');
+            
+            if (!selected) {
+                fb.innerHTML = "Sila pilih satu ramalan dahulu untuk meneruskan.";
+                fb.className = "feedback-msg feedback-warning";
+                fb.classList.remove('hidden');
+                return;
+            }
+            
+            const val = parseInt(selected.value);
+            const q = predictQuestions[level];
+            
+            if (val === q.answer) {
+                fb.innerHTML = `<strong>🌟 Tepat sekali! Pemahaman yang sangat baik.</strong><br><br>${q.explanation}`;
+                fb.className = "feedback-msg feedback-success";
+            } else {
+                fb.innerHTML = `<strong>💡 Hampir tepat! Mari kita perhalusi konsep ini.</strong><br><br>${q.explanation}`;
+                fb.className = "feedback-msg feedback-warning";
+            }
+            fb.classList.remove('hidden');
+            
+            // Kunci pilihan selepas semakan dan serlahkan jawapan betul
+            document.querySelectorAll('input[name="predict"]').forEach(input => {
+                input.disabled = true;
+                const label = input.parentElement;
+                if (parseInt(input.value) === q.answer) {
+                    label.style.borderColor = "var(--success)";
+                    label.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                } else if (input.checked && val !== q.answer) {
+                    label.style.borderColor = "var(--warning)";
+                    label.style.opacity = "0.7";
+                }
+            });
+            
+            document.getElementById('btn-predict-check').classList.add('hidden');
+            document.getElementById('btn-predict-continue').classList.remove('hidden');
+        }
+
+        function closePredictModal(level) {
+            document.getElementById('predict-modal').classList.remove('active');
+            gameState.predictState[level] = true;
         }
     </script>
 </body>
