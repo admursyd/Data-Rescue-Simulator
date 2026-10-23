@@ -118,6 +118,7 @@
     <header>
         <div class="brand">💾 DATA RESCUE</div>
         <div class="dashboard">
+            <div class="stat-box">Tahap: <span id="difficulty-display" style="color: var(--highlight-fd);">Sederhana</span></div>
             <div class="stat-box">Misi: <span id="mission-level">Intro</span></div>
             <div class="stat-box"><span class="xp-text">⚡XP:</span> <span id="xp-score">0</span></div>
             <div id="badge-container" class="badge-list"></div>
@@ -135,6 +136,14 @@
                     Sistem rekod universiti sedang mengalami krisis integriti data! Jadual bercelaru, data berulang, dan maklumat pelajar berisiko hilang.
                     Misi anda adalah untuk menyiasat masalah, mencari kebergantungan fungsi, dan menormalisasikan pangkalan data daripada tahap 1NF ke 3NF.
                 </p>
+                <div style="margin: 1.5rem 0; display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <label style="font-weight: bold;">Pilih Tahap Mula:</label>
+                    <select id="start-difficulty" style="padding: 0.5rem; border-radius: 4px; background: var(--bg-dark); color: white; border: 1px solid var(--border-color);">
+                        <option value="0">Asas</option>
+                        <option value="1" selected>Sederhana</option>
+                        <option value="2">Mencabar</option>
+                    </select>
+                </div>
                 <button onclick="startGame()" class="success" style="font-size: 1.2rem; padding: 1rem 2rem; margin-top: 1rem;">🚀 Mulakan Misi Penyelamatan</button>
                 
                 <div id="ulang-kaji-btn-area"></div>
@@ -224,6 +233,7 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="summary-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="summary-title" style="color: var(--success); margin-bottom: 1rem; font-size: 1.8rem;">Misi Selesai!</h2>
@@ -233,6 +243,17 @@
                 <p id="reflection-question" style="color: var(--highlight-pk); margin-top: 0.5rem; font-size: 1.1rem;"></p>
             </div>
             <button class="success" onclick="closeSummaryModal()" style="font-size: 1.1rem; padding: 0.8rem 2rem;">Teruskan ➡️</button>
+        </div>
+    </div>
+
+    <div id="dda-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="dda-title" style="color: var(--highlight-pk); margin-bottom: 1rem; font-size: 1.8rem;">Tahap Adaptif</h2>
+            <div id="dda-content" style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-muted);"></div>
+            <div style="display: flex; gap: 1rem;">
+                <button class="success" id="btn-dda-confirm" onclick="confirmDDA()" style="font-size: 1.1rem; padding: 0.8rem 2rem; flex: 1;">Ya, Tukar Tahap</button>
+                <button class="outline" onclick="closeDDAModal()" style="font-size: 1.1rem; padding: 0.8rem 2rem; flex: 1;">Tidak, Kekal Tahap Ini</button>
+            </div>
         </div>
     </div>
 
@@ -257,48 +278,75 @@
             reviewIndex: 0
         };
 
+        // DDA Variables
+        const difficultyNames = ['Asas', 'Sederhana', 'Mencabar'];
+        let currentDifficultyIndex = 1;
+        let ddaStreak = 0; // Positive for correct, negative for incorrect
+        let pendingDDADirection = null;
+
         let currentLevel = 0;
         let observationTimer = null;
         let activeHintText = "";
         let selectedCols = [];
-        let currentDatasetIndex = 0;
+        let currentDatasetIndex = 0; // Now relative to difficulty
 
-        const datasets = [
-            { // Set 0: Original Computer Science Data
-                rawTable: {
-                    name: "Pendaftaran_Universiti (Jadual Asal - Set A)",
-                    columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
-                    rows: [
-                        ["S01", "Ahmad Ali", "CS", "FTMK", "K01", "Pangkalan Data", "A"],
-                        ["S01", "Ahmad Ali", "CS", "FTMK", "K02", "Rangkaian", "B"],
-                        ["S02", "Siti Aminah", "IT", "FTMK", "K01", "Pangkalan Data", "A-"],
-                        ["S03", "John Doe", "CS", "FTMK", "K03", "Pengaturcaraan C", "B+"]
-                    ]
-                },
-                abeData: {
-                    1: { id: "DS0_M1", topic: "1NF (Deletion Anomaly)", hint: "Sila perhatikan jadual rekod ini. Semua maklumat (pelajar dan kursus) disumbat sekali. Cuba fikir, apa akan berlaku jika kita memadamkan kursus K03?", question: "Berdasarkan jadual asal di atas, apakah kesan terburuk jika kita memadam rekod pendaftaran kursus (K03) untuk John Doe?", options: ["Hanya KodKursus dan Gred dipadam, maklumat peribadi dikekalkan secara automatik.", "Keseluruhan rekod terpadam, menyebabkan universiti hilang terus identiti John Doe (Deletion Anomaly).", "Sistem akan memindahkan maklumat pelajar ke jadual lain dengan sendirinya.", "Sistem akan menolak pemadaman tersebut kerana data berulang dilarang."], answer: 1, explanation: "Tepat sekali! Jika kita memadam kelas tersebut, maklumat peribadi pelajar turut ghaib secara tidak sengaja. Ini dipanggil <strong>Anomali Pemadaman (Deletion Anomaly)</strong> akibat struktur 1NF yang lemah." },
-                    2: { id: "DS0_M2", topic: "2NF (Partial Dependency)", hint: "Bagus! Kunci utama kita sekarang ialah gabungan komposit (PelajarID + KodKursus). Cuba cari atribut yang HANYA bergantung pada PelajarID, bukannya kedua-duanya.", question: "Atribut manakah yang menunjukkan Kebergantungan Separa (Partial Dependency) kerana ia hanya perlukan PelajarID untuk dikenal pasti?", options: ["Gred, kerana ia bergantung pada kedua-dua kunci tersebut.", "Semua atribut yang mempunyai data berulang automatik melanggar 2NF.", "NamaPelajar, Program, dan Fakulti.", "Tiada. Setiap penguraian jadual pasti menghasilkan struktur yang betul."], answer: 2, explanation: "Betul! NamaPelajar, Program dan Fakulti cuma perlukan PelajarID. Ini dinamakan <strong>Kebergantungan Separa (Partial Dependency)</strong> yang mesti dipisahkan untuk capai tahap 2NF!" },
-                    3: { id: "DS0_M3", topic: "3NF (Transitive Dependency)", hint: "Dalam Jadual Pelajar (2NF) ini, perhatikan hubungan Fakulti. Adakah Fakulti bergantung terus kepada PelajarID, atau bergantung kepada Program?", question: "Fakulti didapati sentiasa bergantung pada Program, bukan PelajarID. Apakah jenis masalah ini dan langkah seterusnya?", options: ["Ia adalah Kebergantungan Transitif. Kita mesti menguraikan Fakulti ke dalam jadual Program (3NF).", "Ia sudah mematuhi 3NF kerana setiap sel dalam jadual hanya mempunyai satu nilai atomik.", "Ia adalah Kebergantungan Separa yang sepatutnya diselesaikan pada langkah 2NF.", "Data berulang sentiasa dibenarkan dalam 3NF asalkan ada Kunci Asing."], answer: 0, explanation: "Hebat! Apabila atribut bukan kunci (Fakulti) bergantung pada atribut bukan kunci lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Kita mesti asingkannya untuk capai 3NF." }
+        // Datasets separated by difficulty
+        const datasets = {
+            asas: [
+                {
+                    rawTable: {
+                        name: "Pendaftaran_Asas (Tahap Asas)",
+                        columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+                        rows: [
+                            ["A01", "Abu", "IT", "FTMK", "K01", "Pangkalan Data", "A"],
+                            ["A02", "Siti", "CS", "FTMK", "K01", "Pangkalan Data", "B"],
+                            ["A03", "Raju", "SE", "FTMK", "K02", "Rangkaian", "A-"]
+                        ]
+                    },
+                    abeData: {
+                        1: { id: "ASAS_M1", topic: "1NF (Pengenalan)", hint: "Tahap asas! Cuba lihat jadual. Apa jadi kalau kita padam rekod kelas Rangkaian?", question: "Apakah yang akan hilang secara tak sengaja jika kursus K02 dipadam?", options: ["Identiti Raju terpadam sama.", "Sistem akan rosak.", "Gred sahaja dipadam.", "Tiada kesan."], answer: 0, explanation: "Ya! Deletion Anomaly memadam maklumat pelajar bersama kursus." },
+                        2: { id: "ASAS_M2", topic: "2NF (Asas)", hint: "Nama Pelajar cuma perlukan PelajarID untuk dikenal pasti.", question: "Manakah atribut yang hanya perlukan PelajarID?", options: ["Gred", "NamaPelajar", "KodKursus", "NamaKursus"], answer: 1, explanation: "Betul! NamaPelajar tidak bergantung pada KodKursus (Partial Dependency)." },
+                        3: { id: "ASAS_M3", topic: "3NF (Asas)", hint: "Fakulti bergantung pada Program. Kita mesti asingkannya.", question: "Apakah tindakan untuk selesaikan isu Fakulti?", options: ["Biarkan sahaja.", "Pindahkan Fakulti ke jadual Program.", "Padam Fakulti.", "Jadikan Fakulti Kunci Primer."], answer: 1, explanation: "Tepat! Ini adalah penyelesaian Kebergantungan Transitif." }
+                    }
                 }
-            },
-            { // Set 1: Alternative Engineering Data
-                rawTable: {
-                    name: "Pendaftaran_Universiti (Jadual Asal - Set B)",
-                    columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
-                    rows: [
-                        ["S11", "Sarah Lee", "AI", "FTSM", "K10", "Machine Learning", "A"],
-                        ["S11", "Sarah Lee", "AI", "FTSM", "K11", "Deep Learning", "A-"],
-                        ["S12", "Muthu", "SE", "FTSM", "K10", "Machine Learning", "B+"],
-                        ["S13", "Chong Wei", "AI", "FTSM", "K12", "Data Mining", "B"]
-                    ]
-                },
-                abeData: {
-                    1: { id: "DS1_M1", topic: "1NF (Deletion Anomaly)", hint: "Perhatikan jadual Set B ini. Apa akan berlaku jika kita terpaksa batalkan kelas Data Mining (K12) yang diambil oleh Chong Wei?", question: "Apakah akan berlaku jika rekod pendaftaran K12 untuk Chong Wei dipadam?", options: ["Maklumat peribadi Chong Wei (Nama, Program, Fakulti) akan terpadam sama (Deletion Anomaly).", "Chong Wei akan ditukarkan ke kursus lain secara automatik.", "Sistem menyimpan namanya di tempat lain jadi tiada masalah.", "Hanya rekod kelas dipadam tanpa menjejaskan identiti Chong Wei."], answer: 0, explanation: "Tepat! Kita akan hilang maklumat tentang Chong Wei sepenuhnya kerana jadual 1NF tidak memisahkan entiti dengan betul." },
-                    2: { id: "DS1_M2", topic: "2NF (Partial Dependency)", hint: "Kunci utama ialah gabungan komposit (PelajarID + KodKursus). Ada atribut yang hanya bergantung kepada PelajarID, bukan KodKursus. Bolehkah anda kenal pasti?", question: "Antara berikut, yang manakah mengalami Kebergantungan Separa (Partial Dependency)?", options: ["Gred sahaja.", "NamaPelajar, Program, dan Fakulti.", "Hanya NamaKursus.", "Semua atribut bergantung sepenuhnya kepada komposit key."], answer: 1, explanation: "Betul! NamaPelajar, Program dan Fakulti cuma perlukan PelajarID. Ini dipanggil <strong>Kebergantungan Separa</strong> dan mesti dipisahkan ke jadual baharu!" },
-                    3: { id: "DS1_M3", topic: "3NF (Transitive Dependency)", hint: "Lihat Jadual Pelajar. Adakah Fakulti 'FTSM' bergantung langsung pada PelajarID, atau sebenarnya ia mengikut Program (AI, SE)?", question: "Apakah masalah utama dengan mengekalkan Fakulti di dalam Jadual Pelajar?", options: ["Tiada masalah, ia dibenarkan dalam 3NF.", "Ia mencipta Kebergantungan Transitif kerana Fakulti bergantung kepada Program, bukan PelajarID.", "Ia melanggar syarat kunci komposit 2NF.", "Fakulti tidak sepatutnya wujud dalam pangkalan data."], answer: 1, explanation: "Betul! Fakulti bergantung kepada Program (atribut bukan kunci). Apabila atribut bukan kunci bergantung pada atribut bukan kunci yang lain, ia adalah <strong>Kebergantungan Transitif</strong> dan harus dipisahkan." }
+            ],
+            sederhana: [
+                { // Set 0: Original Computer Science Data
+                    rawTable: {
+                        name: "Pendaftaran_Universiti (Jadual Asal - Set A)",
+                        columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+                        rows: [
+                            ["S01", "Ahmad Ali", "CS", "FTMK", "K01", "Pangkalan Data", "A"],
+                            ["S01", "Ahmad Ali", "CS", "FTMK", "K02", "Rangkaian", "B"],
+                            ["S02", "Siti Aminah", "IT", "FTMK", "K01", "Pangkalan Data", "A-"],
+                            ["S03", "John Doe", "CS", "FTMK", "K03", "Pengaturcaraan C", "B+"]
+                        ]
+                    },
+                    abeData: {
+                        1: { id: "DS0_M1", topic: "1NF (Deletion Anomaly)", hint: "Sila perhatikan jadual rekod ini. Semua maklumat (pelajar dan kursus) disumbat sekali. Cuba fikir, apa akan berlaku jika kita memadamkan kursus K03?", question: "Berdasarkan jadual asal di atas, apakah kesan terburuk jika kita memadam rekod pendaftaran kursus (K03) untuk John Doe?", options: ["Hanya KodKursus dan Gred dipadam, maklumat peribadi dikekalkan secara automatik.", "Keseluruhan rekod terpadam, menyebabkan universiti hilang terus identiti John Doe (Deletion Anomaly).", "Sistem akan memindahkan maklumat pelajar ke jadual lain dengan sendirinya.", "Sistem akan menolak pemadaman tersebut kerana data berulang dilarang."], answer: 1, explanation: "Tepat sekali! Jika kita memadam kelas tersebut, maklumat peribadi pelajar turut ghaib secara tidak sengaja. Ini dipanggil <strong>Anomali Pemadaman (Deletion Anomaly)</strong> akibat struktur 1NF yang lemah." },
+                        2: { id: "DS0_M2", topic: "2NF (Partial Dependency)", hint: "Bagus! Kunci utama kita sekarang ialah gabungan komposit (PelajarID + KodKursus). Cuba cari atribut yang HANYA bergantung pada PelajarID, bukannya kedua-duanya.", question: "Atribut manakah yang menunjukkan Kebergantungan Separa (Partial Dependency) kerana ia hanya perlukan PelajarID untuk dikenal pasti?", options: ["Gred, kerana ia bergantung pada kedua-dua kunci tersebut.", "Semua atribut yang mempunyai data berulang automatik melanggar 2NF.", "NamaPelajar, Program, dan Fakulti.", "Tiada. Setiap penguraian jadual pasti menghasilkan struktur yang betul."], answer: 2, explanation: "Betul! NamaPelajar, Program dan Fakulti cuma perlukan PelajarID. Ini dinamakan <strong>Kebergantungan Separa (Partial Dependency)</strong> yang mesti dipisahkan untuk capai tahap 2NF!" },
+                        3: { id: "DS0_M3", topic: "3NF (Transitive Dependency)", hint: "Dalam Jadual Pelajar (2NF) ini, perhatikan hubungan Fakulti. Adakah Fakulti bergantung terus kepada PelajarID, atau bergantung kepada Program?", question: "Fakulti didapati sentiasa bergantung pada Program, bukan PelajarID. Apakah jenis masalah ini dan langkah seterusnya?", options: ["Ia adalah Kebergantungan Transitif. Kita mesti menguraikan Fakulti ke dalam jadual Program (3NF).", "Ia sudah mematuhi 3NF kerana setiap sel dalam jadual hanya mempunyai satu nilai atomik.", "Ia adalah Kebergantungan Separa yang sepatutnya diselesaikan pada langkah 2NF.", "Data berulang sentiasa dibenarkan dalam 3NF asalkan ada Kunci Asing."], answer: 0, explanation: "Hebat! Apabila atribut bukan kunci (Fakulti) bergantung pada atribut bukan kunci lain (Program), ia dipanggil <strong>Kebergantungan Transitif</strong>. Kita mesti asingkannya untuk capai 3NF." }
+                    }
                 }
-            }
-        ];
+            ],
+            mencabar: [
+                { // Set Challenging: Testing Misconceptions
+                    rawTable: {
+                        name: "Pendaftaran_Kompleks (Tahap Mencabar)",
+                        columns: ["PelajarID", "NamaPelajar", "Program", "Fakulti", "KodKursus", "NamaKursus", "Gred"],
+                        rows: [
+                            ["C99", "Zack", "CS", "FTMK", "K01, K02", "DB, Rangkaian", "A, B"],
+                            ["C98", "Miya", "SE", "FTMK", "K03", "Koding", "A-"]
+                        ]
+                    },
+                    abeData: {
+                        1: { id: "CHAL_M1", topic: "1NF (Nilai Berbilang)", hint: "Perhatikan rekod Zack. Kenapa ada koma dalam lajur kursus? Ramai yang fikir ia menjimatkan ruang.", question: "Mengapakah memasukkan pelbagai kursus (K01, K02) dalam satu sel melanggar sifat 1NF?", options: ["Ia dibenarkan jika jenis datanya sama.", "Kerana setiap sel mesti mempunyai nilai atomik (tunggal) untuk elak kerumitan carian dan kemas kini.", "Kerana ia menyebabkan Kebergantungan Transitif secara automatik.", "Hanya Kunci Primer tidak boleh ada koma, lajur lain boleh."], answer: 1, explanation: "Betul! Konsep 1NF mensyaratkan setiap sel mesti <strong>atomik (tunggal)</strong>. Nilai berbilang menyukarkan kemas kini dan melanggar 1NF." },
+                        2: { id: "CHAL_M2", topic: "2NF (Kebergantungan Penuh)", hint: "Walaupun kita sudah pisahkan koma tadi, perhatikan kunci komposit (PelajarID, KodKursus). Ada kesilapan fahaman bahawa semua atribut kini bergantung pada kedua-duanya.", question: "Salah faham lazim: 'Jika kita ada kunci komposit, bermakna semua lajur bergantung padanya secara penuh'. Mengapakah ini SALAH?", options: ["Kerana sesetengah atribut seperti NamaPelajar hanya bergantung sebahagian (PelajarID) - ini Kebergantungan Separa.", "Kerana kunci komposit tidak sah dalam 2NF.", "Kerana Gred bergantung pada Program.", "Semua kenyataan di atas adalah betul."], answer: 0, explanation: "Tepat! NamaPelajar hanya perlukan PelajarID, bukan KodKursus. Ini adalah <strong>Kebergantungan Separa</strong> yang perlu diasingkan." },
+                        3: { id: "CHAL_M3", topic: "3NF (Helah Transitif)", hint: "Dalam jadual pelajar, Fakulti masih ada. Ramai sangka selagi ia berkaitan dengan pelajar, ia boleh dikekalkan.", question: "Mengapakah mengekalkan 'Fakulti' dalam Jadual Pelajar adalah salah tanggapan yang melanggar 3NF?", options: ["Kerana Fakulti ialah Kunci Primer.", "Fakulti tidak bergantung langsung pada PelajarID, ia transitif melalui Program.", "Kerana Fakulti mengandungi nilai berbilang.", "Tiada salah tanggapan, ia patut kekal."], answer: 1, explanation: "Mantap! Fakulti bergantung kepada Program, bukan PelajarID secara langsung (Kebergantungan Transitif)." }
+                    }
+                }
+            ]
+        };
 
         const imbasKembaliData = {
             1: [
@@ -488,16 +536,31 @@
             initUlangKajiCheck();
         }
 
+        function getActiveDataset() {
+            const diffKey = Object.keys(datasets)[currentDifficultyIndex];
+            return datasets[diffKey][currentDatasetIndex];
+        }
+
         function changeDataset() {
-            currentDatasetIndex = (currentDatasetIndex + 1) % datasets.length;
+            const diffKey = Object.keys(datasets)[currentDifficultyIndex];
+            currentDatasetIndex = (currentDatasetIndex + 1) % datasets[diffKey].length;
             showCustomAlert("🔄 Set data telah ditukar secara rawak! Mengatur semula jadual...");
             resetCurrentMission();
         }
 
         function startGame() {
+            currentDifficultyIndex = parseInt(document.getElementById('start-difficulty').value);
+            updateDifficultyDisplay();
             document.getElementById('intro-panel').classList.add('hidden');
             document.getElementById('mission-area').classList.remove('hidden');
             loadMission(1);
+        }
+
+        function updateDifficultyDisplay() {
+            const name = difficultyNames[currentDifficultyIndex];
+            const el = document.getElementById('difficulty-display');
+            el.innerText = name;
+            el.style.color = currentDifficultyIndex === 0 ? 'var(--success)' : (currentDifficultyIndex === 1 ? 'var(--highlight-fd)' : 'var(--warning)');
         }
 
         function resetCurrentMission() {
@@ -513,7 +576,6 @@
             predictArea.classList.add('hidden'); predictArea.innerHTML = '';
             document.getElementById('ik-panel').classList.add('hidden');
             
-            // Remove Blur cleanly
             document.getElementById('tables-viewer').classList.remove('blur-mode');
             document.getElementById('interaction-workspace').classList.remove('blur-mode');
             document.getElementById('predict-area').classList.remove('blur-mode');
@@ -536,7 +598,8 @@
             ws.innerHTML = ''; ws.classList.add('hidden'); 
             document.getElementById('tables-viewer').innerHTML = '';
 
-            let rawTbl = datasets[currentDatasetIndex].rawTable;
+            let activeData = getActiveDataset();
+            let rawTbl = activeData.rawTable;
 
             if (level === 1) {
                 mTitle.innerText = "Misi 1: Database Disaster (Menemui Anomali)";
@@ -580,7 +643,8 @@
         }
 
         function showAbeHintPhase(level) {
-            let qData = datasets[currentDatasetIndex].abeData[level];
+            let activeData = getActiveDataset();
+            let qData = activeData.abeData[level];
             showAbeDialog(qData.hint, true, function() {
                 showPredictArea(level, qData);
             }, "👍 Saya Dah Sedia", true); 
@@ -626,11 +690,14 @@
             btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.className = 'success';
         }
 
+        // DDA Logic functions
         function checkPrediction(level) {
             const input = document.querySelector(`input[name="predict-${level}"]:checked`);
             if (!input) return;
             const val = parseInt(input.value);
-            const q = datasets[currentDatasetIndex].abeData[level];
+            
+            let activeData = getActiveDataset();
+            const q = activeData.abeData[level];
             gameState.questionState[level] = 'reviewed';
             
             document.querySelectorAll(`input[name="predict-${level}"]`).forEach(inp => {
@@ -641,25 +708,70 @@
             });
             
             document.getElementById('btn-predict-check').classList.add('hidden');
-            document.getElementById('btn-predict-continue').classList.remove('hidden');
             
             const fb = document.getElementById('predict-feedback-area');
             fb.classList.remove('hidden');
             
+            // Evaluate and trigger DDA internally
             if (val === q.answer) {
+                ddaStreak = (ddaStreak > 0) ? ddaStreak + 1 : 1;
                 fb.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; fb.style.borderLeft = "4px solid var(--success)";
                 fb.innerHTML = `<strong style="color: var(--success); font-size: 1.1rem;">Tepat Sekali!</strong><br>${q.explanation}`;
-                showAbeDialog("Bagus! Anda berjaya meramal dengan tepat. Tekan 'Teruskan' untuk langkah seterusnya.", false);
+                showAbeDialog("Bagus! Anda berjaya meramal dengan tepat.", false);
             } else {
+                ddaStreak = (ddaStreak < 0) ? ddaStreak - 1 : -1;
                 fb.style.backgroundColor = "rgba(245, 158, 11, 0.2)"; fb.style.borderLeft = "4px solid var(--warning)";
                 fb.innerHTML = `<strong style="color: var(--warning); font-size: 1.1rem;">Kurang Tepat.</strong> Jawapan: ${q.options[q.answer]}<br><br>${q.explanation}`;
                 showAbeDialog("Tidak mengapa, kita belajar dari kesilapan. Sistem akan simpan soalan ini untuk Ulang Kaji Adaptif nanti.", false);
-                
-                // Simpan untuk ulang kaji
-                saveWrongQ({
-                    id: q.id, topic: q.topic, type: 'Ramal Dahulu', text: q.question, options: q.options, answer: q.answer, explanation: q.explanation
-                });
+                saveWrongQ({ id: q.id, topic: q.topic, type: 'Ramal Dahulu', text: q.question, options: q.options, answer: q.answer, explanation: q.explanation });
             }
+
+            // Check DDA Trigger
+            if (checkDDATrigger()) {
+                // If DDA is triggered, the continue button logic is handled after modal closes
+            } else {
+                document.getElementById('btn-predict-continue').classList.remove('hidden');
+            }
+        }
+
+        function checkDDATrigger() {
+            if (ddaStreak === 2 && currentDifficultyIndex < 2) {
+                pendingDDADirection = 1; // Up
+                showDDAModal("Prestasi Cemerlang! 🌟", `Anda menjawab 2 soalan dengan tepat berturut-turut. Mahu naik taraf ke tahap <strong>${difficultyNames[currentDifficultyIndex + 1]}</strong> untuk cabaran lebih hebat?`);
+                return true;
+            } else if (ddaStreak === -2 && currentDifficultyIndex > 0) {
+                pendingDDADirection = -1; // Down
+                showDDAModal("Perlukan Bantuan? 💡", `Jangan risau jika tersalah 2 kali berturut-turut. Mahu bertukar ke tahap <strong>${difficultyNames[currentDifficultyIndex - 1]}</strong> untuk membina asas yang lebih kukuh?`);
+                return true;
+            }
+            return false;
+        }
+
+        function showDDAModal(title, content) {
+            document.getElementById('dda-title').innerText = title;
+            document.getElementById('dda-content').innerHTML = content;
+            document.getElementById('dda-modal').classList.add('active');
+        }
+
+        function closeDDAModal() {
+            document.getElementById('dda-modal').classList.remove('active');
+            pendingDDADirection = null;
+            ddaStreak = 0; // Reset streak so it doesn't prompt every time
+            document.getElementById('btn-predict-continue').classList.remove('hidden');
+        }
+
+        function confirmDDA() {
+            document.getElementById('dda-modal').classList.remove('active');
+            if (pendingDDADirection === 1) {
+                currentDifficultyIndex++;
+            } else if (pendingDDADirection === -1) {
+                currentDifficultyIndex--;
+            }
+            updateDifficultyDisplay();
+            ddaStreak = 0;
+            currentDatasetIndex = 0;
+            showCustomAlert("Tahap ditukar ke " + difficultyNames[currentDifficultyIndex]);
+            resetCurrentMission();
         }
 
         function continueAfterPrediction(level) {
@@ -704,8 +816,8 @@
 
         function setupMission1(rawTbl) {
             renderTable(rawTbl, 'tables-viewer');
-            let name1 = rawTbl.rows[0][1]; // Dynamic names from current dataset
-            let name2 = rawTbl.rows[3][1];
+            let name1 = rawTbl.rows[0][1];
+            let name2 = rawTbl.rows[rawTbl.rows.length - 1][1];
             document.getElementById('interaction-workspace').innerHTML = `
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
                     <button class="danger" onclick="triggerAnomaly('insert')">Uji: Tambah Pelajar Baharu (Tiada Kursus)</button>
@@ -718,7 +830,8 @@
         function triggerAnomaly(type, dynName = "") {
             if (!checkMissionCompletionLock()) return;
             hideFeedback();
-            let rawTbl = datasets[currentDatasetIndex].rawTable;
+            let activeData = getActiveDataset();
+            let rawTbl = activeData.rawTable;
             let tempTable = JSON.parse(JSON.stringify(rawTbl));
             
             if (type === 'insert') {
@@ -729,7 +842,7 @@
                 tempTable.rows[0][2] = "Biologi"; 
                 document.getElementById('tables-viewer').innerHTML = '';
                 renderTable(tempTable, 'tables-viewer');
-                showFeedback(`❌ <strong>Update Anomaly:</strong> Program ${dynName} diubah pada baris 1, tapi kekal lama pada baris 2.`, false);
+                showFeedback(`❌ <strong>Update Anomaly:</strong> Program ${dynName} diubah pada baris pertama, tetapi mungkin tidak sekata jika ada rekod lain.`, false);
                 gameState.m1State.tested |= 2;
                 showAbeDialog("Bahaya ni! Bila ubah satu tempat, tempat lain tertinggal. Data dah korup dan berulang. (Update Anomaly)", false);
             } else if (type === 'delete') {
@@ -794,7 +907,8 @@
                 return;
             }
 
-            let rawTbl = datasets[currentDatasetIndex].rawTable;
+            let activeData = getActiveDataset();
+            let rawTbl = activeData.rawTable;
             let newRows = [];
             rawTbl.rows.forEach(r => {
                 let newRow = [];
@@ -815,7 +929,8 @@
 
         function setupMission3() {
             let dynRows = [];
-            datasets[currentDatasetIndex].rawTable.rows.forEach(r => {
+            let activeData = getActiveDataset();
+            activeData.rawTable.rows.forEach(r => {
                 let dynRow = [r[0], r[1], r[2], r[3]];
                 if(!dynRows.some(er => JSON.stringify(er) === JSON.stringify(dynRow))) dynRows.push(dynRow);
             });
@@ -826,8 +941,6 @@
             gameState.currentData.pelajarTable = tPelajar;
             renderTable(tPelajar, 'tables-viewer');
             
-            let progVal1 = dynRows[0][2];
-            let fakVal = dynRows[0][3];
             document.getElementById('interaction-workspace').innerHTML = `
                 <div style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.1);">
                     Periksa Jadual Pelajar. Fakulti bergantung pada Program, bukan terus pada PelajarID. Ini Kebergantungan Transitif!
