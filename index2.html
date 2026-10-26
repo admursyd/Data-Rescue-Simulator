@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA RESCUE V2: Simulator Bersama Abe Jamal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
+            overflow-x: hidden;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Interactive Table Styling */
+        table { border-collapse: collapse; width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+        th, td { border: 1px solid rgba(51, 65, 85, 0.8); padding: 0.75rem; text-align: left; transition: all 0.2s; }
+        th { 
+            background-color: rgba(30, 41, 59, 0.95); color: #38bdf8; font-weight: 600; 
+            font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer; user-select: none;
+        }
+        th:hover { background-color: rgba(56, 189, 248, 0.2); }
+        th.selected { background-color: rgba(6, 182, 212, 0.4); border-color: #22d3ee; color: #fff; }
+        td { background-color: rgba(15, 23, 42, 0.8); }
+        td.anomaly { background-color: rgba(153, 27, 27, 0.4); border-color: #ef4444; animation: flashRed 2s infinite; }
+        
+        @keyframes flashRed {
+            0%, 100% { background-color: rgba(153, 27, 27, 0.4); }
+            50% { background-color: rgba(220, 38, 38, 0.6); }
+        }
+
+        /* System Indicators */
+        .meter-container { background: rgba(0,0,0,0.5); border-radius: 999px; height: 8px; width: 100%; overflow: hidden; margin-top: 4px; }
+        .meter-fill { height: 100%; transition: width 0.5s ease-in-out, background-color 0.5s ease; }
+
+        /* Animations */
+        .modal-enter { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .typing-cursor::after {
+            content: '▋'; display: inline-block; animation: blink 1s step-end infinite;
+            color: #38bdf8; margin-left: 2px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .avatar-glow {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            animation: pulseGlow 2s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+            to { box-shadow: 0 0 20px rgba(56, 189, 248, 0.7); }
+        }
+
+        #start-overlay { background: linear-gradient(135deg, #020617 0%, #0f172a 100%); z-index: 100; }
+        
+        /* Hint Dots */
+        .hint-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #334155; display: inline-block; margin-right: 4px; }
+        .hint-dot.active { background-color: #38bdf8; box-shadow: 0 0 5px #38bdf8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-2 md:p-4 relative">
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="text-center p-8 glass-panel rounded-2xl max-w-lg">
+            <i class="fas fa-database text-6xl text-cyan-500 mb-6 animate-bounce"></i>
+            <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 mb-4">DATA RESCUE V2</h1>
+            <p class="text-slate-300 mb-2 text-lg">Interactive Database Simulator (Phase 2)</p>
+            <p class="text-cyan-400 mb-8 text-sm font-mono">Observe → Investigate → Normalize</p>
+            <button onclick="startGame()" class="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-full font-bold text-lg transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105">
+                <i class="fas fa-power-off mr-2"></i> MULAKAN ENJIN SIMULASI
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-container" class="w-full max-w-[1400px] opacity-0 transition-opacity duration-1000 hidden flex-col items-center">
+        
+        <!-- Header -->
+        <header class="w-full flex flex-col md:flex-row justify-between items-center glass-panel rounded-2xl p-4 mb-4 border-t-4 border-cyan-500">
+            <div class="flex items-center gap-4 mb-4 md:mb-0">
+                <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center border border-cyan-500/50 shadow-inner">
+                    <i class="fas fa-server text-cyan-400 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wider text-white">DATA RESCUE</h1>
+                    <p class="text-cyan-400 text-xs font-mono tracking-widest uppercase" id="rank-display">Rank: Trainee Engineer</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- System Indicators -->
+                <div class="flex flex-col gap-2 min-w-[200px]">
+                    <div>
+                        <div class="flex justify-between text-[10px] font-mono uppercase text-slate-400">
+                            <span>Kestabilan Sistem</span><span id="ind-stability-text" class="text-red-400">30%</span>
+                        </div>
+                        <div class="meter-container"><div id="ind-stability" class="meter-fill bg-red-500" style="width: 30%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] font-mono uppercase text-slate-400">
+                            <span>Integriti Data</span><span id="ind-integrity-text" class="text-yellow-400">50%</span>
+                        </div>
+                        <div class="meter-container"><div id="ind-integrity" class="meter-fill bg-yellow-500" style="width: 50%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Audio Controls & XP -->
+                <div class="flex gap-3">
+                    <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                        <button onclick="toggleBGM()" id="btn-bgm" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Muzik Latar"><i class="fas fa-music"></i></button>
+                        <button onclick="toggleVoice()" id="btn-voice" class="w-10 h-10 rounded text-cyan-400 bg-slate-700 hover:bg-slate-600 transition" title="Suara Abe Jamal"><i class="fas fa-comment-dots"></i></button>
+                    </div>
+                    <div class="bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-700 flex flex-col items-center justify-center">
+                        <span class="text-slate-500 text-[10px] uppercase">XP</span> 
+                        <span id="score-display" class="text-green-400 font-bold text-lg">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="w-full grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Left Sidebar: Mission & AI Mentor -->
+            <aside class="flex flex-col gap-4 lg:col-span-3">
+                <!-- Abe Jamal Panel -->
+                <div class="glass-panel rounded-xl p-4 border border-slate-700 bg-gradient-to-b from-slate-900 to-slate-800 relative">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-cyan-400 flex items-center justify-center avatar-glow">
+                                <i class="fas fa-user-astronaut text-2xl text-cyan-300"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-cyan-400 font-bold text-sm">Abe Jamal</h4>
+                                <span class="text-slate-500 text-[10px] uppercase">AI Mentor</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hint Button -->
+                        <div class="flex flex-col items-end">
+                            <button onclick="requestHint()" class="text-xs bg-cyan-900/50 hover:bg-cyan-800 text-cyan-300 px-2 py-1 rounded border border-cyan-700 transition">
+                                <i class="fas fa-lightbulb text-yellow-400 mr-1"></i> Bantuan
+                            </button>
+                            <div class="mt-1">
+                                <span id="hint-dot-1" class="hint-dot"></span>
+                                <span id="hint-dot-2" class="hint-dot"></span>
+                                <span id="hint-dot-3" class="hint-dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950/80 p-3 rounded-lg border border-slate-700 min-h-[80px]">
+                        <p id="jamal-text" class="text-slate-200 text-sm leading-relaxed font-mono">Sistem bersedia. Menunggu arahan.</p>
+                    </div>
+                </div>
+
+                <!-- Mission Tracker -->
+                <div class="glass-panel rounded-xl p-4 border border-slate-800">
+                    <h2 class="text-xs uppercase tracking-widest text-slate-400 mb-3"><i class="fas fa-tasks mr-2"></i>Peringkat Simulasi</h2>
+                    <div class="flex flex-col gap-2">
+                        <button id="btn-misi-1" class="w-full text-left px-3 py-2 rounded-lg bg-cyan-600/20 border border-cyan-500/50 text-cyan-100 flex justify-between items-center text-sm transition">
+                            <span>1NF: Data Berulang</span><i id="icon-misi-1" class="fas fa-spinner fa-spin text-cyan-400"></i>
+                        </button>
+                        <button id="btn-misi-2" class="w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600 flex justify-between items-center text-sm transition">
+                            <span>2NF: Separa (Partial)</span><i id="icon-misi-2" class="fas fa-lock"></i>
+                        </button>
+                        <button id="btn-misi-3" class="w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600 flex justify-between items-center text-sm transition">
+                            <span>3NF: Transitif</span><i id="icon-misi-3" class="fas fa-lock"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Tools -->
+                <div class="glass-panel rounded-xl p-4 border border-red-900/50 bg-red-950/10">
+                    <h2 class="text-xs uppercase tracking-widest text-red-400 mb-3"><i class="fas fa-biohazard mr-2"></i>Ujian Bencana</h2>
+                    <p class="text-[10px] text-slate-400 mb-3">Uji struktur data anda untuk melihat jika terdapat Anomali (Masalah Kemas Kini/Pemadaman).</p>
+                    <button onclick="testAnomalies()" class="w-full py-2 bg-red-900/50 hover:bg-red-800/80 text-red-200 text-xs font-bold rounded border border-red-700 transition">
+                        JALANKAN UJIAN ANOMALI
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Center/Right Area: Schema Builder & Tables -->
+            <section class="lg:col-span-9 flex flex-col gap-4">
+                
+                <!-- Action Terminal -->
+                <div class="glass-panel rounded-xl p-4 border-t-2 border-emerald-500 shadow-lg flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <h3 class="text-sm font-bold text-emerald-400 mb-1"><i class="fas fa-terminal mr-2"></i> Schema Builder Terminal</h3>
+                        <p class="text-xs text-slate-300" id="mission-objective">Objektif: Kenal pasti dan baiki data berulang (repeating groups).</p>
+                    </div>
+                    <div class="flex gap-2" id="action-buttons">
+                        <button onclick="showCompareModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded shadow transition border border-slate-500">
+                            <i class="fas fa-code-branch mr-1"></i> Bandingkan
+                        </button>
+                        <!-- Dynamic Buttons Injected Here based on selection -->
+                        <button onclick="actionSplitData()" id="btn-split" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded shadow transition">Asingkan Data (Split)</button>
+                        <button onclick="actionExtractTable()" id="btn-extract" class="hidden px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded shadow transition">Pindah ke Jadual Baru</button>
+                        <button onclick="actionSetPK()" id="btn-pk" class="hidden px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold rounded shadow transition">Set PK</button>
+                        <button onclick="validateMission()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow-[0_0_15px_rgba(16,185,129,0.4)] transition">
+                            <i class="fas fa-check-double mr-1"></i> SAHKAN STRUKTUR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Learning Feedback Panel -->
+                <div id="feedback-panel" class="hidden glass-panel rounded-xl p-4 border-l-4 border-blue-500 bg-blue-900/20">
+                    <div class="flex items-start gap-4">
+                        <div id="feedback-icon" class="text-2xl mt-1 text-blue-400"><i class="fas fa-info-circle"></i></div>
+                        <div class="flex-1">
+                            <h4 id="feedback-title" class="text-blue-400 font-bold text-sm uppercase tracking-wide mb-1">Status Validasi</h4>
+                            <p id="feedback-desc" class="text-slate-300 text-xs mb-2 leading-relaxed">Sistem bersedia untuk memproses struktur pangkalan data.</p>
+                            <div class="bg-slate-900/80 p-2 rounded border border-slate-700 text-[11px] font-mono text-slate-400">
+                                <span class="text-cyan-500 font-bold">Peraturan:</span> <span id="feedback-rule">Tunggu Arahan</span><br>
+                                <span class="text-yellow-500 font-bold">Cadangan:</span> <span id="feedback-correction">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tables Workspace -->
+                <div class="glass-panel rounded-xl p-6 min-h-[400px] border border-slate-700 bg-slate-900/50" id="tables-workspace">
+                    <!-- Tables dynamically injected here -->
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- General Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl max-w-lg w-full mx-4 shadow-2xl modal-enter text-center relative overflow-hidden">
+            <div id="modal-icon" class="text-6xl mb-5"></div>
+            <h2 id="modal-title" class="text-2xl font-bold mb-3 tracking-wide"></h2>
+            <div id="modal-desc" class="text-slate-300 mb-8 text-sm leading-relaxed text-left bg-slate-800 p-4 rounded-lg"></div>
+            
+            <div id="modal-actions" class="flex justify-center gap-3">
+                <!-- Action Buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Compare Modal -->
+    <div id="compare-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden items-center justify-center z-50 transition-opacity p-4">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-6xl w-full h-[80vh] shadow-2xl modal-enter flex flex-col relative">
+            <button onclick="closeCompareModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
+            <h2 class="text-xl font-bold mb-4 tracking-wide text-cyan-400"><i class="fas fa-code-branch mr-2"></i>Perbandingan Skema (Before & After)</h2>
+            
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+                <!-- Original -->
+                <div class="flex flex-col bg-slate-800 rounded-lg border border-slate-700 p-4 overflow-y-auto">
+                    <h3 class="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider border-b border-slate-600 pb-2">Struktur Asal</h3>
+                    <div id="compare-original" class="flex-1 text-sm"></div>
+                </div>
+                <!-- Current -->
+                <div class="flex flex-col bg-slate-800/80 rounded-lg border border-cyan-700 p-4 overflow-y-auto relative shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                    <h3 class="text-sm font-bold text-cyan-400 mb-3 uppercase tracking-wider border-b border-cyan-800 pb-2">Struktur Semasa</h3>
+                    <div id="compare-current" class="flex-1 text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- System Data & State ---
+        const M_1NF = 1, M_2NF = 2, M_3NF = 3;
+        
+        let state = {
+            mission: M_1NF,
+            score: 0,
+            bgmPlaying: false,
+            voiceEnabled: true,
+            isGameStarted: false,
+            selectedCols: [],
+            tables: [],
+            originalTables: [], // For Before & After
+            hintLevel: 0,
+            completedMissions: [], // Track completed to prevent resubmitting for score
+            requiredCols: [] // Dynamically generated per mission to verify no data loss
+        };
+
+        // Mission Definitions with FDs, Hints, and exact Schema constraints
+        const missionData = {
+            1: {
+                objective: "1NF: Setiap sel mesti mempunyai nilai atomik. Cari data yang dipisahkan dengan koma dan asingkan ke baris baharu.",
+                tables: [{
+                    name: "Jadual_Pendaftaran",
+                    columns: [
+                        { name: "ID_Pelajar", isPK: false, isFK: false },
+                        { name: "Nama", isPK: false, isFK: false },
+                        { name: "Subjek", isPK: false, isFK: false }
+                    ],
+                    rows: [
+                        { "ID_Pelajar": "P01", "Nama": "Ali", "Subjek": "Matematik, Fizik" },
+                        { "ID_Pelajar": "P02", "Nama": "Siti", "Subjek": "Biologi" }
+                    ]
+                }],
+                indicators: { stability: 30, integrity: 40 },
+                fds: [], // No explicit FDs needed for 1NF atomicity check alone
+                hints: [
+                    "Boss, cuba tengok lajur 'Subjek'. Adakah setiap sel hanya ada satu maklumat sahaja?",
+                    "Dalam dataset ni, Ali mendaftar dua subjek serentak dalam satu sel. Ini melanggar 1NF (nilai atomik).",
+                    "Pilih lajur 'Subjek' dan tekan butang 'Asingkan Data (Split)' supaya setiap baris hanya ada satu subjek."
+                ]
+            },
+            2: {
+                objective: "2NF: Hapus Kebergantungan Separa. Kenal pasti atribut yang hanya bergantung pada sebahagian kunci komposit.",
+                tables: [{
+                    name: "Pendaftaran_Kursus",
+                    columns: [
+                        { name: "ID_Pelajar", isPK: true, isFK: false },
+                        { name: "Kod_Kursus", isPK: true, isFK: false },
+                        { name: "Nama_Pelajar", isPK: false, isFK: false },
+                        { name: "Gred", isPK: false, isFK: false }
+                    ],
+                    rows: [
+                        { "ID_Pelajar": "P01", "Kod_Kursus": "K101", "Nama_Pelajar": "Ali", "Gred": "A" },
+                        { "ID_Pelajar": "P01", "Kod_Kursus": "K102", "Nama_Pelajar": "Ali", "Gred": "B" },
+                        { "ID_Pelajar": "P02", "Kod_Kursus": "K101", "Nama_Pelajar": "Siti", "Gred": "A" }
+                    ]
+                }],
+                indicators: { stability: 60, integrity: 70 },
+                fds: [ 
+                    { determinant: ["ID_Pelajar"], dependent: ["Nama_Pelajar"] },
+                    { determinant: ["ID_Pelajar", "Kod_Kursus"], dependent: ["Gred"] }
+                ],
+                hints: [
+                    "Boss, Kunci Primer (PK) kita sekarang ialah kombinasi (ID_Pelajar + Kod_Kursus). Adakah 'Nama_Pelajar' bergantung kepada KEDUA-DUANYA?",
+                    "Semak dataset: 'Nama_Pelajar' sentiasa sama untuk 'ID_Pelajar' yang sama, tanpa mengira 'Kod_Kursus'. Ini dipanggil kebergantungan separa (Partial Dependency).",
+                    "Pilih ID_Pelajar dan Nama_Pelajar, kemudian 'Pindah ke Jadual Baru'. Pastikan anda set ID_Pelajar sebagai PK di jadual baru itu."
+                ]
+            },
+            3: {
+                objective: "3NF: Hapus Kebergantungan Transitif. Kenal pasti atribut bukan kunci yang bergantung pada atribut bukan kunci yang lain.",
+                tables: [{
+                    name: "Maklumat_Staf",
+                    columns: [
+                        { name: "ID_Staf", isPK: true, isFK: false },
+                        { name: "Nama_Staf", isPK: false, isFK: false },
+                        { name: "ID_Jabatan", isPK: false, isFK: false },
+                        { name: "Nama_Jabatan", isPK: false, isFK: false }
+                    ],
+                    rows: [
+                        { "ID_Staf": "S01", "Nama_Staf": "Abu", "ID_Jabatan": "J01", "Nama_Jabatan": "Kewangan" },
+                        { "ID_Staf": "S02", "Nama_Staf": "Bakar", "ID_Jabatan": "J01", "Nama_Jabatan": "Kewangan" },
+                        { "ID_Staf": "S03", "Nama_Staf": "Chong", "ID_Jabatan": "J02", "Nama_Jabatan": "IT" }
+                    ]
+                }],
+                indicators: { stability: 80, integrity: 85 },
+                fds: [ 
+                    { determinant: ["ID_Staf"], dependent: ["Nama_Staf", "ID_Jabatan"] },
+                    { determinant: ["ID_Jabatan"], dependent: ["Nama_Jabatan"] }
+                ],
+                hints: [
+                    "Boss, PK kita ialah ID_Staf. Tapi cuba periksa 'Nama_Jabatan'. Adakah ia ditentukan secara langsung oleh staf?",
+                    "'Nama_Jabatan' bergantung kepada 'ID_Jabatan', dan 'ID_Jabatan' bergantung kepada 'ID_Staf'. Ini adalah Kebergantungan Transitif.",
+                    "Pilih ID_Jabatan dan Nama_Jabatan, pindahkan ke Jadual Baru. Jangan lupa setkan ID_Jabatan sebagai PK untuk jadual tersebut!"
+                ]
+            }
+        };
+
+        // --- Audio System (Tone.js) ---
+        let bgmSynth, bgmLoop, sfxSynth;
+
+        function initAudio() {
+            bgmSynth = new Tone.PolySynth(Tone.AMSynth, { oscillator: { type: "sine" }, envelope: { attack: 2, decay: 0.1, sustain: 0.5, release: 4 } }).toDestination();
+            bgmSynth.volume.value = -25;
+            const reverb = new Tone.Reverb({ decay: 6, wet: 0.5 }).toDestination();
+            bgmSynth.connect(reverb);
+
+            const notes = ["E3", "A3", "C4", "G3"];
+            let step = 0;
+            bgmLoop = new Tone.Loop(time => {
+                bgmSynth.triggerAttackRelease(notes[step % notes.length], "2n", time);
+                step++;
+            }, "1m");
+            Tone.Transport.bpm.value = 60;
+
+            sfxSynth = new Tone.Synth().toDestination();
+            sfxSynth.volume.value = -15;
+        }
+
+        function toggleBGM() {
+            if (!state.isGameStarted) return;
+            const btn = document.getElementById('btn-bgm');
+            if (state.bgmPlaying) {
+                bgmLoop.stop();
+                btn.classList.replace('text-cyan-400', 'text-slate-400'); btn.classList.replace('bg-slate-700', 'bg-transparent');
+                state.bgmPlaying = false;
+            } else {
+                if (Tone.context.state !== 'running') Tone.context.resume();
+                Tone.Transport.start(); bgmLoop.start(0);
+                btn.classList.replace('text-slate-400', 'text-cyan-400'); btn.classList.replace('bg-transparent', 'bg-slate-700');
+                state.bgmPlaying = true;
+            }
+        }
+
+        function playSFX(type) {
+            if (!state.isGameStarted) return;
+            const now = Tone.now();
+            if (type === 'success') {
+                sfxSynth.triggerAttackRelease("C5", "16n", now);
+                sfxSynth.triggerAttackRelease("E5", "16n", now + 0.1);
+                sfxSynth.triggerAttackRelease("G5", "8n", now + 0.2);
+            } else if (type === 'error') {
+                sfxSynth.triggerAttackRelease("G3", "8n", now);
+                sfxSynth.triggerAttackRelease("C3", "4n", now + 0.15);
+            } else if (type === 'click' || type === 'select') {
+                sfxSynth.triggerAttackRelease("C4", "32n");
+            } else if (type === 'hint') {
+                sfxSynth.triggerAttackRelease("E4", "16n", now);
+                sfxSynth.triggerAttackRelease("A4", "8n", now + 0.1);
+            }
+        }
+
+        // --- Context-Aware Abe Jamal Voice System ---
+        let typingTimeout;
+        function toggleVoice() {
+            const btn = document.getElementById('btn-voice');
+            state.voiceEnabled = !state.voiceEnabled;
+            if (state.voiceEnabled) {
+                btn.classList.replace('text-slate-400', 'text-cyan-400'); btn.classList.replace('bg-transparent', 'bg-slate-700');
+                jamalSpeak("Suara diaktifkan. Jom selesaikan database ni!", "Suara diaktifkan boss.");
+            } else {
+                btn.classList.replace('text-cyan-400', 'text-slate-400'); btn.classList.replace('bg-slate-700', 'bg-transparent');
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function jamalSpeak(textForUI, textForVoice = null) {
+            const displayBox = document.getElementById('jamal-text');
+            clearTimeout(typingTimeout);
+            displayBox.innerHTML = '';
+            
+            let i = 0;
+            displayBox.classList.add('typing-cursor');
+            function typeWriter() {
+                if (i < textForUI.length) {
+                    displayBox.innerHTML = textForUI.substring(0, i+1);
+                    i++;
+                    typingTimeout = setTimeout(typeWriter, 20);
+                } else {
+                    displayBox.classList.remove('typing-cursor');
+                }
+            }
+            typeWriter();
+
+            if (state.voiceEnabled && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(textForVoice || textForUI);
+                const voices = window.speechSynthesis.getVoices();
+                const msVoice = voices.find(v => v.lang.includes('ms') || v.lang.includes('id'));
+                if (msVoice) utterance.voice = msVoice;
+                utterance.rate = 1.1; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- Progressive Hint System ---
+        function requestHint() {
+            const hData = missionData[state.mission].hints;
+            if (state.hintLevel < 3) {
+                playSFX('hint');
+                const hintText = hData[state.hintLevel];
+                state.hintLevel++;
+                
+                // Update UI dots
+                document.getElementById(`hint-dot-${state.hintLevel}`).classList.add('active');
+                
+                // Deduct points (Optional penalty, skipping for Tutorial M1 if needed, but applying globally here)
+                if(state.score >= 20) {
+                    state.score -= 20;
+                    document.getElementById('score-display').textContent = state.score;
+                }
+
+                jamalSpeak(`[BANTUAN TAHAP ${state.hintLevel}]: ${hintText}`);
+                showFeedbackPanel("INFO BANTUAN", hintText, "Gunakan klu yang diberikan untuk mengubah skema jadual.", "blue");
+            } else {
+                jamalSpeak("Boss, semua bantuan dah digunakan. Cuba aplikasikan klu yang terakhir tu.", "Semua bantuan dah diberi boss.");
+            }
+        }
+
+        function resetHints() {
+            state.hintLevel = 0;
+            for(let i=1; i<=3; i++) {
+                document.getElementById(`hint-dot-${i}`).classList.remove('active');
+            }
+        }
+
+        // --- Game Logic & Initialization ---
+        async function startGame() {
+            document.getElementById('start-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('start-overlay').style.display = 'none';
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('flex');
+                setTimeout(() => { document.getElementById('app-container').style.opacity = '1'; }, 50);
+            }, 500);
+
+            await Tone.start();
+            initAudio();
+            state.isGameStarted = true;
+            toggleBGM();
+            
+            loadMission(M_1NF);
+        }
+
+        function loadMission(missionId) {
+            state.mission = missionId;
+            state.selectedCols = [];
+            resetHints();
+            hideFeedbackPanel();
+
+            // Deep copy to prevent mutating original data
+            state.tables = JSON.parse(JSON.stringify(missionData[missionId].tables));
+            state.originalTables = JSON.parse(JSON.stringify(missionData[missionId].tables));
+            
+            // Extract required columns for lossless validation
+            state.requiredCols = [];
+            state.originalTables.forEach(t => {
+                t.columns.forEach(c => state.requiredCols.push(c.name));
+            });
+            
+            // Update UI
+            document.getElementById('mission-objective').textContent = missionData[missionId].objective;
+            
+            // Side bar
+            for(let i=1; i<=3; i++) {
+                const btn = document.getElementById(`btn-misi-${i}`);
+                const icon = document.getElementById(`icon-misi-${i}`);
+                if(i === missionId) {
+                    btn.className = "w-full text-left px-3 py-2 rounded-lg bg-cyan-600/20 border border-cyan-500/50 text-cyan-100 flex justify-between items-center text-sm shadow-[0_0_15px_rgba(6,182,212,0.15)]";
+                    icon.className = "fas fa-spinner fa-spin text-cyan-400";
+                } else if (state.completedMissions.includes(i)) {
+                    btn.className = "w-full text-left px-3 py-2 rounded-lg bg-emerald-900/30 border border-emerald-700/50 text-emerald-400 flex justify-between items-center text-sm";
+                    icon.className = "fas fa-check-circle text-emerald-400";
+                } else {
+                    btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-600 flex justify-between items-center text-sm opacity-60";
+                    icon.className = "fas fa-lock text-slate-600";
+                }
+            }
+
+            updateIndicators(missionData[missionId].indicators.stability, missionData[missionId].indicators.integrity);
+            renderTables();
+
+            if (missionId === 1) {
+                jamalSpeak("Misi 1 bermula. Boss nampak tak data subjek Ali tu? Ada koma kan? Tu maksudnya bukan atomik. Klik pada lajur Subjek dan pilih 'Asingkan Data'.", "Misi satu. Cari data tak atomik dan asingkan.");
+            } else if (missionId === 2) {
+                jamalSpeak("Bagus. 1NF dah lepas. Sekarang 2NF. Nama_Pelajar bergantung pada ID_Pelajar je. Tak payah Kod_Kursus. Pisahkan jadual boss.");
+            } else if (missionId === 3) {
+                jamalSpeak("Misi terakhir, 3NF! Hapus kebergantungan transitif. Nama Jabatan tak patut duduk sekali dengan Staf. Pisahkan dia boss!");
+            }
+        }
+
+        function updateIndicators(stab, integ) {
+            document.getElementById('ind-stability').style.width = `${stab}%`;
+            document.getElementById('ind-stability-text').textContent = `${stab}%`;
+            document.getElementById('ind-stability').className = `meter-fill ${stab > 70 ? 'bg-emerald-500' : stab > 40 ? 'bg-yellow-500' : 'bg-red-500'}`;
+
+            document.getElementById('ind-integrity').style.width = `${integ}%`;
+            document.getElementById('ind-integrity-text').textContent = `${integ}%`;
+            document.getElementById('ind-integrity').className = `meter-fill ${integ > 70 ? 'bg-emerald-500' : integ > 40 ? 'bg-yellow-500' : 'bg-red-500'}`;
+        }
+
+        function renderTables() {
+            const workspace = document.getElementById('tables-workspace');
+            workspace.innerHTML = '';
+
+            state.tables.forEach((table, tIdx) => {
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = "mb-6 bg-slate-900 rounded-lg overflow-hidden border border-slate-700 shadow-md";
+                
+                let html = `<div class="bg-slate-800 px-4 py-2 text-sm font-bold text-slate-300 border-b border-slate-700 flex justify-between">
+                                <span><i class="fas fa-table mr-2 text-cyan-500"></i>${table.name}</span>
+                            </div>
+                            <div class="overflow-x-auto p-4"><table class="w-full text-sm"><thead><tr>`;
+                
+                table.columns.forEach((col) => {
+                    const isSelected = state.selectedCols.some(c => c.tableIdx === tIdx && c.name === col.name);
+                    let icons = '';
+                    if(col.isPK) icons += '<i class="fas fa-key text-yellow-400 mr-1" title="Primary Key"></i>';
+                    if(col.isFK) icons += '<i class="fas fa-link text-purple-400 mr-1" title="Foreign Key"></i>';
+                    
+                    html += `<th class="${isSelected ? 'selected' : ''}" onclick="toggleColumnSelection(${tIdx}, '${col.name}')">
+                                ${icons}${col.name}
+                             </th>`;
+                });
+                
+                html += `</tr></thead><tbody>`;
+                
+                table.rows.forEach(row => {
+                    html += `<tr>`;
+                    table.columns.forEach(col => {
+                        let val = row[col.name] || '';
+                        // Highlight repeating groups visually
+                        let isAnomaly = (val.toString().includes(','));
+                        html += `<td class="${isAnomaly ? 'anomaly' : ''}">${val}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+
+                html += `</tbody></table></div>`;
+                tableWrapper.innerHTML = html;
+                workspace.appendChild(tableWrapper);
+            });
+
+            updateActionButtons();
+        }
+
+        function toggleColumnSelection(tableIdx, colName) {
+            playSFX('select');
+            const existsIdx = state.selectedCols.findIndex(c => c.tableIdx === tableIdx && c.name === colName);
+            
+            // Only allow selecting from ONE table at a time
+            if (state.selectedCols.length > 0 && state.selectedCols[0].tableIdx !== tableIdx) {
+                state.selectedCols = []; 
+            }
+
+            if (existsIdx > -1) {
+                state.selectedCols.splice(existsIdx, 1);
+            } else {
+                state.selectedCols.push({tableIdx, name: colName});
+            }
+            renderTables();
+        }
+
+        function updateActionButtons() {
+            const btnSplit = document.getElementById('btn-split');
+            const btnExtract = document.getElementById('btn-extract');
+            const btnPK = document.getElementById('btn-pk');
+            
+            btnSplit.classList.add('hidden');
+            btnExtract.classList.add('hidden');
+            btnPK.classList.add('hidden');
+
+            if (state.selectedCols.length === 1) {
+                btnSplit.classList.remove('hidden');
+                btnPK.classList.remove('hidden');
+            } else if (state.selectedCols.length > 1) {
+                btnExtract.classList.remove('hidden');
+                btnPK.classList.remove('hidden');
+            }
+        }
+
+        // --- Action Terminal Manipulations ---
+        function actionSplitData() {
+            if(state.selectedCols.length !== 1) return;
+            const tIdx = state.selectedCols[0].tableIdx;
+            const colName = state.selectedCols[0].name;
+            const table = state.tables[tIdx];
+
+            let newRows = [];
+            let changed = false;
+
+            table.rows.forEach(row => {
+                let val = row[colName];
+                if (val && val.toString().includes(',')) {
+                    changed = true;
+                    let parts = val.split(',').map(s => s.trim());
+                    parts.forEach(p => {
+                        let newRow = {...row};
+                        newRow[colName] = p;
+                        newRows.push(newRow);
+                    });
+                } else {
+                    newRows.push(row);
+                }
+            });
+
+            if (changed) {
+                playSFX('click');
+                table.rows = newRows;
+                state.selectedCols = [];
+                jamalSpeak("Cantik! Data dipisahkan. Cuba jalankan validasi sekarang.", "Cantik! Data berjaya dipisahkan.");
+                renderTables();
+            } else {
+                playSFX('error');
+                jamalSpeak("Lajur tu takde data berulang (koma) boss. Cuba cari yang lain.");
+            }
+        }
+
+        function actionExtractTable() {
+            if(state.selectedCols.length < 2) return;
+            const tIdx = state.selectedCols[0].tableIdx;
+            const sourceTable = state.tables[tIdx];
+            const colNamesToMove = state.selectedCols.map(c => c.name);
+            
+            playSFX('click');
+
+            let newTable = {
+                name: `Jadual_${colNamesToMove[0]}_B${state.tables.length}`,
+                columns: [],
+                rows: []
+            };
+
+            // Setup columns
+            colNamesToMove.forEach(colName => {
+                let oldCol = sourceTable.columns.find(c => c.name === colName);
+                newTable.columns.push({...oldCol, isPK: false, isFK: false}); 
+            });
+
+            // Extract unique rows
+            let uniqueCheck = new Set();
+            sourceTable.rows.forEach(row => {
+                let newRow = {};
+                colNamesToMove.forEach(colName => { newRow[colName] = row[colName]; });
+                let rowString = JSON.stringify(newRow);
+                if (!uniqueCheck.has(rowString)) {
+                    uniqueCheck.add(rowString);
+                    newTable.rows.push(newRow);
+                }
+            });
+
+            // Remove non-key selected columns from source table
+            sourceTable.columns = sourceTable.columns.filter(c => {
+                if (c.isPK) return true; // Keep PK in source to act as FK/composite
+                if (colNamesToMove.includes(c.name)) return false; 
+                return true;
+            });
+
+            // Update rows in source table
+            let remainingCols = sourceTable.columns.map(c => c.name);
+            let finalSourceRows = [];
+            let sourceUniqueCheck = new Set();
+            
+            sourceTable.rows.forEach(row => {
+                let newRow = {};
+                remainingCols.forEach(col => { newRow[col] = row[col]; });
+                let rowStr = JSON.stringify(newRow);
+                if(!sourceUniqueCheck.has(rowStr)) {
+                    sourceUniqueCheck.add(rowStr);
+                    finalSourceRows.push(newRow);
+                }
+            });
+            sourceTable.rows = finalSourceRows;
+
+            state.tables.push(newTable);
+            state.selectedCols = [];
+            
+            jamalSpeak("Jadual diasingkan! Awas boss, jangan lupa set Kunci Primer (PK) kat jadual baru tu.");
+            renderTables();
+        }
+
+        function actionSetPK() {
+            if(state.selectedCols.length === 0) return;
+            playSFX('click');
+            
+            const tIdx = state.selectedCols[0].tableIdx;
+            const table = state.tables[tIdx];
+
+            state.selectedCols.forEach(sel => {
+                let col = table.columns.find(c => c.name === sel.name);
+                if(col) col.isPK = !col.isPK;
+            });
+
+            linkForeignKeys();
+            state.selectedCols = [];
+            renderTables();
+        }
+
+        function linkForeignKeys() {
+            let allPKs = [];
+            state.tables.forEach(t => {
+                t.columns.forEach(c => { if (c.isPK) allPKs.push(c.name); });
+            });
+
+            state.tables.forEach(t => {
+                t.columns.forEach(c => {
+                    if (!c.isPK && allPKs.includes(c.name)) {
+                        c.isFK = true;
+                    } else if (!allPKs.includes(c.name)) {
+                        c.isFK = false;
+                    }
+                });
+            });
+        }
+
+        // --- Phase 2: Functional Dependency Validator ---
+        function runValidationEngine() {
+            const currentTables = state.tables;
+            const originalCols = state.requiredCols;
+            const fds = missionData[state.mission].fds;
+            
+            let allCurrentCols = [];
+            currentTables.forEach(t => { t.columns.forEach(c => allCurrentCols.push(c.name)); });
+
+            // 1. DATA LOSS RISK: Check if any original column is missing entirely
+            for(let col of originalCols) {
+                if(!allCurrentCols.includes(col)) {
+                    return {
+                        passed: false,
+                        code: "DATA_LOSS_RISK",
+                        message: `Atribut asal '${col}' telah hilang dari pangkalan data!`,
+                        rule: "Lossless Decomposition (Penguraian Tanpa Hilang Maklumat)",
+                        correction: "Pastikan semua maklumat asal dipindahkan ke jadual baharu tanpa dipadam."
+                    };
+                }
+            }
+
+            // 2. ATOMICITY VIOLATION (1NF)
+            let hasCommas = currentTables.some(t => t.rows.some(r => Object.values(r).some(v => v && v.toString().includes(','))));
+            if (hasCommas) {
+                return {
+                    passed: false,
+                    code: "ATOMICITY_VIOLATION",
+                    message: "Terdapat data tidak atomik (kumpulan berulang/koma) di dalam jadual.",
+                    rule: "Bentuk Normal Pertama (1NF)",
+                    correction: "Asingkan sel yang mengandungi pelbagai nilai kepada baris berasingan."
+                };
+            }
+            if (state.mission === 1) return { passed: true, code: "VALIDATION_SUCCESS" }; // 1NF passes
+
+            // 3. INVALID PRIMARY KEY
+            for(let t of currentTables) {
+                let pks = t.columns.filter(c => c.isPK);
+                if(pks.length === 0) {
+                    return {
+                        passed: false,
+                        code: "INVALID_PRIMARY_KEY",
+                        message: `Jadual '${t.name}' tidak mempunyai Kunci Primer (PK).`,
+                        rule: "Integriti Entiti",
+                        correction: "Setkan sekurang-kurangnya satu atribut sebagai PK unik untuk jadual tersebut."
+                    };
+                }
+            }
+
+            // Check relationships explicitly defined by FDs
+            for(let t of currentTables) {
+                let tableCols = t.columns.map(c => c.name);
+                let tablePKs = t.columns.filter(c => c.isPK).map(c => c.name);
+
+                for(let fd of fds) {
+                    let det = fd.determinant;
+                    let dep = fd.dependent;
+
+                    // If table contains at least one dependent from this FD and its determinants
+                    let hasDet = det.every(d => tableCols.includes(d));
+                    let hasDep = dep.some(d => tableCols.includes(d));
+
+                    if(hasDet && hasDep) {
+                        
+                        // 4. PARTIAL DEPENDENCY (2NF Violation)
+                        // If the table's PK is larger than the FD determinant, the dependent relies on a PARTIAL key.
+                        let isPartial = false;
+                        if(tablePKs.length > det.length) {
+                            // Check if determinants are a strict subset of the PKs
+                            let detIsSubsetOfPK = det.every(d => tablePKs.includes(d));
+                            if (detIsSubsetOfPK) isPartial = true;
+                        }
+
+                        if(isPartial && state.mission >= 2) {
+                            return {
+                                passed: false,
+                                code: "PARTIAL_DEPENDENCY",
+                                message: `Atribut [${dep.join(',')}] hanya bergantung pada [${det.join(',')}], bukan keseluruhan PK [${tablePKs.join(',')}].`,
+                                rule: "Bentuk Normal Kedua (2NF)",
+                                correction: `Pisahkan [${dep.join(',')}] bersama [${det.join(',')}] ke dalam jadual berasingan.`
+                            };
+                        }
+
+                        // 5. TRANSITIVE DEPENDENCY (3NF Violation)
+                        // If determinant is NOT the primary key (or candidate key) of the table.
+                        let isTransitive = false;
+                        // Sort and compare arrays to see if determinant is exactly the PK
+                        let sortedDet = [...det].sort();
+                        let sortedPKs = [...tablePKs].sort();
+                        let isExactPK = sortedDet.length === sortedPKs.length && sortedDet.every((v, i) => v === sortedPKs[i]);
+                        
+                        if(!isExactPK && state.mission >= 3) {
+                             return {
+                                passed: false,
+                                code: "TRANSITIVE_DEPENDENCY",
+                                message: `Atribut [${dep.join(',')}] bergantung pada atribut bukan kunci [${det.join(',')}].`,
+                                rule: "Bentuk Normal Ketiga (3NF)",
+                                correction: `Jadikan [${det.join(',')}] sebagai Kunci Primer di dalam jadual baharu untuk [${dep.join(',')}].`
+                            };
+                        }
+                    }
+                }
+            }
+
+            // If we are at 2NF mission and only have 1 table, decomposition hasn't happened.
+            if(state.mission >= 2 && currentTables.length < 2) {
+                return {
+                    passed: false,
+                    code: "MISSING_DECOMPOSITION",
+                    message: "Anda perlu memisahkan jadual untuk menghapuskan anomali.",
+                    rule: "Normalization Decomposition",
+                    correction: "Pilih atribut yang bermasalah dan 'Pindah ke Jadual Baru'."
+                };
+            }
+
+            return { passed: true, code: "VALIDATION_SUCCESS" };
+        }
+
+        function validateMission() {
+            const validation = runValidationEngine();
+            
+            if (validation.passed) {
+                playSFX('success');
+                updateIndicators(100, 100);
+                
+                // Score integration (prevent dupes)
+                if (!state.completedMissions.includes(state.mission)) {
+                    state.completedMissions.push(state.mission);
+                    state.score += (state.mission * 500); 
+                    document.getElementById('score-display').textContent = state.score;
+                    updateRank();
+                }
+                
+                showFeedbackPanel("PENGESAHAN BERJAYA", "Struktur memenuhi syarat.", "Semua rekod asal terpelihara dan anomali diselesaikan.", "green");
+                jamalSpeak("Terbaik, boss! Struktur ini memenuhi syarat normalisasi yang kita tetapkan.", "Terbaik boss. Semua lulus.");
+                
+                let title = state.mission === 3 ? "SISTEM DISELAMATKAN!" : `MISI ${state.mission} SELESAI`;
+                let actionFn = state.mission === 3 ? "location.reload()" : "nextMission()";
+                let actionTxt = state.mission === 3 ? "Tamat Operasi" : "Teruskan ke Misi Seterusnya";
+                
+                showModal(true, title, "Pangkalan data telah dioptimumkan berdasarkan peraturan penskalaan.", actionTxt, actionFn);
+            } else {
+                playSFX('error');
+                updateIndicators(30, 40);
+                
+                showFeedbackPanel(validation.code, validation.message, validation.correction, "red", validation.rule);
+                
+                // Context-Aware Abe Jamal mapping
+                let dialog = "Ada ralat sikit boss. Cuba check terminal.";
+                if(validation.code === "DATA_LOSS_RISK") dialog = "Bahaya boss! Ada lajur asal yang hilang. Data tak boleh dikorbankan.";
+                if(validation.code === "ATOMICITY_VIOLATION") dialog = "Masih ada data berulang tu boss. Asingkan dulu.";
+                if(validation.code === "INVALID_PRIMARY_KEY") dialog = "Jadual baru mesti ada Kunci Primer (PK) boss. Kalau tak, data tak unik.";
+                if(validation.code === "PARTIAL_DEPENDENCY") dialog = "Belum tepat. Nama pelajar tu bergantung pada ID dia je, bukan Kod Kursus sekali.";
+                if(validation.code === "TRANSITIVE_DEPENDENCY") dialog = "Hampir tepat. Tapi Jabatan tak patut menumpang dalam jadual Staf.";
+                
+                jamalSpeak(dialog, dialog);
+            }
+        }
+
+        // --- Feedback Panel Rendering ---
+        function showFeedbackPanel(code, message, correction, colorType, rule = "-") {
+            const panel = document.getElementById('feedback-panel');
+            panel.classList.remove('hidden', 'border-blue-500', 'bg-blue-900/20', 'border-red-500', 'bg-red-900/20', 'border-green-500', 'bg-green-900/20');
+            
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            
+            if(colorType === 'red') {
+                panel.classList.add('border-red-500', 'bg-red-900/20');
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500"></i>';
+                title.className = "text-red-400 font-bold text-sm uppercase tracking-wide mb-1";
+            } else if (colorType === 'green') {
+                panel.classList.add('border-emerald-500', 'bg-emerald-900/20');
+                icon.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i>';
+                title.className = "text-emerald-400 font-bold text-sm uppercase tracking-wide mb-1";
+            } else {
+                panel.classList.add('border-blue-500', 'bg-blue-900/20');
+                icon.innerHTML = '<i class="fas fa-info-circle text-blue-400"></i>';
+                title.className = "text-blue-400 font-bold text-sm uppercase tracking-wide mb-1";
+            }
+
+            title.textContent = code.replace(/_/g, ' ');
+            document.getElementById('feedback-desc').textContent = message;
+            document.getElementById('feedback-rule').textContent = rule;
+            document.getElementById('feedback-correction').textContent = correction;
+        }
+
+        function hideFeedbackPanel() {
+            document.getElementById('feedback-panel').classList.add('hidden');
+        }
+
+
+        // --- Disaster / Anomaly Testing ---
+        function testAnomalies() {
+            if (state.mission === 1) {
+                let validation = runValidationEngine();
+                if(validation.code === "ATOMICITY_VIOLATION") {
+                    playSFX('error'); updateIndicators(10, 20);
+                    showModal(false, "Ujian Anomali: Carian Gagal", "Sistem cuba mencari pelajar yang mengambil Fizik, tetapi gagal kerana data tergabung (koma). Integriti carian terjejas.", "Tutup", "closeModal()");
+                } else {
+                    jamalSpeak("Data stabil boss. Carian pantas dan tiada masalah atomik.");
+                }
+            } 
+            else if (state.mission === 2) {
+                let validation = runValidationEngine();
+                if (validation.code === "PARTIAL_DEPENDENCY" || validation.code === "MISSING_DECOMPOSITION") {
+                    playSFX('error'); updateIndicators(20, 30);
+                    showModal(false, "Ujian Anomali: UPDATE ANOMALY", "Sistem cuba menukar nama 'Ali' kepada 'Ali Z.'<br><br>Ralat: Sistem terpaksa mengemas kini baris secara berulang. Risiko ketidakselarian tinggi akibat Kebergantungan Separa!", "Faham", "closeModal()");
+                } else {
+                    jamalSpeak("Tiada Update Anomaly dikesan. Tukar nama sekali je dah cukup!"); updateIndicators(100, 100);
+                }
+            }
+            else if (state.mission === 3) {
+                 let validation = runValidationEngine();
+                 if (validation.code === "TRANSITIVE_DEPENDENCY" || validation.code === "MISSING_DECOMPOSITION") {
+                    playSFX('error'); updateIndicators(20, 30);
+                    showModal(false, "Ujian Anomali: DELETION ANOMALY", "Sistem cuba membuang Staf 'Chong' yang letak jawatan.<br><br>Kritikal: Rekod Jabatan 'IT' turut terpadam (hilang dari database) kerana ia menumpang jadual Staf!", "Faham", "closeModal()");
+                } else {
+                    jamalSpeak("Integriti terpelihara! Staf berhenti, tapi Jabatan IT masih wujud dalam database."); updateIndicators(100, 100);
+                }
+            }
+        }
+
+        // --- View Logic & Modals ---
+        function nextMission() {
+            closeModal();
+            loadMission(state.mission + 1);
+        }
+
+        function updateRank() {
+            let rank = "Trainee Engineer";
+            if (state.score >= 400) rank = "Junior DBA";
+            if (state.score >= 1200) rank = "Systems Analyst";
+            if (state.score >= 2000) rank = "Database Master";
+            document.getElementById('rank-display').textContent = `Rank: ${rank}`;
+        }
+
+        function showModal(isSuccess, title, desc, actionText, actionFn) {
+            const modal = document.getElementById('custom-modal');
+            modal.style.display = 'flex';
+            
+            const icon = document.getElementById('modal-icon');
+            if (isSuccess) {
+                icon.innerHTML = '<i class="fas fa-check-circle text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]"></i>';
+                document.getElementById('modal-title').className = "text-2xl font-bold mb-3 tracking-wide text-emerald-400";
+            } else {
+                icon.innerHTML = '<i class="fas fa-times-circle text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"></i>';
+                document.getElementById('modal-title').className = "text-2xl font-bold mb-3 tracking-wide text-red-500";
+            }
+            
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-desc').innerHTML = desc;
+
+            const btnClass = isSuccess ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500' : 'bg-slate-800 hover:bg-slate-700 border-slate-600';
+            document.getElementById('modal-actions').innerHTML = `<button class="px-8 py-2.5 ${btnClass} border rounded-xl font-semibold text-white transition shadow-lg" onclick="${actionFn}">${actionText}</button>`;
+        }
+
+        function closeModal() {
+            playSFX('click');
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
+        // --- Before & After Comparison System ---
+        function showCompareModal() {
+            playSFX('click');
+            document.getElementById('compare-modal').style.display = 'flex';
+            
+            function generateHTML(tablesList) {
+                let html = '';
+                tablesList.forEach(table => {
+                    html += `<div class="mb-4 bg-slate-900 border border-slate-600 rounded overflow-hidden">
+                        <div class="bg-slate-700 px-3 py-1 font-bold text-xs">${table.name}</div>
+                        <table class="w-full text-xs"><thead><tr>`;
+                    table.columns.forEach(col => {
+                        let icons = col.isPK ? '<i class="fas fa-key text-yellow-400 mr-1"></i>' : (col.isFK ? '<i class="fas fa-link text-purple-400 mr-1"></i>' : '');
+                        html += `<th>${icons}${col.name}</th>`;
+                    });
+                    html += `</tr></thead><tbody>`;
+                    table.rows.forEach(row => {
+                        html += `<tr>`;
+                        table.columns.forEach(col => { html += `<td>${row[col.name]}</td>`; });
+                        html += `</tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                });
+                return html;
+            }
+
+            document.getElementById('compare-original').innerHTML = generateHTML(state.originalTables);
+            document.getElementById('compare-current').innerHTML = generateHTML(state.tables);
+        }
+
+        function closeCompareModal() {
+            playSFX('click');
+            document.getElementById('compare-modal').style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>
