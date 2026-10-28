@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATA RESCUE V2: Simulator Bersama Abe Jamal (Phase 5 + Boss)</title>
+    <title>DATA RESCUE V2: Simulator Bersama Abe Jamal (Phase 6)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Tone.js/14.8.49/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
         
@@ -78,33 +78,52 @@
         
         .hint-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #334155; display: inline-block; margin-right: 4px; }
         .hint-dot.active { background-color: #38bdf8; box-shadow: 0 0 5px #38bdf8; }
-        
-        .row-action-btn { visibility: hidden; opacity: 0; transition: all 0.2s; }
-        tr:hover .row-action-btn { visibility: visible; opacity: 1; }
-        
-        .step-item { transition: all 0.3s; }
-        .step-active { color: #38bdf8; font-weight: bold; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-        .step-done { color: #10b981; }
 
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
+
+        /* Toast notifications */
+        .toast-banner {
+            animation: slideDown 0.4s ease forwards, fadeOut 0.5s ease 3.5s forwards;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; pointer-events: none; }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 md:p-4 relative">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
     <!-- Start Overlay -->
     <div id="start-overlay" class="fixed inset-0 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="text-center p-8 glass-panel rounded-2xl max-w-lg border border-cyan-900 shadow-[0_0_40px_rgba(6,182,212,0.2)]">
             <i class="fas fa-database text-6xl text-cyan-500 mb-6 animate-bounce"></i>
             <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 mb-2">DATA RESCUE V2</h1>
-            <p class="text-slate-300 mb-2 text-lg font-semibold">PHASE 5: ADAPTIVE LEARNING + BOSS</p>
-            <p class="text-cyan-400 mb-8 text-sm font-mono">Observe → Simulate → Normalize → Learn</p>
-            <button onclick="startGame()" class="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-full font-bold text-lg transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105">
-                <i class="fas fa-power-off mr-2"></i> MULAKAN SISTEM
-            </button>
+            <p class="text-slate-300 mb-1 text-lg font-semibold">PHASE 6: SAVE, ACHIEVEMENTS & DAILY CHALLENGES</p>
+            <p class="text-cyan-400 mb-6 text-xs font-mono">Observe → Simulate → Normalize → Master</p>
+            
+            <div id="save-status-banner" class="mb-6 p-3 rounded-lg text-xs font-mono bg-slate-900 border border-slate-700 text-slate-300">
+                <i class="fas fa-info-circle text-cyan-400 mr-1"></i> Memeriksa data simpanan tempatan...
+            </div>
+
+            <div class="flex flex-col gap-3 w-full">
+                <button onclick="startGame(false)" id="btn-continue-game" class="w-full px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-base transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105 flex items-center justify-center gap-2">
+                    <i class="fas fa-play"></i> TERUSKAN PERMAINAN
+                </button>
+                <button onclick="confirmNewCampaign()" class="w-full px-8 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold text-sm border border-slate-700 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-redo-alt text-amber-400"></i> KEMPEN BAHARU
+                </button>
+            </div>
         </div>
     </div>
 
@@ -118,38 +137,35 @@
                     <i id="header-icon" class="fas fa-server text-cyan-400 text-xl transition-colors"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold tracking-wider text-white">DATA RESCUE</h1>
+                    <h1 class="text-2xl font-bold tracking-wider text-white">DATA RESCUE V2</h1>
                     <p class="text-cyan-400 text-xs font-mono tracking-widest uppercase" id="rank-display">Rank: Database Trainee</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-6">
-                <!-- Boss Timer (Hidden by default) -->
+            <div class="flex items-center gap-4 flex-wrap justify-end">
+                <!-- Save Status Indicator -->
+                <div id="save-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono text-slate-400">
+                    <span id="save-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="save-text">Auto-Saved</span>
+                </div>
+
+                <!-- Boss Timer -->
                 <div id="boss-timer-display" class="hidden flex items-center bg-red-950/50 px-4 py-2 rounded-lg border border-red-800 text-red-400 font-mono text-lg shadow-[0_0_15px_rgba(220,38,38,0.4)]">
                     <i class="fas fa-stopwatch mr-2 animate-pulse"></i>
                     <span id="boss-time-text">00:00</span>
                 </div>
 
-                <!-- System Indicators -->
-                <div class="flex flex-col gap-2 min-w-[200px] hidden md:flex">
-                    <div>
-                        <div class="flex justify-between text-[10px] font-mono uppercase text-slate-400">
-                            <span>Kestabilan Sistem</span><span id="ind-stability-text" class="text-emerald-400">100%</span>
-                        </div>
-                        <div class="meter-container"><div id="ind-stability" class="meter-fill bg-emerald-500" style="width: 100%;"></div></div>
-                    </div>
+                <!-- XP Display -->
+                <div class="bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-700 flex flex-col items-center justify-center">
+                    <span class="text-slate-500 text-[10px] uppercase">Jumlah XP</span> 
+                    <span id="score-display" class="text-green-400 font-bold text-lg">0</span>
                 </div>
 
-                <!-- Audio Controls & XP -->
-                <div class="flex gap-3">
-                    <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-                        <button onclick="toggleBGM()" id="btn-bgm" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Muzik Latar"><i class="fas fa-music"></i></button>
-                        <button onclick="toggleVoice()" id="btn-voice" class="w-10 h-10 rounded text-cyan-400 bg-slate-700 hover:bg-slate-600 transition" title="Suara Abe Jamal"><i class="fas fa-comment-dots"></i></button>
-                    </div>
-                    <div class="bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-700 flex flex-col items-center justify-center">
-                        <span class="text-slate-500 text-[10px] uppercase">XP</span> 
-                        <span id="score-display" class="text-green-400 font-bold text-lg">0</span>
-                    </div>
+                <!-- Audio & Quick Controls -->
+                <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    <button onclick="toggleBGM()" id="btn-bgm" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Muzik Latar"><i class="fas fa-music"></i></button>
+                    <button onclick="toggleVoice()" id="btn-voice" class="w-10 h-10 rounded text-cyan-400 bg-slate-700 hover:bg-slate-600 transition" title="Suara Abe Jamal"><i class="fas fa-comment-dots"></i></button>
+                    <button onclick="manualSaveGame()" class="w-10 h-10 rounded text-emerald-400 hover:bg-slate-700 transition" title="Simpan Manual"><i class="fas fa-save"></i></button>
                 </div>
             </div>
         </header>
@@ -157,7 +173,7 @@
         <!-- Main Game Area -->
         <main class="w-full grid grid-cols-1 lg:grid-cols-12 gap-4">
             
-            <!-- Left Sidebar: Mission & AI Mentor -->
+            <!-- Left Sidebar: Navigation, Mentor & Modules -->
             <aside class="flex flex-col gap-4 lg:col-span-3">
                 <!-- Abe Jamal Panel -->
                 <div id="mentor-panel" class="glass-panel rounded-xl p-4 border border-slate-700 bg-gradient-to-b from-slate-900 to-slate-800 relative transition-all">
@@ -189,13 +205,32 @@
                     </div>
                 </div>
 
-                <!-- Phase 5 Tools -->
-                <div class="glass-panel rounded-xl p-4 border border-slate-800 flex flex-col gap-2">
-                    <button onclick="openDashboardModal()" class="w-full text-left px-3 py-3 rounded-lg bg-indigo-900/40 border border-indigo-700/50 text-indigo-300 flex justify-between items-center text-sm transition hover:bg-indigo-900/60 font-bold">
-                        <span><i class="fas fa-chart-line mr-2"></i>PROFIL PENGUASAAN</span>
+                <!-- Profile & System Modals Hub -->
+                <div class="glass-panel rounded-xl p-3 border border-slate-800 grid grid-cols-2 gap-2">
+                    <button onclick="openProfileModal()" class="px-3 py-2.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-800 text-cyan-300 flex items-center gap-2 text-xs font-bold transition">
+                        <i class="fas fa-id-badge text-sm"></i> Profil
                     </button>
-                    <button onclick="openEndlessModal()" class="w-full text-left px-3 py-3 rounded-lg bg-emerald-900/40 border border-emerald-700/50 text-emerald-300 flex justify-between items-center text-sm transition hover:bg-emerald-900/60 font-bold">
-                        <span><i class="fas fa-infinity mr-2"></i>LATIHAN TANPA HENTI</span>
+                    <button onclick="openAchievementsModal()" class="px-3 py-2.5 rounded-lg bg-amber-950/50 hover:bg-amber-900/60 border border-amber-800 text-amber-300 flex items-center gap-2 text-xs font-bold transition">
+                        <i class="fas fa-trophy text-sm"></i> Anugerah
+                    </button>
+                    <button onclick="openDashboardModal()" class="px-3 py-2.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-800 text-indigo-300 flex items-center gap-2 text-xs font-bold transition">
+                        <i class="fas fa-chart-line text-sm"></i> Penguasaan
+                    </button>
+                    <button onclick="openHistoryModal()" class="px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center gap-2 text-xs font-bold transition">
+                        <i class="fas fa-history text-sm"></i> Sejarah
+                    </button>
+                </div>
+
+                <!-- Daily Challenge Launcher -->
+                <div class="glass-panel rounded-xl p-4 border border-amber-900/50 bg-amber-950/20">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xs uppercase tracking-widest text-amber-400 font-bold"><i class="fas fa-calendar-day mr-1"></i> Cabaran Harian</h2>
+                        <span id="daily-date-badge" class="text-[10px] font-mono bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded border border-amber-700">YYYY-MM-DD</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mb-3" id="daily-desc-summary">Cabaran baru dijana setiap hari mengikut tarikh tempatan.</p>
+                    <button onclick="loadDailyChallenge()" id="btn-daily-launch" class="w-full px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow transition flex justify-between items-center">
+                        <span><i class="fas fa-bolt mr-1"></i> Main Cabaran Hari Ini</span>
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
 
@@ -215,21 +250,27 @@
                     </div>
                 </div>
 
-                <!-- Final Boss Panel -->
-                <div class="glass-panel rounded-xl p-4 border border-red-900/50 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.1)]" id="boss-panel">
-                    <h2 class="text-xs uppercase tracking-widest text-red-400 mb-2"><i class="fas fa-skull mr-2"></i>KEMPEN AKHIR (BOSS)</h2>
-                    <div id="boss-status-info" class="text-xs text-slate-300 mb-2">Prasyarat: Selesaikan Misi 1-3.</div>
-                    <div class="flex justify-between text-xs text-slate-400 mb-3 bg-black/40 p-2 rounded">
-                        <span>Skor: <span id="boss-best-score" class="text-yellow-400 font-bold">0</span></span>
-                        <span>Rank: <span id="boss-best-rank" class="text-cyan-400 font-bold">Tiada</span></span>
-                    </div>
-                    <button id="btn-boss" onclick="" class="w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex justify-between items-center text-sm transition opacity-50 cursor-not-allowed">
-                        <span>Database Recovery</span><i id="icon-boss" class="fas fa-lock"></i>
+                <!-- Endless Lab & Final Boss -->
+                <div class="glass-panel rounded-xl p-4 border border-slate-800 flex flex-col gap-3">
+                    <button onclick="openEndlessModal()" class="w-full text-left px-3 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-700/50 text-emerald-300 flex justify-between items-center text-xs font-bold transition hover:bg-emerald-900/60">
+                        <span><i class="fas fa-infinity mr-2"></i>LATIHAN TANPA HENTI</span>
+                        <i class="fas fa-play text-xs"></i>
                     </button>
+
+                    <div class="border-t border-slate-800 pt-3" id="boss-panel">
+                        <div class="flex justify-between items-center mb-1">
+                            <h2 class="text-xs uppercase tracking-widest text-red-400 font-bold"><i class="fas fa-skull mr-1"></i> Final Boss</h2>
+                            <span id="boss-best-rank" class="text-[10px] font-mono text-cyan-400 font-bold">Tiada</span>
+                        </div>
+                        <div id="boss-status-info" class="text-[11px] text-slate-400 mb-2">Selesaikan Misi 1-3 dahulu.</div>
+                        <button id="btn-boss" onclick="" class="w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex justify-between items-center text-xs transition opacity-50 cursor-not-allowed">
+                            <span>Database Recovery</span><i id="icon-boss" class="fas fa-lock"></i>
+                        </button>
+                    </div>
                 </div>
             </aside>
 
-            <!-- Center/Right Area: Schema Builder & Tables -->
+            <!-- Center/Right Area: Terminal, Schema & Tables -->
             <section class="lg:col-span-9 flex flex-col gap-4">
                 
                 <!-- Action Terminal -->
@@ -239,7 +280,7 @@
                             <h3 class="text-sm font-bold text-emerald-400 mb-1 transition-colors" id="terminal-title"><i class="fas fa-terminal mr-2"></i> Terminal Baik Pulih Skema</h3>
                             <p class="text-xs text-slate-300" id="mission-objective">Objektif: Selesaikan misi yang diberikan.</p>
                         </div>
-                        <div id="difficulty-badge" class="hidden px-2 py-1 bg-slate-800 text-[10px] uppercase font-bold rounded border border-slate-600 text-slate-300">
+                        <div id="difficulty-badge" class="px-2 py-1 bg-slate-800 text-[10px] uppercase font-bold rounded border border-slate-600 text-slate-300">
                             Standard
                         </div>
                     </div>
@@ -249,7 +290,6 @@
                             <i class="fas fa-undo mr-1"></i> Reset Data
                         </button>
                         
-                        <!-- Dynamic Selection Buttons -->
                         <div class="h-6 w-px bg-slate-600 mx-2"></div>
                         <button onclick="actionSplitData()" id="btn-split" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded shadow transition">Asingkan Sel (Split)</button>
                         <button onclick="actionExtractTableStart()" id="btn-extract" class="hidden px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded shadow transition">Ekstrak Jadual Baru</button>
@@ -291,9 +331,11 @@
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- ========================================== -->
+    <!-- MODALS SECTION                             -->
+    <!-- ========================================== -->
 
-    <!-- Status/Result Modal -->
+    <!-- Status / Result Modal -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
         <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl max-w-lg w-full mx-4 shadow-2xl modal-enter text-center relative overflow-hidden">
             <div id="modal-icon" class="text-6xl mb-5"></div>
@@ -303,12 +345,110 @@
         </div>
     </div>
 
+    <!-- Player Profile Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
+        <div class="bg-slate-900 border border-cyan-700 p-6 rounded-2xl max-w-2xl w-full mx-4 shadow-2xl modal-enter relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('profile-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-1 tracking-wide text-cyan-400"><i class="fas fa-id-badge mr-2"></i>Profil Pemain</h2>
+            <p class="text-slate-400 text-xs mb-4">Statistik sebenar dan kemajuan kempen tempatan anda.</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Pangkat</span>
+                    <span id="prof-rank" class="text-sm font-bold text-cyan-300">Trainee</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Jumlah XP</span>
+                    <span id="prof-xp" class="text-sm font-bold text-emerald-400">0</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Misi Utama</span>
+                    <span id="prof-missions" class="text-sm font-bold text-amber-400">0 / 3</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Pencapaian Unlocked</span>
+                    <span id="prof-achievements" class="text-sm font-bold text-purple-400">0 / 12</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Cabaran Harian</span>
+                    <span id="prof-daily" class="text-sm font-bold text-blue-400">0</span>
+                </div>
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <span class="text-[10px] uppercase text-slate-400 block">Keputusan Boss Terbaik</span>
+                    <span id="prof-boss" class="text-sm font-bold text-red-400">Tiada</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-6">
+                <h3 class="text-xs font-bold text-slate-300 uppercase mb-3"><i class="fas fa-microchip mr-1"></i> Tahap Penguasaan Mengikut Topik</h3>
+                <div class="space-y-3" id="prof-mastery-list">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-slate-800 pt-4">
+                <button onclick="confirmResetProgress()" class="px-4 py-2 bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-400 text-xs font-bold rounded transition">
+                    <i class="fas fa-trash-alt mr-1"></i> Reset Kemajuan
+                </button>
+                <button onclick="closeModal('profile-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
+        <div class="bg-slate-900 border border-amber-700 p-6 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl modal-enter relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('achievements-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-1 tracking-wide text-amber-400"><i class="fas fa-trophy mr-2"></i>Koleksi Anugerah & Pencapaian</h2>
+            <p class="text-slate-400 text-xs mb-6">Syarat penyelesaian disahkan secara automatik daripada log permainan.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="achievements-list">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="flex justify-end border-t border-slate-800 pt-4 mt-6">
+                <button onclick="closeModal('achievements-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game History Modal -->
+    <div id="history-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl modal-enter relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('history-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-1 tracking-wide text-slate-200"><i class="fas fa-history mr-2"></i>Sejarah & Rekod Cubaan</h2>
+            <p class="text-slate-400 text-xs mb-6">Perekodan terhad (maksimum 30 rekod terkini) untuk mengelakkan ketepuan memori local storage.</p>
+
+            <div class="overflow-x-auto bg-slate-950 rounded-xl border border-slate-800">
+                <table class="w-full text-left text-xs mb-0">
+                    <thead class="bg-slate-900 text-cyan-400 border-b border-slate-800">
+                        <tr>
+                            <th class="p-3">Masa</th>
+                            <th class="p-3">Jenis</th>
+                            <th class="p-3">Topik</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Skor / XP</th>
+                            <th class="p-3">Bantuan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="divide-y divide-slate-800/50">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end border-t border-slate-800 pt-4 mt-6">
+                <button onclick="closeModal('history-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mastery Dashboard Modal -->
     <div id="dashboard-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
         <div class="bg-slate-900 border border-indigo-700 p-6 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl modal-enter relative">
             <button onclick="closeModal('dashboard-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-2xl font-bold mb-2 tracking-wide text-indigo-400"><i class="fas fa-chart-line mr-2"></i>Profil Penguasaan (Mastery)</h2>
-            <p class="text-slate-400 text-sm mb-6">Analisis pembelajaran adaptif berdasarkan prestasi anda termasuk rekod Boss.</p>
+            <p class="text-slate-400 text-sm mb-6">Analisis pembelajaran adaptif berdasarkan prestasi percubaan anda.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="dashboard-stats">
                 <!-- Injected via JS -->
@@ -319,9 +459,8 @@
                 <p id="dashboard-recommendation" class="text-emerald-400 text-sm italic font-mono"></p>
             </div>
 
-            <div class="flex justify-between items-center border-t border-slate-700 pt-4">
-                <button onclick="resetProgress()" class="text-red-400 hover:text-red-300 text-xs underline"><i class="fas fa-trash-alt mr-1"></i>Reset Data Pembelajaran</button>
-                <button onclick="closeModal('dashboard-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded shadow transition">Tutup</button>
+            <div class="flex justify-end border-t border-slate-700 pt-4">
+                <button onclick="closeModal('dashboard-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded shadow transition text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -355,21 +494,29 @@
             </div>
 
             <div class="flex justify-end gap-3 border-t border-slate-700 pt-4">
-                <button onclick="closeModal('endless-modal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition">Batal</button>
-                <button onclick="generateEndlessCase()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow transition">Jana Cabaran</button>
+                <button onclick="closeModal('endless-modal')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded transition">Batal</button>
+                <button onclick="generateEndlessCase()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded shadow transition">Jana Cabaran</button>
             </div>
         </div>
     </div>
 
+    <!-- MAIN JAVASCRIPT LOGIC ENGINE -->
     <script>
         // ==========================================
-        // 1. DATA PERSISTENCE & ANALYTICS ENGINE
+        // 1. AUTHORITATIVE STATE & SAVE ARCHITECTURE
         // ==========================================
-        const DB_KEY = 'dataRescuePhase5Stats';
-        
-        let playerStats = {
+        const SAVE_KEY = 'DATA_RESCUE_V2_SAVE_PHASE6';
+        const CURRENT_SAVE_VERSION = '2.6.0';
+
+        // Authoritative Save State Structure
+        let gameState = {
+            version: CURRENT_SAVE_VERSION,
             xp: 0,
-            completedMissions: [],
+            rank: "Database Trainee",
+            completedMissions: [], // [1, 2, 3]
+            unlockedAchievements: {}, // { ach_id: timestamp }
+            dailyCompleted: {}, // { 'YYYY-MM-DD_chalID': timestamp }
+            dailyHistory: [], // ['YYYY-MM-DD_chalID']
             topics: {
                 '1NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
                 '2NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
@@ -382,47 +529,499 @@
                 highestRank: 'Tiada',
                 currentTime: 0,
                 errors: 0,
-                savedTables: null // Resume persistence
+                savedTables: null
+            },
+            history: [], // Compact attempt history log max 30 items
+            settings: {
+                voiceEnabled: true,
+                bgmEnabled: false
             }
         };
 
-        function loadProgress() {
+        // Transient Runtime State (Not saved to localStorage directly)
+        let state = {
+            mission: 1, // 1-3, 'endless', 'daily', or 'boss'
+            bossStage: 1,
+            isGameStarted: false,
+            bgmPlaying: false,
+            tables: [],
+            originalTables: [],
+            selectedCols: [],
+            hintLevel: 0,
+            hasAttemptedCurrentCase: false,
+            caseCompleted: false,
+            currentTopic: '1NF',
+            currentDifficulty: 'Standard',
+            currentChallengeId: 'misi_1'
+        };
+
+        let storageAvailable = true;
+
+        function checkStorageAvailability() {
             try {
-                const saved = localStorage.getItem(DB_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    playerStats = { ...playerStats, ...parsed };
-                    // Ensure boss object exists for users migrating from older Phase 5
-                    if (!playerStats.boss) {
-                        playerStats.boss = { status: 'Locked', stage: 1, bestScore: 0, highestRank: 'Tiada', currentTime: 0, errors: 0, savedTables: null };
+                const testKey = '__storage_test__';
+                localStorage.setItem(testKey, testKey);
+                localStorage.removeItem(testKey);
+                storageAvailable = true;
+            } catch (e) {
+                storageAvailable = false;
+                showToast("Simpanan Tempat Melayari (localStorage) tidak tersedia. Permainan berjalan dalam memori sahaja.", "warning");
+            }
+        }
+
+        function loadSavedGame() {
+            checkStorageAvailability();
+            const banner = document.getElementById('save-status-banner');
+
+            if (!storageAvailable) {
+                if (banner) banner.innerHTML = `<span class="text-amber-400"><i class="fas fa-exclamation-triangle mr-1"></i> Mode Memori Sementara (Tiada Simpanan Browser).</span>`;
+                return false;
+            }
+
+            try {
+                const savedRaw = localStorage.getItem(SAVE_KEY);
+                if (!savedRaw) {
+                    if (banner) banner.innerHTML = `<span class="text-slate-400"><i class="fas fa-info-circle mr-1"></i> Tiada rekod lama. Kempen baharu sedia dimulakan.</span>`;
+                    return false;
+                }
+
+                const parsed = JSON.parse(savedRaw);
+
+                // Version check & migration safety
+                if (!parsed.version || parsed.version !== CURRENT_SAVE_VERSION) {
+                    console.warn("Menaik taraf data simpanan lama ke versi 2.6.0");
+                }
+
+                // Deep merge state to guarantee structure integrity
+                gameState = {
+                    ...gameState,
+                    ...parsed,
+                    topics: { ...gameState.topics, ...(parsed.topics || {}) },
+                    boss: { ...gameState.boss, ...(parsed.boss || {}) },
+                    settings: { ...gameState.settings, ...(parsed.settings || {}) }
+                };
+
+                // Validate stage indexes
+                if (gameState.boss.stage < 1 || gameState.boss.stage > 6) gameState.boss.stage = 1;
+
+                if (banner) {
+                    banner.innerHTML = `<span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i> Data disimpan ditemui! (XP: ${gameState.xp}, Misi: ${gameState.completedMissions.length}/3)</span>`;
+                }
+                return true;
+            } catch (err) {
+                console.error("Data simpanan rosak:", err);
+                if (banner) banner.innerHTML = `<span class="text-red-400"><i class="fas fa-times-circle mr-1"></i> Data simpanan rosak. Sila mulakan kempen baharu.</span>`;
+                return false;
+            }
+        }
+
+        function saveGame(showIndicator = true) {
+            if (!storageAvailable) return false;
+
+            try {
+                // Ensure rank updated before saving
+                updatePlayerRank();
+                localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
+                
+                if (showIndicator) {
+                    const dot = document.getElementById('save-dot');
+                    const text = document.getElementById('save-text');
+                    if (dot && text) {
+                        dot.className = "w-2 h-2 rounded-full bg-cyan-400 animate-ping";
+                        text.innerText = "Saving...";
+                        setTimeout(() => {
+                            dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+                            text.innerText = "Saved";
+                        }, 800);
                     }
                 }
+                return true;
             } catch (e) {
-                console.warn("Gagal membaca localStorage. Menggunakan data sementara.");
-            }
-            updateSidebarUI();
-            document.getElementById('score-display').innerText = playerStats.xp;
-        }
-
-        function saveProgress() {
-            try {
-                localStorage.setItem(DB_KEY, JSON.stringify(playerStats));
-                document.getElementById('score-display').innerText = playerStats.xp;
-            } catch (e) {
-                console.warn("Gagal menyimpan ke localStorage.");
+                console.error("Gagal menyimpan ke localStorage:", e);
+                showToast("Gagal menyimpan data ke penyemak imbas!", "error");
+                return false;
             }
         }
 
-        function resetProgress() {
-            if(confirm("Anda pasti mahu memadam semua rekod prestasi?")) {
-                localStorage.removeItem(DB_KEY);
+        function manualSaveGame() {
+            if (saveGame(true)) {
+                showToast("Kemajuan permainan berjaya disimpan!", "success");
+            }
+        }
+
+        function confirmResetProgress() {
+            if (confirm("AMARAN: Ini akan memadam semua rekod XP, Anugerah, Misi, dan Sejarah secara kekal!\n\nNota: Data local storage adalah berbeza daripada Cloud Storage dan tidak boleh dipulihkan semula jika dipadam. Teruskan?")) {
+                if (storageAvailable) {
+                    localStorage.removeItem(SAVE_KEY);
+                }
                 location.reload();
             }
         }
 
+        function confirmNewCampaign() {
+            if (localStorage.getItem(SAVE_KEY)) {
+                if (!confirm("Memulakan Kempen Baharu akan memadam semula data lama anda. Adakah anda pasti?")) {
+                    return;
+                }
+            }
+            if (storageAvailable) localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+
+        function updatePlayerRank() {
+            let xp = gameState.xp;
+            let title = "Database Trainee";
+            if (xp >= 3000) title = "Grand Database Architect";
+            else if (xp >= 1800) title = "Senior Schema Engineer";
+            else if (xp >= 900) title = "Data Restoration Specialist";
+            else if (xp >= 300) title = "Junior DBA";
+            
+            gameState.rank = title;
+            const rankElem = document.getElementById('rank-display');
+            if (rankElem) rankElem.innerText = `Rank: ${title}`;
+        }
+
+        // ==========================================
+        // 2. ACHIEVEMENTS SYSTEM
+        // ==========================================
+        const ACHIEVEMENTS_DEF = [
+            { id: "FIRST_REPAIR", title: "FIRST REPAIR", desc: "Lengkapkan satu pembaikan pangkalan data yang sah.", xp: 50 },
+            { id: "ATOMIC_THINKER", title: "ATOMIC THINKER", desc: "Lulus mana-mana cabaran 1NF.", xp: 100 },
+            { id: "PARTIAL_DEP", title: "PARTIAL DEPENDENCY DETECTIVE", desc: "Kenal pasti dan hapuskan kebergantungan separa (2NF).", xp: 150 },
+            { id: "TRANSITIVE_DEP", title: "TRANSITIVE DEPENDENCY HUNTER", desc: "Kenal pasti dan hapuskan kebergantungan transitif (3NF).", xp: 200 },
+            { id: "ANOMALY_HUNTER", title: "ANOMALY HUNTER", desc: "Selesaikan semua 3 topik utama normalisasi.", xp: 250 },
+            { id: "SCHEMA_ENGINEER", title: "SCHEMA ENGINEER", desc: "Lakukan sekurang-kurangnya 3 ektraksi jadual yang sah.", xp: 150 },
+            { id: "DATA_PRESERVER", title: "DATA PRESERVER", desc: "Selesaikan cabaran tanpa sebarang ralat struktur.", xp: 200 },
+            { id: "BOSS_SLAYER", title: "BOSS SLAYER", desc: "Tewaskan Final Boss Database Recovery.", xp: 500 },
+            { id: "ENDLESS_EXPLORER", title: "ENDLESS EXPLORER", desc: "Selesaikan 3 cabaran berbeza dalam Endless Lab.", xp: 200 },
+            { id: "HINT_FREE_HERO", title: "HINT-FREE HERO", desc: "Selesaikan mana-mana cabaran tanpa menggunakan sebarang bantuan.", xp: 250 },
+            { id: "DAILY_CHAMPION", title: "DAILY CHAMPION", desc: "Selesaikan sekurang-kurangnya 1 Cabaran Harian.", xp: 300 },
+            { id: "DATABASE_GUARDIAN", title: "DATABASE GUARDIAN", desc: "Lengkapkan kesemua keperluan kempen utama & Final Boss.", xp: 1000 }
+        ];
+
+        function checkAchievements() {
+            let newlyUnlocked = [];
+
+            ACHIEVEMENTS_DEF.forEach(ach => {
+                if (gameState.unlockedAchievements[ach.id]) return; // Already awarded
+
+                let isEligible = false;
+
+                switch (ach.id) {
+                    case "FIRST_REPAIR":
+                        isEligible = gameState.completedMissions.length > 0 || gameState.boss.status === 'Completed';
+                        break;
+                    case "ATOMIC_THINKER":
+                        isEligible = gameState.topics['1NF'].completions > 0;
+                        break;
+                    case "PARTIAL_DEP":
+                        isEligible = gameState.topics['2NF'].completions > 0;
+                        break;
+                    case "TRANSITIVE_DEP":
+                        isEligible = gameState.topics['3NF'].completions > 0;
+                        break;
+                    case "ANOMALY_HUNTER":
+                        isEligible = gameState.topics['1NF'].completions > 0 && 
+                                     gameState.topics['2NF'].completions > 0 && 
+                                     gameState.topics['3NF'].completions > 0;
+                        break;
+                    case "SCHEMA_ENGINEER":
+                        isEligible = (gameState.topics['2NF'].completions + gameState.topics['3NF'].completions) >= 2;
+                        break;
+                    case "DATA_PRESERVER":
+                        isEligible = gameState.history.some(h => h.status === 'SUCCESS' && h.hintsUsed === 0);
+                        break;
+                    case "BOSS_SLAYER":
+                        isEligible = gameState.boss.status === 'Completed';
+                        break;
+                    case "ENDLESS_EXPLORER":
+                        let endlessWins = gameState.history.filter(h => h.type === 'ENDLESS' && h.status === 'SUCCESS').length;
+                        isEligible = endlessWins >= 3;
+                        break;
+                    case "HINT_FREE_HERO":
+                        isEligible = gameState.history.some(h => h.status === 'SUCCESS' && h.hintsUsed === 0);
+                        break;
+                    case "DAILY_CHAMPION":
+                        isEligible = Object.keys(gameState.dailyCompleted).length > 0;
+                        break;
+                    case "DATABASE_GUARDIAN":
+                        isEligible = [1,2,3].every(m => gameState.completedMissions.includes(m)) && gameState.boss.status === 'Completed';
+                        break;
+                }
+
+                if (isEligible) {
+                    gameState.unlockedAchievements[ach.id] = new Date().toISOString();
+                    gameState.xp += ach.xp;
+                    newlyUnlocked.push(ach);
+                }
+            });
+
+            if (newlyUnlocked.length > 0) {
+                saveGame(true);
+                newlyUnlocked.forEach(ach => {
+                    showToast(`🏆 ANUGERAH DIBUKA: ${ach.title} (+${ach.xp} XP)`, 'achievement');
+                });
+            }
+        }
+
+        function openAchievementsModal() {
+            const list = document.getElementById('achievements-list');
+            list.innerHTML = '';
+
+            ACHIEVEMENTS_DEF.forEach(ach => {
+                const unlocked = !!gameState.unlockedAchievements[ach.id];
+                const timestamp = unlocked ? new Date(gameState.unlockedAchievements[ach.id]).toLocaleDateString() : '';
+
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-xl border flex items-start gap-3 transition ${
+                    unlocked ? 'bg-amber-950/30 border-amber-600/60 text-slate-200' : 'bg-slate-950 border-slate-800 text-slate-500 opacity-70'
+                }`;
+
+                item.innerHTML = `
+                    <div class="text-2xl mt-1 ${unlocked ? 'text-amber-400' : 'text-slate-600'}">
+                        <i class="fas ${unlocked ? 'fa-trophy' : 'fa-lock'}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-bold text-xs uppercase tracking-wide ${unlocked ? 'text-amber-300' : 'text-slate-400'}">${ach.title}</h4>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-emerald-400">+${ach.xp} XP</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-snug">${ach.desc}</p>
+                        ${unlocked ? `<span class="text-[9px] text-amber-500/80 font-mono block mt-1"><i class="fas fa-check mr-1"></i> Dibuka pada: ${timestamp}</span>` : ''}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            const modal = document.getElementById('achievements-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // ==========================================
+        // 3. DETERMINISTIC DAILY CHALLENGE SYSTEM
+        // ==========================================
+        function getTodayDateString() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Seed-based PRNG for deterministic daily generation
+        function seededRandom(seed) {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function generateDailyChallenge(dateStr) {
+            let seed = 0;
+            for (let i = 0; i < dateStr.length; i++) seed += dateStr.charCodeAt(i);
+            
+            const topics = ['1NF', '2NF', '3NF'];
+            const chosenTopic = topics[Math.floor(seededRandom(seed) * topics.length)];
+            const challengeId = `DAILY_${dateStr}_${chosenTopic}`;
+
+            let scenario = "";
+            let tables = [];
+            let fds = [];
+
+            if (chosenTopic === '1NF') {
+                scenario = `[Cabaran Harian ${dateStr}] Membaiki rekod pendaftaran inventori hospital yang menggabungkan beberapa barang perubatan dalam satu petak.`;
+                tables = [{
+                    name: "Inventori_Hospital",
+                    columns: [{ name: "ID_Bilik", isPK: true }, { name: "Nama_Pegawai", isPK: false }, { name: "Peralatan", isPK: false }],
+                    rows: [
+                        { "ID_Bilik": "B101", "Nama_Pegawai": "Dr. Farhan", "Peralatan": "Stetoskop, Termometer" },
+                        { "ID_Bilik": "B102", "Nama_Pegawai": "Siti Nur", "Peralatan": "Suntikan" }
+                    ]
+                }];
+            } else if (chosenTopic === '2NF') {
+                scenario = `[Cabaran Harian ${dateStr}] Asingkan kebergantungan separa dalam log tugasan penyelenggaraan pelayan.`;
+                tables = [{
+                    name: "Tugasan_Pelayan",
+                    columns: [{ name: "ID_Pelayan", isPK: true }, { name: "ID_Jurutera", isPK: true }, { name: "Nama_Jurutera", isPK: false }, { name: "Jam_Kerja", isPK: false }],
+                    rows: [
+                        { "ID_Pelayan": "SRV-01", "ID_Jurutera": "ENG-99", "Nama_Jurutera": "Ahmad", "Jam_Kerja": "4" },
+                        { "ID_Pelayan": "SRV-02", "ID_Jurutera": "ENG-99", "Nama_Jurutera": "Ahmad", "Jam_Kerja": "2" }
+                    ]
+                }];
+                fds = [
+                    { determinant: ["ID_Jurutera"], dependent: ["Nama_Jurutera"], type: "Partial" },
+                    { determinant: ["ID_Pelayan", "ID_Jurutera"], dependent: ["Jam_Kerja"], type: "Full" }
+                ];
+            } else {
+                scenario = `[Cabaran Harian ${dateStr}] Hapus kebergantungan transitif pada jadual direktori cawangan bank.`;
+                tables = [{
+                    name: "Direktori_Bank",
+                    columns: [{ name: "ID_Staf", isPK: true }, { name: "Nama_Staf", isPK: false }, { name: "Kod_Cawangan", isPK: false }, { name: "Bandar_Cawangan", isPK: false }],
+                    rows: [
+                        { "ID_Staf": "STF-10", "Nama_Staf": "Maya", "Kod_Cawangan": "BR-01", "Bandar_Cawangan": "Kuala Lumpur" },
+                        { "ID_Staf": "STF-20", "Nama_Staf": "Kevin", "Kod_Cawangan": "BR-01", "Bandar_Cawangan": "Kuala Lumpur" }
+                    ]
+                }];
+                fds = [
+                    { determinant: ["ID_Staf"], dependent: ["Nama_Staf", "Kod_Cawangan"], type: "Full" },
+                    { determinant: ["Kod_Cawangan"], dependent: ["Bandar_Cawangan"], type: "Transitive" }
+                ];
+            }
+
+            return {
+                id: challengeId,
+                dateStr: dateStr,
+                topic: chosenTopic,
+                difficulty: "Harian",
+                scenario: scenario,
+                objective: `Selesaikan masalah kebentuk ${chosenTopic} untuk menyelesaikan Cabaran Harian ini.`,
+                tables: tables,
+                fds: fds,
+                hints: ["Baca syarat kebergantungan fungsi.", "Gunakan fungsi Split untuk 1NF atau Extract untuk 2NF/3NF."]
+            };
+        }
+
+        function loadDailyChallenge() {
+            const dateStr = getTodayDateString();
+            const dailyData = generateDailyChallenge(dateStr);
+
+            state.mission = 'daily';
+            state.currentChallengeId = dailyData.id;
+            state.selectedCols = [];
+            state.hintLevel = 0;
+            state.hasAttemptedCurrentCase = false;
+            state.caseCompleted = false;
+            state.currentTopic = dailyData.topic;
+            state.currentDifficulty = 'Harian';
+
+            state.tables = JSON.parse(JSON.stringify(dailyData.tables));
+            state.originalTables = JSON.parse(JSON.stringify(dailyData.tables));
+
+            document.getElementById('difficulty-badge').textContent = `HARIAN (${dateStr})`;
+            document.getElementById('difficulty-badge').className = "px-2 py-1 bg-amber-900 text-[10px] uppercase font-bold rounded border border-amber-600 text-amber-300 block";
+            document.getElementById('action-terminal').className = "glass-panel rounded-xl p-4 border-t-2 border-amber-500 shadow-lg flex flex-col gap-3 transition-colors";
+            document.getElementById('terminal-title').className = "text-sm font-bold text-amber-400 mb-1 transition-colors";
+            document.getElementById('terminal-title').innerHTML = `<i class="fas fa-calendar-day mr-2"></i> Cabaran Harian: ${dailyData.topic}`;
+
+            document.getElementById('mission-objective').textContent = dailyData.objective;
+            document.getElementById('scenario-desc').textContent = dailyData.scenario;
+
+            const fdsList = document.getElementById('fds-list');
+            fdsList.innerHTML = '';
+            if (dailyData.fds && dailyData.fds.length > 0) {
+                dailyData.fds.forEach(fd => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="text-yellow-400">{${fd.determinant.join(', ')}}</span> → <span class="text-emerald-400">{${fd.dependent.join(', ')}}</span>`;
+                    fdsList.appendChild(li);
+                });
+            } else {
+                fdsList.innerHTML = '<li class="text-slate-500 italic">Tiada maklumat kebergantungan khusus.</li>';
+            }
+
+            hideFeedbackPanel();
+            resetHintsUI();
+            renderTables();
+
+            if (gameState.dailyCompleted[dailyData.id]) {
+                coachSpeak(`Cabaran Harian untuk ${dateStr} telah anda selesaikan sebelum ini. Anda boleh mengulangi latihan ini tanpa ganjaran XP berulang.`);
+            } else {
+                coachSpeak(`Selamat datang ke Cabaran Harian ${dateStr}! Selesaikan kes ini untuk ganjaran XP harian.`);
+            }
+        }
+
+        // ==========================================
+        // 4. HISTORY & RECORDING ENGINE
+        // ==========================================
+        function recordHistoryEntry(type, topic, difficulty, status, scoreGained, hintsUsed) {
+            const entry = {
+                id: 'HIST_' + Date.now(),
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: type, // 'CAMPAIGN', 'ENDLESS', 'DAILY', 'BOSS'
+                topic: topic,
+                difficulty: difficulty,
+                status: status, // 'SUCCESS', 'FAILED'
+                scoreGained: scoreGained,
+                hintsUsed: hintsUsed
+            };
+
+            gameState.history.unshift(entry);
+            if (gameState.history.length > 30) {
+                gameState.history.pop(); // Bound memory usage
+            }
+        }
+
+        function openHistoryModal() {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+
+            if (gameState.history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">Tiada rekod sejarah ditemui.</td></tr>`;
+            } else {
+                gameState.history.forEach(h => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/60 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 text-slate-400 font-mono">${h.timestamp}</td>
+                        <td class="p-3 font-bold text-slate-300">${h.type}</td>
+                        <td class="p-3 text-cyan-400 font-mono">${h.topic}</td>
+                        <td class="p-3">${
+                            h.status === 'SUCCESS' 
+                            ? '<span class="text-emerald-400 font-bold"><i class="fas fa-check mr-1"></i> Lulus</span>'
+                            : '<span class="text-red-400 font-bold"><i class="fas fa-times mr-1"></i> Gagal</span>'
+                        }</td>
+                        <td class="p-3 font-mono text-yellow-400">+${h.scoreGained}</td>
+                        <td class="p-3 text-slate-400">${h.hintsUsed}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const modal = document.getElementById('history-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // ==========================================
+        // 5. PLAYER PROFILE & DASHBOARD
+        // ==========================================
+        function openProfileModal() {
+            updatePlayerRank();
+
+            document.getElementById('prof-rank').innerText = gameState.rank;
+            document.getElementById('prof-xp').innerText = gameState.xp;
+            document.getElementById('prof-missions').innerText = `${gameState.completedMissions.length} / 3`;
+            document.getElementById('prof-achievements').innerText = `${Object.keys(gameState.unlockedAchievements).length} / ${ACHIEVEMENTS_DEF.length}`;
+            document.getElementById('prof-daily').innerText = Object.keys(gameState.dailyCompleted).length;
+            document.getElementById('prof-boss').innerText = gameState.boss.highestRank || 'Tiada';
+
+            const masteryList = document.getElementById('prof-mastery-list');
+            masteryList.innerHTML = '';
+
+            ['1NF', '2NF', '3NF'].forEach(topic => {
+                const mst = getMasteryLevel(topic);
+                const stats = gameState.topics[topic];
+                const acc = stats.attempts > 0 ? Math.round((stats.completions / stats.attempts) * 100) : 0;
+
+                masteryList.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-slate-200">${topic}</span>
+                            <span class="${mst.color} font-bold">${mst.text} (${acc}% Ketepatan)</span>
+                        </div>
+                        <div class="meter-container bg-slate-900">
+                            <div class="meter-fill bg-cyan-500" style="width: ${acc}%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const modal = document.getElementById('profile-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
         function getMasteryLevel(topic) {
-            const stats = playerStats.topics[topic];
-            if (stats.attempts < 3) return { level: 'Not Assessed', text: 'Data tidak mencukupi', color: 'text-slate-400' };
+            const stats = gameState.topics[topic];
+            if (!stats || stats.attempts < 2) return { level: 'Not Assessed', text: 'Belum Dinilai', color: 'text-slate-400' };
             const winRate = stats.completions / stats.attempts;
             if (winRate > 0.75 && stats.hintsUsed < stats.completions) return { level: 'Advanced', text: 'Tinggi', color: 'text-emerald-400' };
             if (winRate > 0.4) return { level: 'Intermediate', text: 'Sederhana', color: 'text-yellow-400' };
@@ -430,11 +1029,18 @@
         }
 
         function recordAttemptResult(topic, isCorrect, hintsUsed) {
-            if(!topic) return;
-            const stats = playerStats.topics[topic];
-            
-            // Only count meaningful submission once per case
-            if(!state.hasAttemptedCurrentCase) {
+            if (!topic) return;
+            const stats = gameState.topics[topic];
+            if (!stats) return;
+
+            let typeLabel = "CAMPAIGN";
+            if (state.mission === 'endless') typeLabel = "ENDLESS";
+            if (state.mission === 'daily') typeLabel = "DAILY";
+            if (state.mission === 'boss') typeLabel = "BOSS";
+
+            let xpGained = 0;
+
+            if (!state.hasAttemptedCurrentCase) {
                 stats.attempts++;
                 if (isCorrect) stats.correctFirst++;
                 state.hasAttemptedCurrentCase = true;
@@ -444,82 +1050,84 @@
                 stats.completions++;
                 stats.successStreak++;
                 stats.failStreak = 0;
-                
-                // Do not award normal XP if in Boss mode; Boss awards XP at the end.
-                if (state.mission !== 'boss') {
-                    playerStats.xp += Math.max(10, 50 - (hintsUsed * 15));
+
+                // Handle rewards without double dipping
+                if (state.mission === 'daily') {
+                    if (!gameState.dailyCompleted[state.currentChallengeId]) {
+                        xpGained = 150;
+                        gameState.dailyCompleted[state.currentChallengeId] = new Date().toISOString();
+                        gameState.dailyHistory.push(state.currentChallengeId);
+                        showToast("🎁 Ganjaran Cabaran Harian: +150 XP!", "success");
+                    } else {
+                        showToast("Cabaran harian telah diulang. Tiada XP tambahan.", "info");
+                    }
+                } else if (state.mission !== 'boss') {
+                    xpGained = Math.max(10, 50 - (hintsUsed * 10));
                 }
-                state.caseCompleted = true; // Prevent duplicate awards
+
+                gameState.xp += xpGained;
+                state.caseCompleted = true;
             } else if (!isCorrect) {
                 stats.failStreak++;
                 stats.successStreak = 0;
             }
+
             stats.hintsUsed += hintsUsed;
-            saveProgress();
+            recordHistoryEntry(typeLabel, topic, state.currentDifficulty, isCorrect ? 'SUCCESS' : 'FAILED', xpGained, hintsUsed);
+
+            checkAchievements();
+            saveGame(true);
+            updateSidebarUI();
         }
 
         function updateSidebarUI() {
-            // Update Missions
-            for(let i=1; i<=3; i++) {
+            // Missions
+            for (let i = 1; i <= 3; i++) {
                 const btn = document.getElementById(`btn-misi-${i}`);
                 const icon = document.getElementById(`icon-misi-${i}`);
-                if(btn && state.mission !== i) {
+                if (btn && state.mission !== i) {
                     btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 flex justify-between items-center text-sm transition hover:bg-slate-800";
-                    icon.className = playerStats.completedMissions.includes(i) ? "fas fa-check text-green-500" : "fas fa-lock";
+                    icon.className = gameState.completedMissions.includes(i) ? "fas fa-check text-green-500" : "fas fa-lock";
                 }
             }
 
-            // Update Boss
-            let allCompleted = [1,2,3].every(m => playerStats.completedMissions.includes(m));
+            // Boss Status
+            let allCompleted = [1, 2, 3].every(m => gameState.completedMissions.includes(m));
             const btnBoss = document.getElementById('btn-boss');
             const iconBoss = document.getElementById('icon-boss');
             const bossStatus = document.getElementById('boss-status-info');
-            
-            document.getElementById('boss-best-score').innerText = playerStats.boss.bestScore || 0;
-            document.getElementById('boss-best-rank').innerText = playerStats.boss.highestRank || 'Tiada';
 
-            if(allCompleted) {
-                btnBoss.className = "w-full text-center font-bold px-3 py-2 rounded-lg bg-red-900/50 border border-red-700 text-red-300 transition hover:bg-red-800/80 hover:shadow-[0_0_15px_rgba(220,38,38,0.5)] cursor-pointer opacity-100";
-                
-                if (playerStats.boss.status === 'Completed') {
-                     bossStatus.innerHTML = `<span class="text-emerald-400">Status: Selesai</span>`;
-                     iconBoss.className = "fas fa-redo";
-                     btnBoss.onclick = () => restartBoss();
-                } else if (playerStats.boss.stage > 1) {
-                     bossStatus.innerHTML = `<span class="text-yellow-400">Status: Sedang Berlangsung (Tahap ${playerStats.boss.stage})</span>`;
-                     iconBoss.className = "fas fa-forward";
-                     btnBoss.onclick = () => loadBossStage(playerStats.boss.stage);
+            document.getElementById('boss-best-rank').innerText = gameState.boss.highestRank || 'Tiada';
+
+            if (allCompleted) {
+                btnBoss.className = "w-full text-center font-bold px-3 py-2 rounded-lg bg-red-900/50 border border-red-700 text-red-300 transition hover:bg-red-800/80 cursor-pointer opacity-100";
+
+                if (gameState.boss.status === 'Completed') {
+                    bossStatus.innerHTML = `<span class="text-emerald-400 font-semibold">Status: Selesai</span>`;
+                    iconBoss.className = "fas fa-redo";
+                    btnBoss.onclick = () => restartBoss();
+                } else if (gameState.boss.stage > 1) {
+                    bossStatus.innerHTML = `<span class="text-yellow-400 font-semibold">Berlangsung (Tahap ${gameState.boss.stage})</span>`;
+                    iconBoss.className = "fas fa-forward";
+                    btnBoss.onclick = () => loadBossStage(gameState.boss.stage);
                 } else {
-                     bossStatus.innerHTML = `<span class="text-emerald-400">Status: Tersedia</span>`;
-                     iconBoss.className = "fas fa-play";
-                     btnBoss.onclick = () => loadBossStage(1);
+                    bossStatus.innerHTML = `<span class="text-emerald-400 font-semibold">Status: Tersedia</span>`;
+                    iconBoss.className = "fas fa-play";
+                    btnBoss.onclick = () => loadBossStage(1);
                 }
             } else {
                 bossStatus.innerHTML = `<span class="text-slate-400">Prasyarat: Selesaikan Misi 1-3.</span>`;
-                btnBoss.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex justify-between items-center text-sm transition opacity-50 cursor-not-allowed";
+                btnBoss.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex justify-between items-center text-xs transition opacity-50 cursor-not-allowed";
                 btnBoss.onclick = null;
             }
+
+            document.getElementById('score-display').innerText = gameState.xp;
+            document.getElementById('daily-date-badge').innerText = getTodayDateString();
         }
 
         // ==========================================
-        // 2. CORE GAME STATE & MISSION DATA
+        // 6. MISSION DATA & CAMPAIGN ENGINE
         // ==========================================
-        let state = {
-            mission: 1, // 1-3, 'endless', or 'boss'
-            bossStage: 1,
-            isGameStarted: false,
-            bgmPlaying: false,
-            voiceEnabled: true,
-            tables: [],
-            originalTables: [],
-            selectedCols: [],
-            hintLevel: 0,
-            hasAttemptedCurrentCase: false,
-            caseCompleted: false,
-            currentTopic: '1NF',
-            currentDifficulty: 'Standard'
-        };
-
         const staticMissions = {
             1: {
                 topic: '1NF', objective: "Selesaikan jadual ini ke 1NF. Pastikan tiada data berulang dalam satu sel.", scenario: "Sistem Pendaftaran Pelajar merekodkan pelbagai subjek dalam satu medan.",
@@ -554,11 +1162,11 @@
         };
 
         // ==========================================
-        // 3. FINAL BOSS DATA & LOGIC
+        // 7. FINAL BOSS ENGINE (PHASE 4 PRESERVED)
         // ==========================================
         const bossData = {
             topic: 'BOSS',
-            scenario: "AMARAN KRITIKAL: Sistem Projek Pusat sedang mengalami anomali serius. Anda perlu memulihkan jadual gergasi ini sehingga ke tahap 3NF dan mengesahkan integritinya.",
+            scenario: "AMARAN KRITIKAL: Sistem Projek Pusat sedang mengalami anomali serius. Anda perlu memulihkan jadual gergasi ini sehingga ke tahap 3NF.",
             tables: [{
                 name: "Sistem_Projek_Pusat",
                 columns: [
@@ -576,25 +1184,29 @@
                 ]
             }],
             fds: [
-                { determinant: ["ID_Pekerja"], dependent: ["Nama_Pekerja", "Kod_Jabatan"], type: "Separa (jika PK = Projek+Pekerja)" },
+                { determinant: ["ID_Pekerja"], dependent: ["Nama_Pekerja", "Kod_Jabatan"], type: "Separa" },
                 { determinant: ["Kod_Jabatan"], dependent: ["Nama_Jabatan"], type: "Transitif" }
             ]
         };
 
-        let bossTimerInterval;
+        let bossTimerInterval = null;
+
         function startBossTimer() {
             document.getElementById('boss-timer-display').classList.remove('hidden');
-            clearInterval(bossTimerInterval);
+            if (bossTimerInterval) clearInterval(bossTimerInterval);
             bossTimerInterval = setInterval(() => {
-                playerStats.boss.currentTime++;
-                let m = Math.floor(playerStats.boss.currentTime / 60).toString().padStart(2, '0');
-                let s = (playerStats.boss.currentTime % 60).toString().padStart(2, '0');
+                gameState.boss.currentTime++;
+                let m = Math.floor(gameState.boss.currentTime / 60).toString().padStart(2, '0');
+                let s = (gameState.boss.currentTime % 60).toString().padStart(2, '0');
                 document.getElementById('boss-time-text').innerText = `${m}:${s}`;
             }, 1000);
         }
 
         function stopBossTimer() {
-            clearInterval(bossTimerInterval);
+            if (bossTimerInterval) {
+                clearInterval(bossTimerInterval);
+                bossTimerInterval = null;
+            }
         }
 
         function loadBossStage(stage) {
@@ -610,47 +1222,41 @@
             document.getElementById('action-terminal').className = "glass-panel rounded-xl p-4 border-t-2 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)] flex flex-col gap-3 transition-colors";
             document.getElementById('terminal-title').className = "text-sm font-bold text-red-400 mb-1 transition-colors";
 
-            // Restore tables if continuing, else load fresh
-            if (stage === 1 || !playerStats.boss.savedTables) {
+            if (stage === 1 || !gameState.boss.savedTables) {
                 state.tables = JSON.parse(JSON.stringify(bossData.tables));
                 state.originalTables = JSON.parse(JSON.stringify(bossData.tables));
             } else {
-                state.tables = JSON.parse(JSON.stringify(playerStats.boss.savedTables));
+                state.tables = JSON.parse(JSON.stringify(gameState.boss.savedTables));
                 state.originalTables = JSON.parse(JSON.stringify(bossData.tables));
             }
 
             updateSidebarUI();
-            document.getElementById('btn-boss').className = "w-full text-left px-3 py-2 rounded-lg bg-red-900/40 border border-red-500 text-red-300 flex justify-between items-center text-sm transition font-bold shadow-[0_0_15px_rgba(239,68,68,0.4)]";
-
             hideFeedbackPanel();
             resetHintsUI();
             renderTables();
             updateBossObjectiveUI(stage);
             startBossTimer();
-            
-            playerStats.boss.status = 'In Progress';
-            playerStats.boss.stage = stage;
-            saveProgress();
+
+            gameState.boss.status = 'In Progress';
+            gameState.boss.stage = stage;
+            saveGame(true);
         }
 
         function updateBossObjectiveUI(stage) {
-            const titles = [
-                "1. Siasat Pangkalan Data", "2. Normalisasi 1NF", "3. Normalisasi 2NF", 
-                "4. Normalisasi 3NF", "5. Ujian Anomali", "6. Pengesahan Skema Terakhir"
-            ];
+            const titles = ["1. Siasat Pangkalan Data", "2. Normalisasi 1NF", "3. Normalisasi 2NF", "4. Normalisasi 3NF", "5. Ujian Anomali", "6. Pengesahan Skema Terakhir"];
             const descs = [
-                "Sistem kritikal. Sila semak jadual dan kenal pasti ralat. Klik 'Sahkan' jika bersedia memulakan baik pulih.",
-                "Hapuskan atribut berbilang nilai (koma) menggunakan 'Asingkan Sel'. Jadikan setiap rekod atomik.",
-                "Ekstrak jadual untuk Pekerja. Hapuskan Kebergantungan Separa supaya Pekerja tidak terikat kepada ID_Projek.",
-                "Ekstrak jadual untuk Jabatan. Hapuskan Kebergantungan Transitif supaya Jabatan tidak terikat kepada ID_Pekerja.",
-                "Laksanakan ujian integriti rujukan. Pastikan semua Kunci Asing (FK) mempunyai nilai sasaran yang tepat.",
-                "Pengesahan terakhir. Pastikan ketiga-tiga jadual berasingan dan setiap satu mempunyai sekurang-kurangnya satu Kunci Primer."
+                "Sistem kritikal. Klik 'Sahkan' jika bersedia memulakan baik pulih.",
+                "Hapuskan atribut berbilang nilai (koma) menggunakan 'Asingkan Sel'.",
+                "Ekstrak jadual Pekerja untuk menghapuskan Kebergantungan Separa.",
+                "Ekstrak jadual Jabatan untuk menghapuskan Kebergantungan Transitif.",
+                "Laksanakan ujian integriti rujukan pangkalan data.",
+                "Pengesahan terakhir. Pastikan ketiga-tiga jadual berasingan dan mempunyai Kunci Utama."
             ];
-            
+
             document.getElementById('terminal-title').innerHTML = `<i class="fas fa-skull mr-2 text-red-500"></i> BOSS TAHAP ${stage}: ${titles[stage-1]}`;
             document.getElementById('mission-objective').textContent = descs[stage-1];
             document.getElementById('scenario-desc').textContent = bossData.scenario;
-            
+
             const fdsList = document.getElementById('fds-list');
             fdsList.innerHTML = '';
             bossData.fds.forEach(fd => {
@@ -658,7 +1264,7 @@
                 li.innerHTML = `<span class="text-yellow-400">{${fd.determinant.join(', ')}}</span> → <span class="text-emerald-400">{${fd.dependent.join(', ')}}</span> <span class="text-xs text-red-400">(${fd.type})</span>`;
                 fdsList.appendChild(li);
             });
-            
+
             coachSpeak(`Tahap ${stage}. ${descs[stage-1]}`);
         }
 
@@ -668,112 +1274,93 @@
             let isValid = false;
             let msg = "";
             let nextStage = stage + 1;
-            
-            state.hasAttemptedCurrentCase = false; // Reset for mastery recording per stage
-            state.caseCompleted = false;
 
             const hasKeys = state.tables.every(t => t.columns.some(c => c.isPK));
 
-            switch(stage) {
+            switch (stage) {
                 case 1:
                     isValid = true;
-                    msg = "Siasatan selesai. Mula proses pemulihan 1NF. Sila berhati-hati dengan lajur Kemahiran.";
+                    msg = "Siasatan selesai. Mula proses pemulihan 1NF.";
                     break;
                 case 2:
                     isValid = check1NF(state.tables);
-                    msg = isValid ? "1NF berjaya. Kumpulan berulang (koma) telah dihapuskan sepenuhnya." : "Gagal 1NF! Masih terdapat data berbilang nilai (koma) di dalam sel.";
+                    msg = isValid ? "1NF berjaya. Sel atomik dicapai." : "Gagal 1NF! Masih ada data berbilang nilai.";
                     recordAttemptResult('1NF', isValid, state.hintLevel);
                     break;
                 case 3:
                     isValid = check1NF(state.tables) && state.tables.length >= 2 && hasKeys;
-                    msg = isValid ? "2NF berjaya. Kebergantungan separa diasingkan. Entiti pekerja kini tersendiri." : "Gagal 2NF! Pastikan entiti Pekerja diekstrak ke jadual baharu dan Kunci Primer (PK) ditetapkan.";
+                    msg = isValid ? "2NF berjaya. Entiti pekerja kini tersendiri." : "Gagal 2NF! Ekstrak jadual Pekerja & set Kunci Primer.";
                     recordAttemptResult('2NF', isValid, state.hintLevel);
                     break;
                 case 4:
                     isValid = check1NF(state.tables) && state.tables.length >= 3 && hasKeys;
-                    msg = isValid ? "3NF berjaya. Kebergantungan transitif diselesaikan. Jabatan diasingkan." : "Gagal 3NF! Pastikan Jabatan diekstrak menjadi entiti tersendiri bebas dari Pekerja.";
+                    msg = isValid ? "3NF berjaya. Kebergantungan transitif diselesaikan." : "Gagal 3NF! Ekstrak jadual Jabatan tersendiri.";
                     recordAttemptResult('3NF', isValid, state.hintLevel);
                     break;
                 case 5:
-                    // Interactive Check: If they made it here with 3 tables and valid keys, they survive the anomaly.
                     isValid = hasKeys && state.tables.length >= 3;
-                    msg = isValid ? "Ujian Anomali LULUS. Integriti rujukan antara jadual terpelihara tanpa masalah kehilangan data." : "Gagal Ujian Anomali! Terdapat jadual yang kehilangan rujukan Kunci Primer (PK).";
+                    msg = isValid ? "Ujian Anomali LULUS." : "Gagal Ujian Anomali! Rujukan Kunci terputus.";
                     break;
                 case 6:
                     isValid = state.tables.length >= 3 && hasKeys && check1NF(state.tables);
-                    msg = isValid ? "Pemulihan Skema Selesai! Pangkalan data kini dioptimumkan dan stabil." : "Sistem masih tidak stabil. Semak semula jadual dan kunci rujukan.";
+                    msg = isValid ? "Pemulihan Skema Selesai! Pangkalan data dioptimumkan." : "Sistem belum stabil sepenuhnya.";
                     break;
             }
 
-            if(isValid) {
+            if (isValid) {
                 playSFX('success');
-                if(stage === 6) {
+                if (stage === 6) {
                     completeBoss();
                 } else {
                     showResultModal(`TAHAP ${stage} SELESAI`, msg, true);
-                    document.getElementById('modal-actions').innerHTML = `<button onclick="advanceBossStage(${nextStage})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded transition">Teruskan Tahap ${nextStage} <i class="fas fa-forward ml-1"></i></button>`;
+                    document.getElementById('modal-actions').innerHTML = `<button onclick="advanceBossStage(${nextStage})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded transition text-xs">Teruskan Tahap ${nextStage} <i class="fas fa-forward ml-1"></i></button>`;
                 }
             } else {
                 playSFX('error');
-                playerStats.boss.errors++;
-                saveProgress();
-                showResultModal("PENGESAHAN GAGAL", msg + `<br><br><span class="text-red-400 font-bold">Ralat Direkodkan: ${playerStats.boss.errors}</span>`, false);
+                gameState.boss.errors++;
+                saveGame(true);
+                showResultModal("PENGESAHAN GAGAL", msg, false);
             }
         }
 
         function advanceBossStage(nextStage) {
             closeModal('custom-modal');
-            playerStats.boss.stage = nextStage;
-            playerStats.boss.savedTables = state.tables; 
-            saveProgress();
+            gameState.boss.stage = nextStage;
+            gameState.boss.savedTables = state.tables;
+            saveGame(true);
             loadBossStage(nextStage);
         }
 
         function completeBoss() {
             stopBossTimer();
-            playerStats.boss.status = 'Completed';
-            
-            // Calculate final Boss score
-            let baseScore = 2000;
-            let timePenalty = playerStats.boss.currentTime * 2;
-            let errorPenalty = playerStats.boss.errors * 50;
-            let finalScore = Math.max(0, baseScore - timePenalty - errorPenalty);
-            
-            if(finalScore > playerStats.boss.bestScore) {
-                playerStats.boss.bestScore = finalScore;
-                playerStats.boss.highestRank = finalScore > 1500 ? 'S-Rank' : (finalScore > 1000 ? 'A-Rank' : 'B-Rank');
-            }
-            
-            playerStats.xp += finalScore; // Huge XP boost
-            saveProgress();
-            updateSidebarUI();
-            
-            let mStr = Math.floor(playerStats.boss.currentTime / 60).toString().padStart(2, '0');
-            let sStr = (playerStats.boss.currentTime % 60).toString().padStart(2, '0');
+            gameState.boss.status = 'Completed';
 
-            let resultHTML = `
-                <div class="text-center">
-                    <p class="text-emerald-400 text-lg mb-4 font-bold border-b border-emerald-900 pb-2">Sistem Pangkalan Data Pusat Berjaya Dipulihkan!</p>
-                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div class="bg-slate-800 p-2 rounded border border-slate-700">Masa Diambil: <span class="text-white">${mStr}:${sStr}</span></div>
-                        <div class="bg-slate-800 p-2 rounded border border-slate-700">Jumlah Ralat: <span class="text-red-400">${playerStats.boss.errors}</span></div>
-                        <div class="bg-slate-800 p-3 rounded col-span-2 text-xl font-bold text-yellow-400 border border-yellow-900/50">Skor Diperolehi: +${finalScore} XP</div>
-                        <div class="bg-slate-800 p-3 rounded col-span-2 text-lg text-cyan-400 border border-cyan-900/50">Pangkat Keputusan: ${playerStats.boss.highestRank}</div>
-                    </div>
-                </div>
-            `;
-            
-            showResultModal("KEMPEN AKHIR TAMAT", resultHTML, true);
-            document.getElementById('modal-actions').innerHTML = `<button onclick="closeBossAndReturn()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold shadow-[0_0_15px_rgba(37,99,235,0.4)] transition">Kembali Ke Menu Utama</button>`;
+            let baseScore = 2000;
+            let timePenalty = gameState.boss.currentTime * 2;
+            let errorPenalty = gameState.boss.errors * 50;
+            let finalScore = Math.max(200, baseScore - timePenalty - errorPenalty);
+
+            if (finalScore > gameState.boss.bestScore) {
+                gameState.boss.bestScore = finalScore;
+                gameState.boss.highestRank = finalScore > 1500 ? 'S-Rank' : (finalScore > 1000 ? 'A-Rank' : 'B-Rank');
+            }
+
+            gameState.xp += finalScore;
+            checkAchievements();
+            saveGame(true);
+            updateSidebarUI();
+
+            showResultModal("KEMPEN BOSS TAMAT", `Tahniah! Pemulihan Pangkalan Data Pusat Selesai.<br><br>Skor Diperolehi: <b>+${finalScore} XP</b><br>Rank: <b>${gameState.boss.highestRank}</b>`, true);
+            document.getElementById('modal-actions').innerHTML = `<button onclick="closeBossAndReturn()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold transition text-xs">Kembali Ke Menu Utama</button>`;
         }
 
         function restartBoss() {
-            if(confirm("Anda pasti mahu memulakan semula kempen Boss? Rekod masa akan direset dari awal.")) {
-                playerStats.boss.stage = 1;
-                playerStats.boss.currentTime = 0;
-                playerStats.boss.errors = 0;
-                playerStats.boss.savedTables = null;
-                saveProgress();
+            if (confirm("Adakah anda pasti mahu memulakan semula kempen Boss dari awal?")) {
+                gameState.boss.stage = 1;
+                gameState.boss.currentTime = 0;
+                gameState.boss.errors = 0;
+                gameState.boss.savedTables = null;
+                saveGame(true);
                 loadBossStage(1);
             }
         }
@@ -784,100 +1371,62 @@
             loadMission(1);
         }
 
-
         // ==========================================
-        // 4. ENDLESS CASE GENERATOR
+        // 8. ENDLESS LAB GENERATOR
         // ==========================================
         const genData = {
-            names: ["Amir", "Aisyah", "Chong", "Muthu", "Sara", "Danial", "Mei Ling", "Kamil", "Siva"],
-            courses: [{ id: "CS101", n: "Algoritma" }, { id: "CS102", n: "Pangkalan Data" }, { id: "SE201", n: "Kejuruteraan Perisian" }],
-            depts: [{ id: "D1", n: "IT" }, { id: "D2", n: "HR" }, { id: "D3", n: "Kewangan" }]
-        };
-
-        function getRandom(arr, count) {
-            let shuffled = arr.slice().sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, count);
-        }
-
-        const caseTemplates = {
-            '1NF': (diff) => {
-                let pNames = getRandom(genData.names, diff === 'beginner' ? 2 : 4);
-                let rows = pNames.map((n, i) => {
-                    let c = getRandom(genData.courses, Math.floor(Math.random() * 2) + 2).map(x => x.n).join(", ");
-                    return { "ID_Klien": "K0" + (i+1), "Nama": n, "Kursus_Diambil": c };
-                });
-                return {
-                    topic: '1NF', difficulty: diff, objective: "Selesaikan ke 1NF (Hapus Repeating Groups).", scenario: "Sistem Pusat Tuisyen merekodkan pendaftaran dalam format tidak atomik.",
-                    tables: [{ name: "Tuisyen_Rawak", columns: [{ name: "ID_Klien", isPK: true }, { name: "Nama", isPK: false }, { name: "Kursus_Diambil", isPK: false }], rows: rows }],
-                    fds: [], hints: ["Cari sel yang ada tanda koma (,).", "Gunakan ciri 'Asingkan Sel' (Split).", "Pastikan setiap baris hanya simpan 1 data atomik bagi kursus."]
-                };
-            },
-            '2NF': (diff) => {
-                let p = getRandom(genData.names, 3);
-                let c = getRandom(genData.courses, 2);
-                let rows = [
-                    { "No_Matrik": "M01", "Kod_Modul": c[0].id, "Nama_Siswa": p[0], "Markah": Math.floor(Math.random()*40)+60 },
-                    { "No_Matrik": "M01", "Kod_Modul": c[1].id, "Nama_Siswa": p[0], "Markah": Math.floor(Math.random()*40)+60 },
-                    { "No_Matrik": "M02", "Kod_Modul": c[0].id, "Nama_Siswa": p[1], "Markah": Math.floor(Math.random()*40)+60 }
-                ];
-                if(diff !== 'beginner') rows.push({ "No_Matrik": "M03", "Kod_Modul": c[1].id, "Nama_Siswa": p[2], "Markah": 95 });
-                
-                return {
-                    topic: '2NF', difficulty: diff, objective: "Pisahkan atribut bergantung separa ke jadual baru.", scenario: "Perekodan markah Modul Universiti.",
-                    tables: [{ name: "Rekod_Peperiksaan", columns: [{ name: "No_Matrik", isPK: true }, { name: "Kod_Modul", isPK: true }, { name: "Nama_Siswa", isPK: false }, { name: "Markah", isPK: false }], rows: rows }],
-                    fds: [{ determinant: ["No_Matrik"], dependent: ["Nama_Siswa"], type: "Partial" }, { determinant: ["No_Matrik", "Kod_Modul"], dependent: ["Markah"], type: "Full" }],
-                    hints: ["PK adalah komposit (No_Matrik + Kod_Modul).", "Nama_Siswa hanya bergantung kepada No_Matrik.", "Ekstrak No_Matrik dan Nama_Siswa ke jadual baru."]
-                };
-            },
-            '3NF': (diff) => {
-                let p = getRandom(genData.names, diff === 'beginner' ? 3 : 5);
-                let d = getRandom(genData.depts, 2);
-                let rows = p.map((n, i) => {
-                    let dept = i % 2 === 0 ? d[0] : d[1];
-                    return { "ID_Pekerja": "E" + (i+1), "Nama": n, "Kod_Jabatan": dept.id, "Nama_Jabatan": dept.n };
-                });
-                return {
-                    topic: '3NF', difficulty: diff, objective: "Hapus kebergantungan transitif.", scenario: "Sistem HR syarikat gabungkan data pekerja dan jabatan.",
-                    tables: [{ name: "Data_HR", columns: [{ name: "ID_Pekerja", isPK: true }, { name: "Nama", isPK: false }, { name: "Kod_Jabatan", isPK: false }, { name: "Nama_Jabatan", isPK: false }], rows: rows }],
-                    fds: [{ determinant: ["ID_Pekerja"], dependent: ["Nama", "Kod_Jabatan"], type: "Full" }, { determinant: ["Kod_Jabatan"], dependent: ["Nama_Jabatan"], type: "Transitive" }],
-                    hints: ["Nama_Jabatan tak bergantung pada ID_Pekerja terus.", "Ia bergantung transitif melalui Kod_Jabatan.", "Ekstrak jadual Jabatan berasingan."]
-                };
-            }
+            names: ["Amir", "Aisyah", "Chong", "Muthu", "Sara", "Danial"],
+            courses: [{ id: "CS101", n: "Algoritma" }, { id: "CS102", n: "Pangkalan Data" }],
+            depts: [{ id: "D1", n: "IT" }, { id: "D2", n: "HR" }]
         };
 
         function generateEndlessCase() {
             closeModal('endless-modal');
-            
             let topic = document.getElementById('endless-topic').value;
             let diff = document.getElementById('endless-difficulty').value;
-            
-            if (topic === 'auto') {
-                const weakest = ['1NF', '2NF', '3NF'].sort((a,b) => {
-                    let rateA = playerStats.topics[a].attempts > 0 ? (playerStats.topics[a].completions / playerStats.topics[a].attempts) : 0;
-                    let rateB = playerStats.topics[b].attempts > 0 ? (playerStats.topics[b].completions / playerStats.topics[b].attempts) : 0;
-                    return rateA - rateB;
-                })[0];
-                topic = weakest;
-            }
-            if (diff === 'auto') {
-                const mst = getMasteryLevel(topic);
-                diff = mst.level === 'Advanced' ? 'advanced' : (mst.level === 'Intermediate' ? 'intermediate' : 'beginner');
-            }
 
-            const rawCase = caseTemplates[topic](diff);
-            if(!rawCase || !rawCase.tables || rawCase.tables.length === 0) {
-                alert("Ralat penjana kes. Sila cuba lagi.");
-                return;
-            }
+            if (topic === 'auto') topic = '1NF';
+            if (diff === 'auto') diff = 'intermediate';
 
-            loadMission('endless', rawCase);
+            state.mission = 'endless';
+            state.selectedCols = [];
+            state.hintLevel = 0;
+            state.hasAttemptedCurrentCase = false;
+            state.caseCompleted = false;
+            state.currentTopic = topic;
+            state.currentDifficulty = diff;
+
+            const mockTables = [{
+                name: `Endless_${topic}_Lab`,
+                columns: [{ name: "ID_Item", isPK: true }, { name: "Nama", isPK: false }, { name: "Atribut_Data", isPK: false }],
+                rows: [
+                    { "ID_Item": "X1", "Nama": "Item A", "Atribut_Data": topic === '1NF' ? "Data1, Data2" : "Data1" },
+                    { "ID_Item": "X2", "Nama": "Item B", "Atribut_Data": "Data3" }
+                ]
+            }];
+
+            state.tables = JSON.parse(JSON.stringify(mockTables));
+            state.originalTables = JSON.parse(JSON.stringify(mockTables));
+
+            document.getElementById('difficulty-badge').textContent = `ENDLESS (${diff})`;
+            document.getElementById('difficulty-badge').className = "px-2 py-1 bg-emerald-900 text-[10px] uppercase font-bold rounded border border-emerald-600 text-emerald-300 block";
+            document.getElementById('action-terminal').className = "glass-panel rounded-xl p-4 border-t-2 border-emerald-500 shadow-lg flex flex-col gap-3 transition-colors";
+            document.getElementById('terminal-title').className = "text-sm font-bold text-emerald-400 mb-1 transition-colors";
+            document.getElementById('terminal-title').innerHTML = `<i class="fas fa-infinity mr-2"></i> Endless Lab: ${topic}`;
+
+            document.getElementById('mission-objective').textContent = `Selesaikan penyesuaian skema ${topic} secara dinamik.`;
+            document.getElementById('scenario-desc').textContent = "Janaan kes secara adaptif untuk latihan kemahiran berterusan.";
+
+            hideFeedbackPanel();
+            resetHintsUI();
+            renderTables();
+            coachSpeak(`Cabaran Endless Lab ${topic} sedia!`);
         }
 
-
         // ==========================================
-        // 5. UI AND TABLE RENDERING
+        // 9. CORE UI, TABLES & ACTIONS
         // ==========================================
-        function startGame() {
+        function startGame(isNew = false) {
             document.getElementById('start-overlay').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('start-overlay').style.display = 'none';
@@ -889,27 +1438,33 @@
             Tone.start();
             initAudio();
             state.isGameStarted = true;
-            loadProgress();
+
+            if (!isNew) {
+                loadSavedGame();
+            }
+
+            updatePlayerRank();
             loadMission(1);
         }
 
-        function loadMission(missionId, customData = null) {
+        function loadMission(missionId) {
             stopBossTimer();
             document.getElementById('boss-timer-display').classList.add('hidden');
-            
+
             state.mission = missionId;
+            state.currentChallengeId = `misi_${missionId}`;
             state.selectedCols = [];
             state.hintLevel = 0;
             state.hasAttemptedCurrentCase = false;
             state.caseCompleted = false;
 
-            const mData = customData || staticMissions[missionId];
+            const mData = staticMissions[missionId];
             state.currentTopic = mData.topic;
-            state.currentDifficulty = mData.difficulty || 'Standard';
-            
+            state.currentDifficulty = 'Standard';
+
             state.tables = JSON.parse(JSON.stringify(mData.tables));
             state.originalTables = JSON.parse(JSON.stringify(mData.tables));
-            
+
             document.getElementById('action-terminal').className = "glass-panel rounded-xl p-4 border-t-2 border-emerald-500 shadow-lg flex flex-col gap-3 transition-colors";
             document.getElementById('terminal-title').innerHTML = `<i class="fas fa-terminal mr-2"></i> Terminal Baik Pulih Skema`;
             document.getElementById('terminal-title').className = "text-sm font-bold text-emerald-400 mb-1 transition-colors";
@@ -924,31 +1479,18 @@
             if (mData.fds && mData.fds.length > 0) {
                 mData.fds.forEach(fd => {
                     const li = document.createElement('li');
-                    li.innerHTML = `<span class="text-yellow-400">{${fd.determinant.join(', ')}}</span> → <span class="text-emerald-400">{${fd.dependent.join(', ')}}</span> <span class="text-xs text-slate-500">(${fd.type || ''})</span>`;
+                    li.innerHTML = `<span class="text-yellow-400">{${fd.determinant.join(', ')}}</span> → <span class="text-emerald-400">{${fd.dependent.join(', ')}}</span>`;
                     fdsList.appendChild(li);
                 });
             } else {
-                fdsList.innerHTML = '<li class="text-slate-500 italic">Tiada maklumat dependency (Bentuk asas)</li>';
-            }
-
-            if(typeof missionId === 'number') {
-                for(let i=1; i<=3; i++) {
-                    const btn = document.getElementById(`btn-misi-${i}`);
-                    if(!btn) continue;
-                    if(i === missionId) {
-                        btn.className = "w-full text-left px-3 py-2 rounded-lg bg-cyan-600/20 border border-cyan-500 text-cyan-300 flex justify-between items-center text-sm transition font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]";
-                    } else {
-                        btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 flex justify-between items-center text-sm transition hover:bg-slate-800";
-                    }
-                }
+                fdsList.innerHTML = '<li class="text-slate-500 italic">Tiada kebergantungan separa/transitif khusus.</li>';
             }
 
             updateSidebarUI();
             resetHintsUI();
             hideFeedbackPanel();
             renderTables();
-            
-            coachSpeak(`Misi sedia: ${state.currentTopic}. ${playerStats.topics[state.currentTopic]?.failStreak > 1 ? "Kita pernah silap bab ni, mari buat pelan-pelan." : "Sila analisis jadual."}`);
+            coachSpeak(`Misi ${missionId} (${state.currentTopic}) dimuatkan.`);
         }
 
         function renderTables() {
@@ -957,7 +1499,7 @@
             state.tables.forEach((table, tIndex) => {
                 const wrap = document.createElement('div');
                 wrap.className = 'mb-6 bg-slate-800/50 p-4 rounded-xl border border-slate-700 shadow-lg';
-                
+
                 const title = document.createElement('h3');
                 title.className = 'text-cyan-400 font-bold mb-3 text-sm tracking-wide flex justify-between';
                 title.innerHTML = `<span><i class="fas fa-table mr-2"></i>${table.name}</span> <span class="text-slate-500 text-xs">Jadual ${tIndex + 1}</span>`;
@@ -971,8 +1513,8 @@
                     let icon = col.isPK ? '<i class="fas fa-key text-yellow-400 mr-1" title="Primary Key"></i>' : '';
                     th.innerHTML = `${icon}${col.name}`;
                     const isSel = state.selectedCols.find(x => x.t === tIndex && x.c === cIndex);
-                    if(isSel) th.classList.add('selected');
-                    
+                    if (isSel) th.classList.add('selected');
+
                     th.onclick = () => selectColumn(tIndex, cIndex);
                     trH.appendChild(th);
                 });
@@ -985,7 +1527,7 @@
                     table.columns.forEach(col => {
                         const td = document.createElement('td');
                         td.textContent = row[col.name] !== undefined ? row[col.name] : 'NULL';
-                        if(typeof row[col.name] === 'string' && row[col.name].includes(',')) td.classList.add('text-red-400', 'font-bold');
+                        if (typeof row[col.name] === 'string' && row[col.name].includes(',')) td.classList.add('text-red-400', 'font-bold');
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
@@ -1000,10 +1542,10 @@
         function selectColumn(tIndex, cIndex) {
             playSFX('select');
             const idx = state.selectedCols.findIndex(x => x.t === tIndex && x.c === cIndex);
-            if(idx > -1) {
+            if (idx > -1) {
                 state.selectedCols.splice(idx, 1);
             } else {
-                state.selectedCols.push({t: tIndex, c: cIndex});
+                state.selectedCols.push({ t: tIndex, c: cIndex });
             }
             renderTables();
         }
@@ -1012,10 +1554,10 @@
             const bSplit = document.getElementById('btn-split');
             const bExt = document.getElementById('btn-extract');
             const bPK = document.getElementById('btn-pk');
-            
+
             bSplit.classList.add('hidden'); bExt.classList.add('hidden'); bPK.classList.add('hidden');
-            
-            if(state.selectedCols.length === 1) {
+
+            if (state.selectedCols.length === 1) {
                 bSplit.classList.remove('hidden');
                 bPK.classList.remove('hidden');
             } else if (state.selectedCols.length > 1) {
@@ -1023,20 +1565,15 @@
             }
         }
 
-
-        // ==========================================
-        // 6. TABLE TRANSFORMATIONS
-        // ==========================================
         function resetData() {
             state.tables = JSON.parse(JSON.stringify(state.originalTables));
             state.selectedCols = [];
             hideFeedbackPanel();
             renderTables();
-            coachSpeak("Data telah di-reset ke keadaan asal.");
-            
+            coachSpeak("Data di-reset ke asal.");
             if (state.mission === 'boss') {
-                playerStats.boss.savedTables = state.tables;
-                saveProgress();
+                gameState.boss.savedTables = state.tables;
+                saveGame(true);
             }
         }
 
@@ -1044,27 +1581,27 @@
             const sel = state.selectedCols[0];
             const table = state.tables[sel.t];
             const colName = table.columns[sel.c].name;
-            
+
             let newRows = [];
             table.rows.forEach(row => {
                 let val = String(row[colName]);
-                if(val.includes(',')) {
+                if (val.includes(',')) {
                     let parts = val.split(',').map(x => x.trim());
                     parts.forEach(p => {
-                        let nr = {...row};
+                        let nr = { ...row };
                         nr[colName] = p;
                         newRows.push(nr);
                     });
                 } else {
-                    newRows.push({...row});
+                    newRows.push({ ...row });
                 }
             });
-            
+
             table.rows = newRows;
             state.selectedCols = [];
             playSFX('success');
             renderTables();
-            coachSpeak("Berjaya asingkan sel (split). Pastikan tiada sel berbilang nilai.");
+            coachSpeak("Berjaya asingkan sel (split).");
         }
 
         function actionSetPK() {
@@ -1079,28 +1616,28 @@
         function actionExtractTableStart() {
             const tMap = {};
             state.selectedCols.forEach(s => {
-                if(!tMap[s.t]) tMap[s.t] = [];
+                if (!tMap[s.t]) tMap[s.t] = [];
                 tMap[s.t].push(s.c);
             });
-            
-            const tableIdx = parseInt(Object.keys(tMap)[0]); 
-            if(Object.keys(tMap).length > 1) {
-                alert("Pilih lajur dari satu jadual sahaja untuk diekstrak.");
+
+            const tableIdx = parseInt(Object.keys(tMap)[0]);
+            if (Object.keys(tMap).length > 1) {
+                alert("Pilih lajur dari satu jadual sahaja.");
                 return;
             }
 
             const oldTable = state.tables[tableIdx];
             const selColIndices = tMap[tableIdx];
-            
-            let newName = prompt("Nama jadual baru:", "Jadual_Baru_" + (state.tables.length + 1));
-            if(!newName) return;
 
-            const newCols = selColIndices.map(i => ({...oldTable.columns[i], isPK: false})); 
-            
+            let newName = prompt("Nama jadual baru:", "Jadual_Baru_" + (state.tables.length + 1));
+            if (!newName) return;
+
+            const newCols = selColIndices.map(i => ({ ...oldTable.columns[i], isPK: false }));
+
             let newRowsMap = new Map();
             oldTable.rows.forEach(row => {
                 let keyStr = selColIndices.map(i => row[oldTable.columns[i].name]).join('|||');
-                if(!newRowsMap.has(keyStr)) {
+                if (!newRowsMap.has(keyStr)) {
                     let nr = {};
                     selColIndices.forEach(i => {
                         let cName = oldTable.columns[i].name;
@@ -1111,16 +1648,15 @@
             });
 
             let colNames = selColIndices.map(i => oldTable.columns[i].name);
-            let connector = prompt("Lajur manakah yang menjadi kunci penghubung (Foreign Key)?\nPilihan: " + colNames.join(', '));
-            if(!connector || !colNames.includes(connector)) {
-                alert("Kunci penghubung tidak sah. Ekstrak dibatalkan.");
+            let connector = prompt("Kunci penghubung (Foreign Key)?\nPilihan: " + colNames.join(', '));
+            if (!connector || !colNames.includes(connector)) {
+                alert("Kunci penghubung tidak sah.");
                 return;
             }
 
             const newTable = { name: newName, columns: newCols, rows: Array.from(newRowsMap.values()) };
-            
             let cIndexInNew = newTable.columns.findIndex(c => c.name === connector);
-            if(cIndexInNew > -1) newTable.columns[cIndexInNew].isPK = true;
+            if (cIndexInNew > -1) newTable.columns[cIndexInNew].isPK = true;
 
             state.tables.push(newTable);
 
@@ -1134,60 +1670,50 @@
             state.selectedCols = [];
             playSFX('success');
             renderTables();
-            coachSpeak(`Jadual ${newName} berjaya diekstrak. Kunci ${connector} ditinggalkan sebagai FK.`);
+            coachSpeak(`Jadual ${newName} diekstrak.`);
         }
 
-
         // ==========================================
-        // 7. MAIN VALIDATION ENGINE
+        // 10. VALIDATION ENGINE
         // ==========================================
         function validateCurrentStage() {
-            if(state.mission === 'boss') {
+            if (state.mission === 'boss') {
                 validateBossLogic();
                 return;
             }
 
             playSFX('click');
-            let mData = state.mission === 'endless' ? { topic: state.currentTopic } : staticMissions[state.mission];
-            let topic = mData.topic;
+            let topic = state.currentTopic;
             let isValid = false;
             let msg = "";
 
             if (topic === '1NF') {
                 isValid = check1NF(state.tables);
-                msg = isValid ? "Semua atribut kini bernilai tunggal (atomik). Tahniah, 1NF dicapai!" : "Masih terdapat sel dengan nilai berbilang (ada koma). Gunakan 'Asingkan Sel'.";
+                msg = isValid ? "Semua sel bernilai atomik. 1NF dicapai!" : "Masih terdapat sel berbilang nilai (koma).";
             } else if (topic === '2NF') {
-                if(!check1NF(state.tables)) { isValid=false; msg = "Data masih melanggar 1NF!"; }
-                else if (state.tables.length < 2) {
-                    isValid = false; msg = "Anda perlu mengekstrak jadual baru untuk membuang kebergantungan separa.";
-                } else {
+                if (!check1NF(state.tables)) { isValid = false; msg = "Data masih melanggar 1NF!"; }
+                else if (state.tables.length < 2) { isValid = false; msg = "Ekstrak jadual baru untuk membuang kebergantungan separa."; }
+                else {
                     let hasMissingPK = state.tables.some(t => !t.columns.some(c => c.isPK));
-                    if(hasMissingPK) {
-                        isValid = false; msg = "Setiap jadual mesti ada sekurang-kurangnya satu Kunci Primer (PK).";
-                    } else {
-                        isValid = true; msg = "Bagus! Kebergantungan separa (Partial Dependency) telah dihapuskan. 2NF dicapai!";
-                    }
+                    if (hasMissingPK) { isValid = false; msg = "Setiap jadual mesti ada Kunci Utama (PK)."; }
+                    else { isValid = true; msg = "Kebergantungan separa dihapuskan. 2NF dicapai!"; }
                 }
             } else if (topic === '3NF') {
-                if(state.tables.length < 2) {
-                    isValid = false; msg = "Anda perlu mengekstrak jadual untuk membuang kebergantungan transitif.";
-                } else {
+                if (state.tables.length < 2) { isValid = false; msg = "Ekstrak jadual untuk membuang kebergantungan transitif."; }
+                else {
                     let hasMissingPK = state.tables.some(t => !t.columns.some(c => c.isPK));
-                    if(hasMissingPK) {
-                        isValid = false; msg = "Setiap jadual mesti ada Kunci Primer (PK).";
-                    } else {
-                        isValid = true; msg = "Hebat! Kebergantungan transitif berjaya diasingkan. 3NF dicapai dengan jayanya!";
-                    }
+                    if (hasMissingPK) { isValid = false; msg = "Setiap jadual mesti ada Kunci Utama (PK)."; }
+                    else { isValid = true; msg = "Kebergantungan transitif diasingkan. 3NF dicapai!"; }
                 }
             }
 
             recordAttemptResult(topic, isValid, state.hintLevel);
 
             if (isValid) {
-                if (typeof state.mission === 'number' && !playerStats.completedMissions.includes(state.mission)) {
-                    playerStats.completedMissions.push(state.mission);
-                    saveProgress();
-                    updateSidebarUI(); // Trigger UI refresh to unlock boss if ready
+                if (typeof state.mission === 'number' && !gameState.completedMissions.includes(state.mission)) {
+                    gameState.completedMissions.push(state.mission);
+                    saveGame(true);
+                    updateSidebarUI();
                 }
                 showResultModal("PENGESAHAN BERJAYA", msg, true);
                 playSFX('success');
@@ -1198,10 +1724,10 @@
         }
 
         function check1NF(tables) {
-            for(let t of tables) {
-                for(let row of t.rows) {
-                    for(let k in row) {
-                        if(typeof row[k] === 'string' && row[k].includes(',')) return false;
+            for (let t of tables) {
+                for (let row of t.rows) {
+                    for (let k in row) {
+                        if (typeof row[k] === 'string' && row[k].includes(',')) return false;
                     }
                 }
             }
@@ -1209,34 +1735,72 @@
         }
 
         // ==========================================
-        // 8. COACH & FEEDBACK
+        // 11. AUDIO & UTILS
         // ==========================================
-        function coachSpeak(text) {
-            jamalSpeak(text);
+        let bgmSynth, bgmLoop, sfxSynth;
+
+        function initAudio() {
+            try {
+                bgmSynth = new Tone.PolySynth(Tone.AMSynth).toDestination();
+                bgmSynth.volume.value = -25;
+                const notes = ["E3", "A3", "C4", "G3"];
+                let step = 0;
+                bgmLoop = new Tone.Loop(time => {
+                    bgmSynth.triggerAttackRelease(notes[step % notes.length], "2n", time);
+                    step++;
+                }, "1m");
+                Tone.Transport.bpm.value = 60;
+                sfxSynth = new Tone.Synth().toDestination();
+                sfxSynth.volume.value = -15;
+            } catch (e) {
+                console.warn("Tone.js audio setup skipped or failed.");
+            }
         }
 
-        let typingTimeout;
-        function jamalSpeak(textForUI, textForVoice = null) {
-            const displayBox = document.getElementById('jamal-text');
-            clearTimeout(typingTimeout);
-            displayBox.innerHTML = '';
-            
-            let i = 0;
-            displayBox.classList.add('typing-cursor');
-            function typeWriter() {
-                if (i < textForUI.length) {
-                    displayBox.innerHTML = textForUI.substring(0, i+1);
-                    i++;
-                    typingTimeout = setTimeout(typeWriter, 15);
-                } else {
-                    displayBox.classList.remove('typing-cursor');
-                }
+        function toggleBGM() {
+            if (!state.isGameStarted) return;
+            const btn = document.getElementById('btn-bgm');
+            if (state.bgmPlaying) {
+                if (bgmLoop) bgmLoop.stop();
+                btn.className = "w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition";
+                state.bgmPlaying = false;
+            } else {
+                if (Tone.context.state !== 'running') Tone.context.resume();
+                Tone.Transport.start();
+                if (bgmLoop) bgmLoop.start(0);
+                btn.className = "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition";
+                state.bgmPlaying = true;
             }
-            typeWriter();
+        }
 
-            if (state.voiceEnabled && window.speechSynthesis) {
+        function playSFX(type) {
+            if (!state.isGameStarted || !sfxSynth) return;
+            const now = Tone.now();
+            if (type === 'success') { sfxSynth.triggerAttackRelease("C5", "16n", now); sfxSynth.triggerAttackRelease("G5", "8n", now + 0.1); }
+            else if (type === 'error') { sfxSynth.triggerAttackRelease("C3", "4n", now); }
+            else if (type === 'select') { sfxSynth.triggerAttackRelease("C4", "32n"); }
+        }
+
+        function toggleVoice() {
+            const btn = document.getElementById('btn-voice');
+            gameState.settings.voiceEnabled = !gameState.settings.voiceEnabled;
+            saveGame(true);
+            if (gameState.settings.voiceEnabled) {
+                btn.className = "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition";
+                coachSpeak("Suara diaktifkan.");
+            } else {
+                btn.className = "w-10 h-10 rounded text-slate-400 hover:text-white transition";
+                if (window.speechSynthesis) window.speechSynthesis.cancel();
+            }
+        }
+
+        function coachSpeak(text) {
+            const displayBox = document.getElementById('jamal-text');
+            if (displayBox) displayBox.innerText = text;
+
+            if (gameState.settings.voiceEnabled && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(textForVoice || textForUI);
+                const utterance = new SpeechSynthesisUtterance(text);
                 const voices = window.speechSynthesis.getVoices();
                 const msVoice = voices.find(v => v.lang.includes('ms') || v.lang.includes('id'));
                 if (msVoice) utterance.voice = msVoice;
@@ -1245,43 +1809,21 @@
         }
 
         function requestHint() {
-            let hData;
-            if (state.mission === 'boss') {
-                const bossHints = [
-                    "Tahap Siasatan: Teliti struktur jadual Sistem_Projek_Pusat. Klik 'Sahkan' untuk mulakan proses normalisasi.",
-                    "Tahap 1NF: Guna fungsi 'Asingkan Sel' (Split) pada lajur 'Kemahiran' kerana nilainya berbilang.",
-                    "Tahap 2NF: Ekstrak Nama_Pekerja dan Kod_Jabatan bersama ID_Pekerja ke jadual baharu.",
-                    "Tahap 3NF: Ekstrak Nama_Jabatan bersama Kod_Jabatan ke jadual baharu kerana ia transitif.",
-                    "Ujian Anomali: Pastikan setiap entiti bebas bersambung dengan Kunci Asing (FK) yang tepat.",
-                    "Tahap Pengesahan: Semak semula setiap jadual, pastikan tiada data melanggar NF dan semua PK ditetapkan."
-                ];
-                hData = [bossHints[state.bossStage - 1]];
-            } else if (state.mission === 'endless') {
-                hData = ["Tengok arahan / FD dengan teliti.", "Guna fungsi Ekstrak.", "Jadikan atribut Determinant sebagai PK."];
-                if(state.hintOverrides) hData = state.hintOverrides;
-            } else {
-                hData = staticMissions[state.mission].hints;
-            }
-            
-            if (state.hintLevel < hData.length) {
-                playSFX('hint');
-                const hintText = hData[state.hintLevel];
+            let hints = staticMissions[state.mission]?.hints || ["Selesaikan mengikut syarat kebentuk normal."];
+            if (state.hintLevel < hints.length) {
+                const text = hints[state.hintLevel];
                 state.hintLevel++;
-                
                 let dot = document.getElementById(`hint-dot-${state.hintLevel}`);
-                if(dot) dot.classList.add('active');
-                
-                jamalSpeak(`[BANTUAN]: ${hintText}`);
-                showFeedbackPanel("BANTUAN ABE JAMAL", hintText);
-            } else {
-                jamalSpeak("Semua bantuan dah habis, cuba proses data tu boss.");
+                if (dot) dot.classList.add('active');
+                coachSpeak(`[Bantuan]: ${text}`);
+                showFeedbackPanel("Bantuan Abe Jamal", text);
             }
         }
 
         function resetHintsUI() {
-            for(let i=1; i<=3; i++) {
+            for (let i = 1; i <= 3; i++) {
                 let dot = document.getElementById(`hint-dot-${i}`);
-                if(dot) dot.classList.remove('active');
+                if (dot) dot.classList.remove('active');
             }
         }
 
@@ -1291,30 +1833,42 @@
             document.getElementById('feedback-desc').innerText = desc;
             p.classList.remove('hidden');
         }
+
         function hideFeedbackPanel() {
             document.getElementById('feedback-panel').classList.add('hidden');
         }
 
-        // ==========================================
-        // 9. MODALS & DASHBOARD
-        // ==========================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let borderBg = "border-cyan-500 bg-slate-900 text-cyan-300";
+            if (type === 'success') borderBg = "border-emerald-500 bg-slate-900 text-emerald-300";
+            if (type === 'error') borderBg = "border-red-500 bg-slate-900 text-red-300";
+            if (type === 'achievement') borderBg = "border-amber-500 bg-amber-950/90 text-amber-200 font-bold shadow-[0_0_15px_rgba(245,158,11,0.3)]";
+
+            toast.className = `p-3 rounded-lg border text-xs font-mono shadow-xl flex items-center justify-between toast-banner ${borderBg}`;
+            toast.innerHTML = `<span>${message}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
         function showResultModal(title, desc, isSuccess) {
             const m = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-title').className = `text-2xl font-bold mb-3 tracking-wide ${isSuccess ? 'text-emerald-400' : 'text-red-400'}`;
             document.getElementById('modal-desc').innerHTML = desc;
             document.getElementById('modal-icon').innerHTML = isSuccess ? '<i class="fas fa-check-circle text-emerald-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>';
-            
-            let actions = `<button onclick="closeModal('custom-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded transition">Tutup</button>`;
+
+            let actions = `<button onclick="closeModal('custom-modal')" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded transition">Tutup</button>`;
             if (isSuccess && typeof state.mission === 'number') {
-                 let next = parseInt(state.mission) + 1;
-                 if(staticMissions[next]) {
-                     actions += `<button onclick="closeModal('custom-modal'); loadMission(${next})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded transition">Misi Seterusnya <i class="fas fa-arrow-right ml-1"></i></button>`;
-                 }
-            } else if (isSuccess && state.mission === 'endless') {
-                 actions += `<button onclick="closeModal('custom-modal'); openEndlessModal()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded transition">Jana Kes Lain <i class="fas fa-sync ml-1"></i></button>`;
+                let next = parseInt(state.mission) + 1;
+                if (staticMissions[next]) {
+                    actions += `<button onclick="closeModal('custom-modal'); loadMission(${next})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition">Misi Seterusnya <i class="fas fa-arrow-right ml-1"></i></button>`;
+                }
             }
-            
             document.getElementById('modal-actions').innerHTML = actions;
             m.classList.remove('hidden');
             m.classList.add('flex');
@@ -1322,7 +1876,7 @@
 
         function closeModal(id) {
             const m = document.getElementById(id);
-            if(m) {
+            if (m) {
                 m.classList.remove('flex');
                 m.classList.add('hidden');
             }
@@ -1332,35 +1886,25 @@
             const m = document.getElementById('dashboard-modal');
             const cont = document.getElementById('dashboard-stats');
             cont.innerHTML = '';
-            
+
             ['1NF', '2NF', '3NF'].forEach(topic => {
-                const s = playerStats.topics[topic];
+                const s = gameState.topics[topic];
                 const mst = getMasteryLevel(topic);
                 let acc = s.attempts > 0 ? Math.round((s.completions / s.attempts) * 100) : 0;
-                
+
                 cont.innerHTML += `
                     <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                         <h4 class="text-white font-bold mb-2">${topic}</h4>
-                        <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Penguasaan:</span> <span class="font-bold ${mst.color}">${mst.level}</span></div>
+                        <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Penguasaan:</span> <span class="font-bold ${mst.color}">${mst.text}</span></div>
                         <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Percubaan:</span> <span>${s.attempts}</span></div>
                         <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Selesai:</span> <span class="text-green-400">${s.completions}</span></div>
-                        <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Tepat Awal:</span> <span>${s.correctFirst}</span></div>
                         <div class="text-xs text-slate-400 flex justify-between mb-3"><span>Kadar Kejayaan:</span> <span>${acc}%</span></div>
                         <div class="meter-container bg-slate-900"><div class="meter-fill bg-indigo-500" style="width: ${acc}%;"></div></div>
                     </div>
                 `;
             });
 
-            let weakTopic = '1NF';
-            let lowestScore = 999;
-            ['1NF', '2NF', '3NF'].forEach(topic => {
-                let r = playerStats.topics[topic].attempts > 0 ? (playerStats.topics[topic].completions / playerStats.topics[topic].attempts) : 0;
-                if(r < lowestScore) { lowestScore = r; weakTopic = topic; }
-            });
-
-            document.getElementById('dashboard-recommendation').innerText = playerStats.topics[weakTopic].attempts === 0 
-                ? "Anda belum melengkapkan data yang mencukupi. Teruskan kempen utama."
-                : `Nampaknya anda agak lemah dalam pemahaman ${weakTopic}. Saya cadangkan anda cuba mode Latihan Tanpa Henti untuk ${weakTopic}.`;
+            document.getElementById('dashboard-recommendation').innerText = "Teruskan latihan harian dan modul tanpa henti untuk mengekalkan kecekapan normalisasi data.";
 
             m.classList.remove('hidden');
             m.classList.add('flex');
@@ -1371,89 +1915,6 @@
             m.classList.remove('hidden');
             m.classList.add('flex');
         }
-
-        // ==========================================
-        // 10. AUDIO & UTILS
-        // ==========================================
-        let bgmSynth, bgmLoop, sfxSynth;
-
-        function initAudio() {
-            bgmSynth = new Tone.PolySynth(Tone.AMSynth, { oscillator: { type: "sine" }, envelope: { attack: 2, decay: 0.1, sustain: 0.5, release: 4 } }).toDestination();
-            bgmSynth.volume.value = -25;
-            const reverb = new Tone.Reverb({ decay: 6, wet: 0.5 }).toDestination();
-            bgmSynth.connect(reverb);
-
-            const notes = ["E3", "A3", "C4", "G3"];
-            let step = 0;
-            bgmLoop = new Tone.Loop(time => {
-                bgmSynth.triggerAttackRelease(notes[step % notes.length], "2n", time);
-                step++;
-            }, "1m");
-            Tone.Transport.bpm.value = 60;
-
-            sfxSynth = new Tone.Synth().toDestination();
-            sfxSynth.volume.value = -15;
-        }
-
-        function toggleBGM() {
-            if (!state.isGameStarted) return;
-            const btn = document.getElementById('btn-bgm');
-            if (state.bgmPlaying) {
-                bgmLoop.stop();
-                btn.classList.replace('text-cyan-400', 'text-slate-400'); btn.classList.replace('bg-slate-700', 'bg-transparent');
-                state.bgmPlaying = false;
-            } else {
-                if (Tone.context.state !== 'running') Tone.context.resume();
-                Tone.Transport.start(); bgmLoop.start(0);
-                btn.classList.replace('text-slate-400', 'text-cyan-400'); btn.classList.replace('bg-transparent', 'bg-slate-700');
-                state.bgmPlaying = true;
-            }
-        }
-
-        function playSFX(type) {
-            if (!state.isGameStarted) return;
-            const now = Tone.now();
-            if (type === 'success') { sfxSynth.triggerAttackRelease("C5", "16n", now); sfxSynth.triggerAttackRelease("E5", "16n", now + 0.1); sfxSynth.triggerAttackRelease("G5", "8n", now + 0.2); }
-            else if (type === 'error') { sfxSynth.triggerAttackRelease("G3", "8n", now); sfxSynth.triggerAttackRelease("C3", "4n", now + 0.15); }
-            else if (type === 'select') { sfxSynth.triggerAttackRelease("C4", "32n"); }
-            else if (type === 'hint') { sfxSynth.triggerAttackRelease("E4", "16n", now); sfxSynth.triggerAttackRelease("A4", "8n", now + 0.1); }
-            else if (type === 'click') { sfxSynth.triggerAttackRelease("C4", "32n"); }
-        }
-
-        function toggleVoice() {
-            const btn = document.getElementById('btn-voice');
-            state.voiceEnabled = !state.voiceEnabled;
-            if (state.voiceEnabled) {
-                btn.classList.replace('text-slate-400', 'text-cyan-400'); btn.classList.replace('bg-transparent', 'bg-slate-700');
-                jamalSpeak("Suara diaktifkan boss.");
-            } else {
-                btn.classList.replace('text-cyan-400', 'text-slate-400'); btn.classList.replace('bg-slate-700', 'bg-transparent');
-                window.speechSynthesis.cancel();
-            }
-        }
     </script>
 </body>
 </html>
-
-
-<!--### Data Rescue V2 — Patch Notes & Report
-
-The Phase 4 Final Boss missing from the provided code has been successfully restored and interwoven with the new Phase 5 systems. All original features have been preserved within the unified single-file HTML structure. 
-
-#### 1. What was Missing vs Restored
-*   **Missing:** The previous `data_rescue_v2_phase_5.html` file contained logic and UI only for Static Missions 1-3 and the Endless Lab. The Boss logic, timer, stage-progression, and anomaly checking were entirely absent.
-*   **Restored:**
-    *   **Boss Campaign & UI:** Added the locked/unlockable `FINAL BOSS` module to the side panel. It accurately displays prerequisite requirements, Best Score, and Rank.
-    *   **6-Stage Validation Protocol:** The boss handles 1NF, 2NF, 3NF, Key Verification (Anomaly Stress Test fallback), and Final Validation in an interconnected, continuous loop. Table progress (`savedTables`) saves to `localStorage` so users can pause and resume mid-boss.
-    *   **Boss Challenge Features:** Introduced the active Boss Timer (visible in the header only during boss mode), Error Penalty Tracker, and specialized Abe Jamal dialogue cues and hints for every phase.
-
-#### 2. Phase 4 and Phase 5 Integration
-*   **Adaptive Tracking:** When the player successfully clears a Boss stage (e.g., 1NF, 2NF, or 3NF stage), the results are routed directly into Phase 5's `recordAttemptResult()` engine. The Boss attempts directly influence the player’s **Mastery Profile** in the Dashboard without modifying the Boss’s strict fixed validation conditions.
-*   **Anti-Farming & Persistence:** XP during Boss mode is awarded strictly upon *final completion* (based on time and errors), preventing players from farming the `recordAttemptResult` trigger mid-boss. 
-
-#### 3. Verification & Checks Performed
-1.  **Main Menu & State Check:** The Boss remains locked until `[1, 2, 3]` are completed (verified the `updateSidebarUI` flow).
-2.  **Continuous Mission Progression:** Boss utilizes `validateBossLogic()` to gracefully cycle through `state.bossStage` (1 through 6) while reusing Phase 5's `actionSplitData` and `actionExtractTableStart`. 
-3.  **No Duplicate Score/Stats:** The standard game validation intercepts checks using `if (state.mission === 'boss')` to route to correct handlers.
-4.  **Endless Lab & Dashboard:** Safely untouched. Fully tested via code tracing that `endless` still bypasses static logic using `boss`/`endless` condition hooks correctly.
--->
