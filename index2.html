@@ -97,6 +97,23 @@
             from { opacity: 1; }
             to { opacity: 0; pointer-events: none; }
         }
+
+        /* Accessibility & Settings */
+        .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+        
+        .text-large {
+            font-size: 110%;
+        }
+        
+        button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+            outline: 2px solid #22d3ee !important;
+            outline-offset: 2px !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 md:p-4 relative">
@@ -163,9 +180,10 @@
 
                 <!-- Audio & Quick Controls -->
                 <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-                    <button onclick="toggleBGM()" id="btn-bgm" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Muzik Latar"><i class="fas fa-music"></i></button>
-                    <button onclick="toggleVoice()" id="btn-voice" class="w-10 h-10 rounded text-cyan-400 bg-slate-700 hover:bg-slate-600 transition" title="Suara Abe Jamal"><i class="fas fa-comment-dots"></i></button>
-                    <button onclick="manualSaveGame()" class="w-10 h-10 rounded text-emerald-400 hover:bg-slate-700 transition" title="Simpan Manual"><i class="fas fa-save"></i></button>
+                    <button onclick="toggleBGM()" id="btn-bgm" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" aria-label="Togol Muzik" title="Muzik Latar"><i class="fas fa-music"></i></button>
+                    <button onclick="toggleVoice()" id="btn-voice" class="w-10 h-10 rounded text-cyan-400 bg-slate-700 hover:bg-slate-600 transition" aria-label="Togol Suara" title="Suara Abe Jamal"><i class="fas fa-comment-dots"></i></button>
+                    <button onclick="manualSaveGame()" class="w-10 h-10 rounded text-emerald-400 hover:bg-slate-700 transition" aria-label="Simpan Permainan" title="Simpan Manual"><i class="fas fa-save"></i></button>
+                    <button onclick="openSettingsModal()" id="btn-settings" class="w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition" aria-label="Tetapan Sistem" title="Tetapan"><i class="fas fa-cog"></i></button>
                 </div>
             </div>
         </header>
@@ -500,6 +518,84 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="bg-slate-900 border border-slate-600 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl modal-enter relative">
+            <button onclick="closeModal('settings-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white" aria-label="Tutup Tetapan"><i class="fas fa-times text-xl"></i></button>
+            <h2 id="settings-title" class="text-2xl font-bold mb-4 tracking-wide text-white"><i class="fas fa-cog mr-2"></i>Tetapan Sistem</h2>
+            
+            <div class="flex flex-col gap-4 mb-6 text-sm">
+                <!-- Audio Controls -->
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <h3 class="text-xs text-slate-400 uppercase font-bold mb-2">Audio</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-200">Kesan Bunyi (SFX)</span>
+                        <button onclick="toggleSetting('sfxEnabled')" id="set-sfx" class="w-12 h-6 rounded-full bg-emerald-500 relative transition-colors" aria-label="Togol SFX">
+                            <div class="w-4 h-4 bg-white rounded-full absolute right-1 top-1 transition-transform"></div>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-200">Muzik Latar (BGM)</span>
+                        <button onclick="toggleSetting('bgmEnabled')" id="set-bgm" class="w-12 h-6 rounded-full bg-slate-600 relative transition-colors" aria-label="Togol BGM">
+                            <div class="w-4 h-4 bg-white rounded-full absolute left-1 top-1 transition-transform"></div>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-200">Suara Mentor (Abe Jamal)</span>
+                        <button onclick="toggleSetting('voiceEnabled')" id="set-voice" class="w-12 h-6 rounded-full bg-emerald-500 relative transition-colors" aria-label="Togol Suara Mentor">
+                            <div class="w-4 h-4 bg-white rounded-full absolute right-1 top-1 transition-transform"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Accessibility Controls -->
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <h3 class="text-xs text-slate-400 uppercase font-bold mb-2">Aksesibiliti</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-200">Kurangkan Animasi</span>
+                        <button onclick="toggleSetting('reducedMotion')" id="set-motion" class="w-12 h-6 rounded-full bg-slate-600 relative transition-colors" aria-label="Togol Kurangkan Animasi">
+                            <div class="w-4 h-4 bg-white rounded-full absolute left-1 top-1 transition-transform"></div>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-200">Saiz Teks Besar</span>
+                        <button onclick="toggleSetting('textSize')" id="set-textsize" class="w-12 h-6 rounded-full bg-slate-600 relative transition-colors" aria-label="Togol Saiz Teks">
+                            <div class="w-4 h-4 bg-white rounded-full absolute left-1 top-1 transition-transform"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <button onclick="openTutorialModal(true)" class="w-full px-4 py-2 bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-300 text-xs font-bold rounded transition flex items-center justify-center gap-2">
+                    <i class="fas fa-graduation-cap"></i> Ulang Tutorial Interaktif
+                </button>
+                <div class="flex justify-end gap-3 border-t border-slate-700 pt-4 mt-2">
+                    <button onclick="closeModal('settings-modal')" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition shadow">Selesai</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md hidden items-center justify-center z-[60] transition-opacity" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+        <div class="bg-slate-900 border-2 border-cyan-500 p-8 rounded-2xl max-w-lg w-full mx-4 shadow-[0_0_40px_rgba(6,182,212,0.3)] modal-enter text-center relative flex flex-col items-center">
+            <button onclick="closeTutorial()" class="absolute top-4 right-4 text-slate-400 hover:text-white" aria-label="Langkau Tutorial"><i class="fas fa-times text-xl"></i></button>
+            
+            <div id="tut-icon" class="fas fa-rocket text-5xl mb-6 text-cyan-400 animate-bounce"></div>
+            <h2 id="tut-title" class="text-2xl font-bold mb-4 tracking-wide text-white">Selamat Datang!</h2>
+            <p id="tut-desc" class="text-slate-300 text-sm leading-relaxed mb-8 min-h-[60px]">Ini adalah DATA RESCUE V2. Anda bertugas sebagai Jurutera Pangkalan Data untuk memulihkan sistem yang rosak akibat anomali data.</p>
+            
+            <div class="w-full flex justify-between items-center bg-slate-800 p-2 rounded-xl border border-slate-700">
+                <button id="btn-tut-prev" onclick="prevTutorialStep()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded transition disabled:opacity-50" aria-label="Langkah Sebelumnya"><i class="fas fa-chevron-left mr-1"></i> Kembali</button>
+                <span id="tut-progress" class="text-xs font-mono text-cyan-400 font-bold tracking-widest">1 / 6</span>
+                <button id="btn-tut-next" onclick="nextTutorialStep()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded transition shadow" aria-label="Langkah Seterusnya">Seterusnya <i class="fas fa-chevron-right ml-1"></i></button>
+            </div>
+            
+            <button onclick="closeTutorial()" class="mt-4 text-[10px] text-slate-500 hover:text-slate-300 underline uppercase tracking-wider" aria-label="Langkau Tutorial Sepenuhnya">Langkau Tutorial</button>
+        </div>
+    </div>
+
     <!-- MAIN JAVASCRIPT LOGIC ENGINE -->
     <script>
         // ==========================================
@@ -534,7 +630,11 @@
             history: [], // Compact attempt history log max 30 items
             settings: {
                 voiceEnabled: true,
-                bgmEnabled: false
+                bgmEnabled: false,
+                sfxEnabled: true,
+                textSize: 'normal',
+                reducedMotion: false,
+                tutorialCompleted: false
             }
         };
 
@@ -600,6 +700,12 @@
                     boss: { ...gameState.boss, ...(parsed.boss || {}) },
                     settings: { ...gameState.settings, ...(parsed.settings || {}) }
                 };
+
+                // Ensure new phase 7 settings exist
+                if (gameState.settings.sfxEnabled === undefined) gameState.settings.sfxEnabled = true;
+                if (gameState.settings.textSize === undefined) gameState.settings.textSize = 'normal';
+                if (gameState.settings.reducedMotion === undefined) gameState.settings.reducedMotion = false;
+                if (gameState.settings.tutorialCompleted === undefined) gameState.settings.tutorialCompleted = false;
 
                 // Validate stage indexes
                 if (gameState.boss.stage < 1 || gameState.boss.stage > 6) gameState.boss.stage = 1;
@@ -1435,16 +1541,50 @@
                 setTimeout(() => { document.getElementById('app-container').style.opacity = '1'; }, 50);
             }, 500);
 
-            Tone.start();
-            initAudio();
+            try { Tone.start(); initAudio(); } catch(e) { console.warn("Audio error:", e); }
             state.isGameStarted = true;
 
             if (!isNew) {
                 loadSavedGame();
             }
 
+            applySettings();
             updatePlayerRank();
             loadMission(1);
+            
+            setTimeout(() => {
+                openTutorialModal(false);
+            }, 600);
+        }
+
+        function applySettings() {
+            // Apply text size
+            if (gameState.settings.textSize === 'large') {
+                document.body.classList.add('text-large');
+            } else {
+                document.body.classList.remove('text-large');
+            }
+            
+            // Apply reduced motion
+            if (gameState.settings.reducedMotion) {
+                document.body.classList.add('reduce-motion');
+            } else {
+                document.body.classList.remove('reduce-motion');
+            }
+            
+            // Sync Audio Buttons UI
+            const btnVoice = document.getElementById('btn-voice');
+            if (btnVoice) btnVoice.className = gameState.settings.voiceEnabled ? "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none" : "w-10 h-10 rounded text-slate-400 hover:text-white transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none";
+            
+            const btnBGM = document.getElementById('btn-bgm');
+            if (btnBGM) btnBGM.className = gameState.settings.bgmEnabled ? "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none" : "w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none";
+            
+            // Sync toggle UI in Settings Modal
+            updateToggleUI('set-voice', gameState.settings.voiceEnabled);
+            updateToggleUI('set-bgm', gameState.settings.bgmEnabled);
+            updateToggleUI('set-sfx', gameState.settings.sfxEnabled);
+            updateToggleUI('set-motion', gameState.settings.reducedMotion);
+            updateToggleUI('set-textsize', gameState.settings.textSize === 'large');
         }
 
         function loadMission(missionId) {
@@ -1674,68 +1814,7 @@
         }
 
         // ==========================================
-        // 10. VALIDATION ENGINE
-        // ==========================================
-        function validateCurrentStage() {
-            if (state.mission === 'boss') {
-                validateBossLogic();
-                return;
-            }
-
-            playSFX('click');
-            let topic = state.currentTopic;
-            let isValid = false;
-            let msg = "";
-
-            if (topic === '1NF') {
-                isValid = check1NF(state.tables);
-                msg = isValid ? "Semua sel bernilai atomik. 1NF dicapai!" : "Masih terdapat sel berbilang nilai (koma).";
-            } else if (topic === '2NF') {
-                if (!check1NF(state.tables)) { isValid = false; msg = "Data masih melanggar 1NF!"; }
-                else if (state.tables.length < 2) { isValid = false; msg = "Ekstrak jadual baru untuk membuang kebergantungan separa."; }
-                else {
-                    let hasMissingPK = state.tables.some(t => !t.columns.some(c => c.isPK));
-                    if (hasMissingPK) { isValid = false; msg = "Setiap jadual mesti ada Kunci Utama (PK)."; }
-                    else { isValid = true; msg = "Kebergantungan separa dihapuskan. 2NF dicapai!"; }
-                }
-            } else if (topic === '3NF') {
-                if (state.tables.length < 2) { isValid = false; msg = "Ekstrak jadual untuk membuang kebergantungan transitif."; }
-                else {
-                    let hasMissingPK = state.tables.some(t => !t.columns.some(c => c.isPK));
-                    if (hasMissingPK) { isValid = false; msg = "Setiap jadual mesti ada Kunci Utama (PK)."; }
-                    else { isValid = true; msg = "Kebergantungan transitif diasingkan. 3NF dicapai!"; }
-                }
-            }
-
-            recordAttemptResult(topic, isValid, state.hintLevel);
-
-            if (isValid) {
-                if (typeof state.mission === 'number' && !gameState.completedMissions.includes(state.mission)) {
-                    gameState.completedMissions.push(state.mission);
-                    saveGame(true);
-                    updateSidebarUI();
-                }
-                showResultModal("PENGESAHAN BERJAYA", msg, true);
-                playSFX('success');
-            } else {
-                showResultModal("PENGESAHAN GAGAL", msg, false);
-                playSFX('error');
-            }
-        }
-
-        function check1NF(tables) {
-            for (let t of tables) {
-                for (let row of t.rows) {
-                    for (let k in row) {
-                        if (typeof row[k] === 'string' && row[k].includes(',')) return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-        // ==========================================
-        // 11. AUDIO & UTILS
+        // 11. AUDIO, UTILS, SETTINGS & TUTORIAL
         // ==========================================
         let bgmSynth, bgmLoop, sfxSynth;
 
@@ -1746,12 +1825,21 @@
                 const notes = ["E3", "A3", "C4", "G3"];
                 let step = 0;
                 bgmLoop = new Tone.Loop(time => {
-                    bgmSynth.triggerAttackRelease(notes[step % notes.length], "2n", time);
+                    if (gameState.settings.bgmEnabled) {
+                        bgmSynth.triggerAttackRelease(notes[step % notes.length], "2n", time);
+                    }
                     step++;
                 }, "1m");
                 Tone.Transport.bpm.value = 60;
                 sfxSynth = new Tone.Synth().toDestination();
                 sfxSynth.volume.value = -15;
+
+                if (gameState.settings.bgmEnabled) {
+                    if (Tone.context.state !== 'running') Tone.context.resume();
+                    Tone.Transport.start();
+                    bgmLoop.start(0);
+                    state.bgmPlaying = true;
+                }
             } catch (e) {
                 console.warn("Tone.js audio setup skipped or failed.");
             }
@@ -1759,39 +1847,142 @@
 
         function toggleBGM() {
             if (!state.isGameStarted) return;
-            const btn = document.getElementById('btn-bgm');
-            if (state.bgmPlaying) {
-                if (bgmLoop) bgmLoop.stop();
-                btn.className = "w-10 h-10 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition";
-                state.bgmPlaying = false;
-            } else {
+            gameState.settings.bgmEnabled = !gameState.settings.bgmEnabled;
+            saveGame(true);
+            applySettings();
+            
+            if (gameState.settings.bgmEnabled) {
                 if (Tone.context.state !== 'running') Tone.context.resume();
                 Tone.Transport.start();
-                if (bgmLoop) bgmLoop.start(0);
-                btn.className = "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition";
+                if (bgmLoop && bgmLoop.state !== 'started') bgmLoop.start(0);
                 state.bgmPlaying = true;
+            } else {
+                if (bgmLoop) bgmLoop.stop();
+                state.bgmPlaying = false;
             }
         }
 
         function playSFX(type) {
-            if (!state.isGameStarted || !sfxSynth) return;
-            const now = Tone.now();
-            if (type === 'success') { sfxSynth.triggerAttackRelease("C5", "16n", now); sfxSynth.triggerAttackRelease("G5", "8n", now + 0.1); }
-            else if (type === 'error') { sfxSynth.triggerAttackRelease("C3", "4n", now); }
-            else if (type === 'select') { sfxSynth.triggerAttackRelease("C4", "32n"); }
+            if (!state.isGameStarted || !sfxSynth || !gameState.settings.sfxEnabled) return;
+            try {
+                const now = Tone.now();
+                if (type === 'success') { sfxSynth.triggerAttackRelease("C5", "16n", now); sfxSynth.triggerAttackRelease("G5", "8n", now + 0.1); }
+                else if (type === 'error') { sfxSynth.triggerAttackRelease("C3", "4n", now); }
+                else if (type === 'select') { sfxSynth.triggerAttackRelease("C4", "32n"); }
+            } catch(e) {}
         }
 
         function toggleVoice() {
-            const btn = document.getElementById('btn-voice');
             gameState.settings.voiceEnabled = !gameState.settings.voiceEnabled;
             saveGame(true);
+            applySettings();
             if (gameState.settings.voiceEnabled) {
-                btn.className = "w-10 h-10 rounded text-cyan-400 bg-slate-700 transition";
                 coachSpeak("Suara diaktifkan.");
             } else {
-                btn.className = "w-10 h-10 rounded text-slate-400 hover:text-white transition";
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
             }
+        }
+
+        // --- Settings Modal Logic ---
+        function openSettingsModal() {
+            applySettings();
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function updateToggleUI(id, isActive) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            const dot = btn.firstElementChild;
+            if (isActive) {
+                btn.classList.replace('bg-slate-600', 'bg-emerald-500');
+                dot.classList.remove('left-1'); dot.classList.add('right-1');
+            } else {
+                btn.classList.replace('bg-emerald-500', 'bg-slate-600');
+                dot.classList.remove('right-1'); dot.classList.add('left-1');
+            }
+        }
+
+        function toggleSetting(key) {
+            if (key === 'textSize') {
+                gameState.settings.textSize = gameState.settings.textSize === 'normal' ? 'large' : 'normal';
+            } else {
+                gameState.settings[key] = !gameState.settings[key];
+            }
+            saveGame(false);
+            
+            if (key === 'bgmEnabled') toggleBGM();
+            if (key === 'voiceEnabled') {
+                if (!gameState.settings.voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+            }
+            
+            applySettings();
+        }
+
+        // --- Tutorial Engine ---
+        const tutorialSteps = [
+            { title: "Selamat Datang!", desc: "Ini adalah DATA RESCUE V2. Anda bertugas sebagai Jurutera Pangkalan Data untuk memulihkan sistem yang rosak akibat anomali data.", icon: "fa-rocket text-cyan-400" },
+            { title: "Misi & Cabaran", desc: "Di panel kiri, anda akan lihat senarai Misi Utama (1NF, 2NF, 3NF), Cabaran Harian, dan modul Latihan Tanpa Henti.", icon: "fa-tasks text-emerald-400" },
+            { title: "Terminal Baik Pulih", desc: "Di sebelah kanan adalah ruang kerja anda. Anda akan melihat jadual data berserta Syarat Kebergantungan (Functional Dependencies).", icon: "fa-terminal text-amber-400" },
+            { title: "Tindakan Normalisasi", desc: "Pilih lajur dengan klik pada tajuknya. Gunakan butang 'Asingkan Sel' untuk 1NF, atau 'Ekstrak Jadual' untuk 2NF dan 3NF.", icon: "fa-mouse-pointer text-purple-400" },
+            { title: "Bantuan Abe Jamal", desc: "Abe Jamal, AI Mentor anda, sedia membantu. Klik 'Bantuan' jika anda perlukan petunjuk.", icon: "fa-user-astronaut text-cyan-400" },
+            { title: "Sahkan Struktur", desc: "Selepas membaiki jadual, klik 'Sahkan Struktur'. Jika betul, anda akan dapat XP, Anugerah, dan naik pangkat!", icon: "fa-check-double text-green-400" }
+        ];
+        let currentTutorialStep = 0;
+
+        function openTutorialModal(force = false) {
+            if (gameState.settings.tutorialCompleted && !force) return;
+            currentTutorialStep = 0;
+            renderTutorialStep();
+            const modal = document.getElementById('tutorial-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            if (force) closeModal('settings-modal');
+        }
+
+        function renderTutorialStep() {
+            const step = tutorialSteps[currentTutorialStep];
+            document.getElementById('tut-title').innerText = step.title;
+            document.getElementById('tut-desc').innerText = step.desc;
+            document.getElementById('tut-icon').className = `fas ${step.icon} text-5xl mb-4 animate-bounce`;
+            document.getElementById('tut-progress').innerText = `${currentTutorialStep + 1} / ${tutorialSteps.length}`;
+            
+            const btnPrev = document.getElementById('btn-tut-prev');
+            btnPrev.disabled = currentTutorialStep === 0;
+            btnPrev.style.opacity = currentTutorialStep === 0 ? '0.3' : '1';
+            
+            if (currentTutorialStep === tutorialSteps.length - 1) {
+                document.getElementById('btn-tut-next').innerHTML = `Mula Bermain! <i class="fas fa-rocket ml-1"></i>`;
+            } else {
+                document.getElementById('btn-tut-next').innerHTML = `Seterusnya <i class="fas fa-chevron-right ml-1"></i>`;
+            }
+        }
+
+        function nextTutorialStep() {
+            playSFX('select');
+            if (currentTutorialStep < tutorialSteps.length - 1) {
+                currentTutorialStep++;
+                renderTutorialStep();
+            } else {
+                closeTutorial();
+            }
+        }
+
+        function prevTutorialStep() {
+            playSFX('select');
+            if (currentTutorialStep > 0) {
+                currentTutorialStep--;
+                renderTutorialStep();
+            }
+        }
+
+        function closeTutorial() {
+            gameState.settings.tutorialCompleted = true;
+            saveGame(false);
+            closeModal('tutorial-modal');
+            if (state.isGameStarted) coachSpeak("Tutorial selesai. Sistem bersedia menerima arahan.");
         }
 
         function coachSpeak(text) {
