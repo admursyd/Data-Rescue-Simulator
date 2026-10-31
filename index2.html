@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATA RESCUE V2: Simulator Bersama Abe Jamal (Phase 8)</title>
+    <title>DATA RESCUE V2: Simulator Bersama Abe Jamal (Phase 9)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Tone.js/14.8.49/Tone.js"></script>
@@ -373,7 +373,7 @@
 
     <!-- Generic Result Modal -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
-        <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl max-w-lg w-full mx-4 shadow-2xl modal-enter text-center relative overflow-hidden">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl max-w-lg w-full mx-4 shadow-2xl modal-enter text-center relative max-h-[90vh] overflow-y-auto">
             <div id="modal-icon" class="text-6xl mb-5"></div>
             <h2 id="modal-title" class="text-2xl font-bold mb-3 tracking-wide"></h2>
             <div id="modal-desc" class="text-slate-300 mb-8 text-sm leading-relaxed text-left bg-slate-800 p-4 rounded-lg"></div>
@@ -615,7 +615,7 @@
 
     <!-- Mastery Dashboard Modal -->
     <div id="dashboard-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
-        <div class="bg-slate-900 border border-indigo-700 p-6 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl modal-enter relative">
+        <div class="bg-slate-900 border border-indigo-700 p-6 rounded-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl modal-enter relative">
             <button onclick="closeModal('dashboard-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-2xl font-bold mb-2 tracking-wide text-indigo-400"><i class="fas fa-chart-line mr-2"></i>Profil Penguasaan (Mastery)</h2>
             <p class="text-slate-400 text-sm mb-6">Analisis pembelajaran adaptif berdasarkan prestasi percubaan anda.</p>
@@ -637,7 +637,7 @@
 
     <!-- Endless Lab Modal -->
     <div id="endless-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
-        <div class="bg-slate-900 border border-emerald-700 p-6 rounded-2xl max-w-lg w-full mx-4 shadow-2xl modal-enter relative">
+        <div class="bg-slate-900 border border-emerald-700 p-6 rounded-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl modal-enter relative">
             <button onclick="closeModal('endless-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-2xl font-bold mb-2 tracking-wide text-emerald-400"><i class="fas fa-infinity mr-2"></i>Latihan Tanpa Henti</h2>
             <p class="text-slate-400 text-sm mb-6">Jana kes pangkalan data rawak berdasarkan tahap penguasaan anda.</p>
@@ -672,7 +672,7 @@
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-        <div class="bg-slate-900 border border-slate-600 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl modal-enter relative">
+        <div class="bg-slate-900 border border-slate-600 p-6 rounded-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl modal-enter relative">
             <button onclick="closeModal('settings-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white" aria-label="Tutup Tetapan"><i class="fas fa-times text-xl"></i></button>
             <h2 id="settings-title" class="text-2xl font-bold mb-4 tracking-wide text-white"><i class="fas fa-cog mr-2"></i>Tetapan Sistem</h2>
             
@@ -754,87 +754,273 @@
         // ==========================================
         // 1. AUTHORITATIVE STATE & SAVE ARCHITECTURE
         // ==========================================
-        const SAVE_KEY = 'DATA_RESCUE_V2_SAVE_PHASE8';
+        const SAVE_KEY = 'DATA_RESCUE_V2_SAVE_PHASE8'; // key intentionally unchanged so existing saves stay readable
         const CLASS_SAVE_KEY = 'DATA_RESCUE_V2_CLASSROOM';
-        const CURRENT_SAVE_VERSION = '2.8.0';
+        const CURRENT_SAVE_VERSION = '2.9.0';
+        const BACKUP_SLOTS = 3;
+        const RESERVED_NAMES = ['__proto__', 'constructor', 'prototype', 'hasownproperty', 'tostring', 'valueof'];
 
-        let gameState = {
-            version: CURRENT_SAVE_VERSION,
-            xp: 0, rank: "Database Trainee", completedMissions: [], unlockedAchievements: {},
-            dailyCompleted: {}, dailyHistory: [],
-            topics: {
-                '1NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
-                '2NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
-                '3NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 }
-            },
-            boss: { status: 'Locked', stage: 1, bestScore: 0, highestRank: 'Tiada', currentTime: 0, errors: 0, savedTables: null },
-            history: [],
-            settings: { voiceEnabled: true, bgmEnabled: false, sfxEnabled: true, textSize: 'normal', reducedMotion: false, tutorialCompleted: false }
-        };
+        // ---- Generic safety helpers ----
+        function escapeHtml(v) {
+            return String(v === null || v === undefined ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function isPlainObject(o) { return o !== null && typeof o === 'object' && !Array.isArray(o); }
+        function hasOwn(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+        function clampInt(v, min, max, dflt) {
+            const n = Number(v);
+            if (v === null || v === '' || typeof v === 'boolean' || !Number.isFinite(n)) return dflt;
+            return Math.min(max, Math.max(min, Math.trunc(n)));
+        }
+        function cleanText(v, max) { return String(v === null || v === undefined ? '' : v).replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, max); }
+
+        function defaultGameState() {
+            return {
+                version: CURRENT_SAVE_VERSION,
+                xp: 0, rank: "Database Trainee", completedMissions: [], unlockedAchievements: {},
+                dailyCompleted: {}, dailyHistory: [],
+                topics: {
+                    '1NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
+                    '2NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 },
+                    '3NF': { attempts: 0, correctFirst: 0, completions: 0, hintsUsed: 0, failStreak: 0, successStreak: 0 }
+                },
+                boss: { status: 'Locked', stage: 1, bestScore: 0, highestRank: 'Tiada', currentTime: 0, errors: 0, savedTables: null },
+                history: [],
+                counters: { validExtractions: 0, endlessSolved: 0 },
+                settings: { voiceEnabled: true, bgmEnabled: false, sfxEnabled: true, textSize: 'normal', reducedMotion: false, tutorialCompleted: false }
+            };
+        }
+        let gameState = defaultGameState();
 
         // Classroom State (Local)
         let classState = {
             active: false,
             code: "",
             config: { topic: "1", timeLimit: 0 },
-            students: {}, // { nickname: { results: [], highestScore: 0 } }
+            students: {}, // { nickname: { results: [], highestScore: 0, errors: 0 } }
             results: [] // [ { name, status, score, time, attempts, hints } ]
         };
 
         let state = {
             mission: 1, bossStage: 1, isGameStarted: false, bgmPlaying: false,
-            tables: [], originalTables: [], selectedCols: [], hintLevel: 0,
+            tables: [], originalTables: [], selectedCols: [], hintLevel: 0, hintsCounted: 0, spec: null,
             hasAttemptedCurrentCase: false, caseCompleted: false, currentTopic: '1NF', currentDifficulty: 'Standard'
         };
 
         let activeClassStudent = null;
         let isClassroomMode = false;
         let classroomTimer = 0;
+        let classroomStartTime = 0;
+        let classroomRunActive = false;
         let classroomTimerInterval = null;
         let classroomAttemptCounter = 0;
+        let histSeq = 0;
 
         let storageAvailable = true;
         try { localStorage.setItem('_t', 't'); localStorage.removeItem('_t'); } catch(e) { storageAvailable = false; }
 
+        // ---- Save validation / migration ----
+        function parseVersion(v) { const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(v || '')); return m ? [+m[1], +m[2], +m[3]] : null; }
+        function compareVersions(a, b) { for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; } return 0; }
+
+        function sanitizeTables(raw) {
+            if (!Array.isArray(raw) || raw.length < 1 || raw.length > 8) return null;
+            const out = [];
+            for (const t of raw) {
+                if (!isPlainObject(t) || !Array.isArray(t.columns) || !Array.isArray(t.rows)) return null;
+                const name = cleanText(t.name, 40); if (!name) return null;
+                if (t.columns.length < 1 || t.columns.length > 12 || t.rows.length > 200) return null;
+                const columns = []; const seen = new Set();
+                for (const c of t.columns) {
+                    if (!isPlainObject(c)) return null;
+                    const cn = cleanText(c.name, 40);
+                    if (!cn || seen.has(cn) || RESERVED_NAMES.includes(cn.toLowerCase())) return null;
+                    seen.add(cn); columns.push({ name: cn, isPK: c.isPK === true });
+                }
+                const rows = [];
+                for (const r of t.rows) {
+                    if (!isPlainObject(r)) return null;
+                    const nr = {};
+                    for (const c of columns) { const v = hasOwn(r, c.name) ? r[c.name] : ''; nr[c.name] = (typeof v === 'string' || typeof v === 'number') ? String(v).slice(0, 100) : ''; }
+                    rows.push(nr);
+                }
+                out.push({ name, columns, rows });
+            }
+            return out;
+        }
+
+        function sanitizeGameState(raw) {
+            if (!isPlainObject(raw)) return null;
+            const d = defaultGameState();
+            const ver = parseVersion(raw.version), cur = parseVersion(CURRENT_SAVE_VERSION);
+            const newer = !!(ver && compareVersions(ver, cur) > 0);
+            const migrated = !ver || compareVersions(ver, cur) < 0;
+            d.xp = clampInt(raw.xp, 0, 10000000, 0);
+            d.completedMissions = Array.isArray(raw.completedMissions) ? Array.from(new Set(raw.completedMissions.filter(m => m === 1 || m === 2 || m === 3))) : [];
+            if (isPlainObject(raw.unlockedAchievements)) {
+                ACHIEVEMENTS_DEF.forEach(a => { if (hasOwn(raw.unlockedAchievements, a.id) && raw.unlockedAchievements[a.id]) d.unlockedAchievements[a.id] = cleanText(raw.unlockedAchievements[a.id], 40) || 'restored'; });
+            }
+            const dayRe = /^DAILY_\d{4}-\d{2}-\d{2}$/;
+            if (isPlainObject(raw.dailyCompleted)) Object.keys(raw.dailyCompleted).forEach(k => { if (dayRe.test(k)) d.dailyCompleted[k] = cleanText(raw.dailyCompleted[k], 40) || 'restored'; });
+            if (Array.isArray(raw.dailyHistory)) d.dailyHistory = Array.from(new Set(raw.dailyHistory.filter(x => typeof x === 'string' && dayRe.test(x)))).slice(-400);
+            ['1NF', '2NF', '3NF'].forEach(t => {
+                const s = isPlainObject(raw.topics) && isPlainObject(raw.topics[t]) ? raw.topics[t] : {};
+                const o = d.topics[t];
+                Object.keys(o).forEach(f => { o[f] = clampInt(s[f], 0, 1000000, 0); });
+                if (o.correctFirst > o.attempts) o.correctFirst = o.attempts;
+            });
+            const b = isPlainObject(raw.boss) ? raw.boss : {};
+            d.boss.status = ['Locked', 'In Progress', 'Completed'].includes(b.status) ? b.status : 'Locked';
+            d.boss.stage = clampInt(b.stage, 1, 6, 1);
+            d.boss.bestScore = clampInt(b.bestScore, 0, 10000000, 0);
+            d.boss.highestRank = cleanText(b.highestRank, 30) || 'Tiada';
+            d.boss.currentTime = clampInt(b.currentTime, 0, 10000000, 0);
+            d.boss.errors = clampInt(b.errors, 0, 1000000, 0);
+            d.boss.savedTables = sanitizeTables(b.savedTables);
+            if (d.boss.stage > 1 && !d.boss.savedTables) d.boss.stage = 1;
+            if (Array.isArray(raw.history)) {
+                d.history = raw.history.filter(h => isPlainObject(h) && (h.status === 'SUCCESS' || h.status === 'FAILED')).slice(0, 30).map(h => ({
+                    id: cleanText(h.id, 40), timestamp: cleanText(h.timestamp, 20),
+                    type: ['CAMPAIGN', 'DAILY', 'ENDLESS', 'BOSS'].includes(h.type) ? h.type : 'CAMPAIGN',
+                    topic: cleanText(h.topic, 10), difficulty: cleanText(h.difficulty, 40), status: h.status,
+                    scoreGained: clampInt(h.scoreGained, 0, 100000, 0), hintsUsed: clampInt(h.hintsUsed, 0, 1000, 0), firstTry: h.firstTry === true
+                }));
+            }
+            // Migration: counters did not exist before 2.9.0 -> seed from legacy data
+            if (isPlainObject(raw.counters)) {
+                d.counters.validExtractions = clampInt(raw.counters.validExtractions, 0, 1000000, 0);
+                d.counters.endlessSolved = clampInt(raw.counters.endlessSolved, 0, 1000000, 0);
+            } else {
+                d.counters.validExtractions = d.topics['2NF'].completions + d.topics['3NF'].completions;
+                d.counters.endlessSolved = d.history.filter(h => h.type === 'ENDLESS' && h.status === 'SUCCESS').length;
+            }
+            const s = isPlainObject(raw.settings) ? raw.settings : {};
+            ['voiceEnabled', 'bgmEnabled', 'sfxEnabled', 'reducedMotion', 'tutorialCompleted'].forEach(k => { if (typeof s[k] === 'boolean') d.settings[k] = s[k]; });
+            d.settings.textSize = s.textSize === 'large' ? 'large' : 'normal';
+            d.version = CURRENT_SAVE_VERSION;
+            return { state: d, migrated, newer };
+        }
+
+        function sanitizeClassState(raw) {
+            if (!isPlainObject(raw)) return null;
+            const d = { active: false, code: "", config: { topic: "1", timeLimit: 0 }, students: {}, results: [] };
+            d.code = /^DR-\d{4}$/.test(String(raw.code || '')) ? raw.code : '';
+            d.active = raw.active === true && d.code !== '';
+            const cfg = isPlainObject(raw.config) ? raw.config : {};
+            d.config.topic = ['1', '2', '3', 'BOSS'].includes(String(cfg.topic)) ? String(cfg.topic) : '1';
+            d.config.timeLimit = clampInt(cfg.timeLimit, 0, 600, 0);
+            if (isPlainObject(raw.students)) {
+                Object.keys(raw.students).slice(0, 500).forEach(n => {
+                    const nn = cleanText(n, 24);
+                    if (!nn || RESERVED_NAMES.includes(nn.toLowerCase())) return;
+                    const s = isPlainObject(raw.students[n]) ? raw.students[n] : {};
+                    d.students[nn] = { results: [], highestScore: clampInt(s.highestScore, 0, 100000, 0), errors: clampInt(s.errors, 0, 100000, 0) };
+                });
+            }
+            if (Array.isArray(raw.results)) {
+                d.results = raw.results.filter(r => isPlainObject(r) && (r.status === 'Lulus' || r.status === 'Gagal')).slice(-1000).map(r => ({
+                    name: cleanText(r.name, 24), status: r.status, score: clampInt(r.score, 0, 100000, 0),
+                    time: clampInt(r.time, 0, 1000000, 0), attempts: clampInt(r.attempts, 0, 100000, 0), hints: clampInt(r.hints, 0, 100, 0)
+                }));
+            }
+            return d;
+        }
+
+        // Rotating backup of unreadable data so it is never silently destroyed
+        function backupCorruptData(baseKey, raw) {
+            try {
+                const keys = []; for (let i = 0; i < BACKUP_SLOTS; i++) keys.push(`${baseKey}_CORRUPT_BACKUP_${i}`);
+                for (const k of keys) if (localStorage.getItem(k) === raw) return true;
+                const free = keys.find(k => localStorage.getItem(k) === null);
+                if (free) { localStorage.setItem(free, raw); return true; }
+                for (let i = 0; i < BACKUP_SLOTS - 1; i++) localStorage.setItem(keys[i], localStorage.getItem(keys[i + 1]));
+                localStorage.setItem(keys[BACKUP_SLOTS - 1], raw);
+                return true;
+            } catch (e) { return false; }
+        }
+        function removeBackups(baseKey) { try { for (let i = 0; i < BACKUP_SLOTS; i++) localStorage.removeItem(`${baseKey}_CORRUPT_BACKUP_${i}`); } catch (e) {} }
+
+        let lastLoadReport = { status: 'none' };
+        let saveWriteBlocked = false;      // protects personal save when it is unreadable-and-unbacked-up or from a newer version
+        let classSaveBlocked = false;
+        let blockedToastShown = false;
+
         function loadSavedGame() {
-            if (!storageAvailable) return false;
+            if (!storageAvailable) { lastLoadReport = { status: 'unavailable' }; return false; }
+            let ok = true;
             try {
                 const saved = localStorage.getItem(SAVE_KEY);
-                if (saved) gameState = { ...gameState, ...JSON.parse(saved) };
-                
+                if (saved === null) {
+                    lastLoadReport = { status: 'none' };
+                } else {
+                    let parsed; try { parsed = JSON.parse(saved); } catch (e) { parsed = undefined; }
+                    const res = parsed === undefined ? null : sanitizeGameState(parsed);
+                    if (!res) {
+                        const backedUp = backupCorruptData(SAVE_KEY, saved);
+                        if (!backedUp) saveWriteBlocked = true;
+                        gameState = defaultGameState(); lastLoadReport = { status: 'corrupt', backedUp }; ok = false;
+                    } else {
+                        gameState = res.state;
+                        if (res.newer) saveWriteBlocked = true;
+                        lastLoadReport = { status: res.newer ? 'newer' : 'ok', migrated: res.migrated };
+                    }
+                }
                 const classSaved = localStorage.getItem(CLASS_SAVE_KEY);
-                if (classSaved) classState = JSON.parse(classSaved);
-                return true;
-            } catch (err) { return false; }
+                if (classSaved !== null) {
+                    let cp; try { cp = JSON.parse(classSaved); } catch (e) { cp = undefined; }
+                    const cres = cp === undefined ? null : sanitizeClassState(cp);
+                    if (cres) classState = cres;
+                    else if (!backupCorruptData(CLASS_SAVE_KEY, classSaved)) classSaveBlocked = true;
+                }
+            } catch (err) { lastLoadReport = { status: 'error' }; return false; }
+            return ok;
         }
 
         function saveGame(showInd = true) {
-            if (!storageAvailable) return;
+            if (!storageAvailable) return false;
             updatePlayerRank();
-            localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
-            if(showInd) {
+            if (saveWriteBlocked) {
+                if (!blockedToastShown) { blockedToastShown = true; showToast("Simpanan dilindungi: data sedia ada tidak ditimpa (versi lebih baharu atau sandaran gagal).", 'error'); }
+                return false;
+            }
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(gameState)); }
+            catch (e) { showToast("Gagal menyimpan: storan penuh atau disekat.", 'error'); return false; }
+            if (showInd) {
                 const dot = document.getElementById('save-dot');
                 const txt = document.getElementById('save-text');
-                if(dot && txt) {
+                if (dot && txt) {
                     dot.className = "w-2 h-2 rounded-full bg-cyan-400 animate-ping";
                     txt.innerText = "Saving...";
-                    setTimeout(() => { dot.className="w-2 h-2 rounded-full bg-emerald-500"; txt.innerText="Saved"; }, 800);
+                    setTimeout(() => { dot.className = "w-2 h-2 rounded-full bg-emerald-500"; txt.innerText = "Saved"; }, 800);
                 }
             }
+            return true;
         }
 
         function manualSaveGame() {
-            saveGame(true);
-            showToast("Kemajuan permainan berjaya disimpan!", "success");
+            if (saveGame(true)) showToast("Kemajuan permainan berjaya disimpan!", "success");
         }
 
         function saveClassData() {
-            if (storageAvailable) localStorage.setItem(CLASS_SAVE_KEY, JSON.stringify(classState));
+            if (!storageAvailable || classSaveBlocked) return false;
+            try { localStorage.setItem(CLASS_SAVE_KEY, JSON.stringify(classState)); return true; } catch (e) { return false; }
+        }
+
+        function updateSaveBanner() {
+            const el = document.getElementById('save-status-banner'); if (!el) return;
+            const r = lastLoadReport; let text;
+            if (r.status === 'ok') text = `Data simpanan dijumpai: ${gameState.xp} XP, ${gameState.completedMissions.length}/3 misi${r.migrated ? ' (dinaik taraf ke v' + CURRENT_SAVE_VERSION + ')' : ''}.`;
+            else if (r.status === 'none') text = 'Tiada data simpanan. Kempen baharu akan bermula.';
+            else if (r.status === 'corrupt') text = r.backedUp ? 'Data simpanan rosak. Salinan sandaran disimpan dan kempen baharu dimulakan.' : 'Data simpanan rosak dan sandaran gagal; simpanan dilumpuhkan untuk melindungi data.';
+            else if (r.status === 'newer') text = 'Data dicipta oleh versi lebih baharu; dimuatkan tanpa ditimpa.';
+            else if (r.status === 'unavailable') text = 'Storan tempatan tidak tersedia; kemajuan tidak akan disimpan.';
+            else text = 'Gagal membaca data simpanan.';
+            el.innerHTML = '<i class="fas fa-info-circle text-cyan-400 mr-1"></i>';
+            el.appendChild(document.createTextNode(text));
         }
 
         function confirmNewCampaign() {
             if (confirm("Adakah anda pasti? Semua data kempen peribadi (XP, Misi, Anugerah) akan dipadam (Data kelas tidak terjejas).")) {
-                if (storageAvailable) localStorage.removeItem(SAVE_KEY);
+                if (storageAvailable) { localStorage.removeItem(SAVE_KEY); removeBackups(SAVE_KEY); }
                 location.reload();
             }
         }
@@ -874,20 +1060,21 @@
 
         function checkAchievements() {
             let newlyUnlocked = [];
+            const hist = gameState.history;
             ACHIEVEMENTS_DEF.forEach(ach => {
                 if (gameState.unlockedAchievements[ach.id]) return; 
                 let isEligible = false;
                 switch (ach.id) {
-                    case "FIRST_REPAIR": isEligible = gameState.completedMissions.length > 0 || gameState.boss.status === 'Completed'; break;
+                    case "FIRST_REPAIR": isEligible = gameState.completedMissions.length > 0 || gameState.boss.status === 'Completed' || hist.some(h => h.status === 'SUCCESS'); break;
                     case "ATOMIC_THINKER": isEligible = gameState.topics['1NF'].completions > 0; break;
                     case "PARTIAL_DEP": isEligible = gameState.topics['2NF'].completions > 0; break;
                     case "TRANSITIVE_DEP": isEligible = gameState.topics['3NF'].completions > 0; break;
                     case "ANOMALY_HUNTER": isEligible = gameState.topics['1NF'].completions > 0 && gameState.topics['2NF'].completions > 0 && gameState.topics['3NF'].completions > 0; break;
-                    case "SCHEMA_ENGINEER": isEligible = (gameState.topics['2NF'].completions + gameState.topics['3NF'].completions) >= 2; break;
-                    case "DATA_PRESERVER": isEligible = gameState.history.some(h => h.status === 'SUCCESS' && h.hintsUsed === 0); break;
+                    case "SCHEMA_ENGINEER": isEligible = gameState.counters.validExtractions >= 3; break;
+                    case "DATA_PRESERVER": isEligible = hist.some(h => h.status === 'SUCCESS' && h.firstTry === true); break;
                     case "BOSS_SLAYER": isEligible = gameState.boss.status === 'Completed'; break;
-                    case "ENDLESS_EXPLORER": isEligible = gameState.history.filter(h => h.type === 'ENDLESS' && h.status === 'SUCCESS').length >= 3; break;
-                    case "HINT_FREE_HERO": isEligible = gameState.history.some(h => h.status === 'SUCCESS' && h.hintsUsed === 0); break;
+                    case "ENDLESS_EXPLORER": isEligible = gameState.counters.endlessSolved >= 3; break;
+                    case "HINT_FREE_HERO": isEligible = hist.some(h => h.status === 'SUCCESS' && h.hintsUsed === 0); break;
                     case "DAILY_CHAMPION": isEligible = Object.keys(gameState.dailyCompleted).length > 0; break;
                     case "DATABASE_GUARDIAN": isEligible = [1,2,3].every(m => gameState.completedMissions.includes(m)) && gameState.boss.status === 'Completed'; break;
                 }
@@ -907,48 +1094,63 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
-        function recordHistoryEntry(type, topic, diff, status, score, hints) {
+        function recordHistoryEntry(type, topic, diff, status, score, hints, firstTry) {
             gameState.history.unshift({
-                id: 'HIST_' + Date.now(), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                type, topic, difficulty: diff, status, scoreGained: score, hintsUsed: hints
+                id: 'HIST_' + Date.now() + '_' + (histSeq++), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type, topic, difficulty: cleanText(diff, 40), status, scoreGained: score, hintsUsed: hints, firstTry: firstTry === true
             });
             if (gameState.history.length > 30) gameState.history.pop();
         }
 
+        // Records one validation of the current (non-classroom) case. Returns { xp } actually awarded for the case itself.
         function recordAttemptResult(topic, isCorrect, hintsUsed) {
-            if (!topic || isClassroomMode) return;
+            if (!topic || isClassroomMode) return { xp: 0 };
             const stats = gameState.topics[topic];
-            if (!stats) return;
+            if (!stats) return { xp: 0 };
+            // A solved case is final: re-validating it must not add stats, history, XP or streaks.
+            if (state.caseCompleted) return { xp: 0 };
 
             let typeLabel = state.mission === 'endless' ? "ENDLESS" : (state.mission === 'daily' ? "DAILY" : (state.mission === 'boss' ? "BOSS" : "CAMPAIGN"));
             let xpGained = 0;
+            const isFirstAttempt = !state.hasAttemptedCurrentCase;
 
-            if (!state.hasAttemptedCurrentCase) {
+            if (isFirstAttempt) {
                 stats.attempts++;
                 if (isCorrect) stats.correctFirst++;
                 state.hasAttemptedCurrentCase = true;
             }
+            // Count each hint once per case (hintsUsed is cumulative for the case)
+            const newHints = Math.max(0, hintsUsed - state.hintsCounted);
+            stats.hintsUsed += newHints; state.hintsCounted = hintsUsed;
 
-            if (isCorrect && !state.caseCompleted) {
+            if (isCorrect) {
                 stats.completions++; stats.successStreak++; stats.failStreak = 0;
                 if (state.mission === 'daily') {
                     if (!gameState.dailyCompleted[state.currentChallengeId]) {
                         xpGained = 150;
                         gameState.dailyCompleted[state.currentChallengeId] = new Date().toISOString();
-                        gameState.dailyHistory.push(state.currentChallengeId);
+                        if (!gameState.dailyHistory.includes(state.currentChallengeId)) gameState.dailyHistory.push(state.currentChallengeId);
                         showToast("🎁 Ganjaran Cabaran Harian: +150 XP!", "success");
                     }
-                } else if (state.mission !== 'boss') {
+                } else if (typeof state.mission === 'number') {
+                    // Campaign mission: XP only on the FIRST completion; replays cannot farm XP
+                    if (!gameState.completedMissions.includes(state.mission)) {
+                        xpGained = Math.max(10, 50 - (hintsUsed * 10));
+                        gameState.completedMissions.push(state.mission);
+                    }
+                } else if (state.mission === 'endless') {
                     xpGained = Math.max(10, 50 - (hintsUsed * 10));
+                    gameState.counters.endlessSolved++;
                 }
+                gameState.counters.validExtractions += Math.max(0, state.tables.length - state.originalTables.length);
                 gameState.xp += xpGained; state.caseCompleted = true;
-            } else if (!isCorrect) {
+            } else {
                 stats.failStreak++; stats.successStreak = 0;
             }
 
-            stats.hintsUsed += hintsUsed;
-            recordHistoryEntry(typeLabel, topic, state.currentDifficulty, isCorrect ? 'SUCCESS' : 'FAILED', xpGained, hintsUsed);
+            recordHistoryEntry(typeLabel, topic, state.currentDifficulty, isCorrect ? 'SUCCESS' : 'FAILED', xpGained, hintsUsed, isCorrect && isFirstAttempt);
             checkAchievements(); saveGame(true); updateSidebarUI();
+            return { xp: xpGained };
         }
 
         // ==========================================
@@ -960,36 +1162,86 @@
             3: { topic: '3NF', objective: "Selesaikan ke 3NF (Buang Kebergantungan Transitif).", scenario: "Maklumat staf & jabatan.", tables: [{ name: "Staf", columns: [{ name: "ID", isPK: true }, { name: "Nama", isPK: false }, { name: "ID_Jab", isPK: false }, { name: "Nama_Jab", isPK: false }], rows: [{ "ID": "S01", "Nama": "Abu", "ID_Jab": "J1", "Nama_Jab": "IT" }, { "ID": "S02", "Nama": "Bakar", "ID_Jab": "J1", "Nama_Jab": "IT" }] }], fds: [{ determinant: ["ID_Jab"], dependent: ["Nama_Jab"], type: "Transitive" }] }
         };
 
+        // Functional dependencies are DECLARED here (never inferred from sample rows).
+        // Candidate key of the unnormalized boss relation: {ID_Projek, ID_Pekerja, Kemahiran}.
         const bossData = {
             topic: 'BOSS', scenario: "Anomali kritikal. Pulihkan sehingga 3NF.",
+            key: ['ID_Projek', 'ID_Pekerja', 'Kemahiran'],
             tables: [{
                 name: "Sistem_Projek",
                 columns: [{ name: "ID_Projek", isPK: false }, { name: "ID_Pekerja", isPK: false }, { name: "Kemahiran", isPK: false }, { name: "Nama", isPK: false }, { name: "Kod_Jab", isPK: false }, { name: "Nama_Jab", isPK: false }],
                 rows: [{ "ID_Projek": "PRJ01", "ID_Pekerja": "EMP01", "Kemahiran": "SQL, Java", "Nama": "Ali", "Kod_Jab": "J01", "Nama_Jab": "IT" }]
-            }], fds: []
+            }],
+            fds: [
+                { determinant: ["ID_Pekerja"], dependent: ["Nama"], type: "Partial" },
+                { determinant: ["ID_Pekerja"], dependent: ["Kod_Jab"], type: "Partial" },
+                { determinant: ["Kod_Jab"], dependent: ["Nama_Jab"], type: "Transitive" }
+            ]
         };
+
+        // Builds the formal specification {attrs, fds} used by the normalization engine.
+        // Key constraint (PK -> all other attributes) is added from the declared key.
+        function buildSpec(def) {
+            const t0 = def.tables[0];
+            const attrs = t0.columns.map(c => c.name);
+            const fds = (def.fds || []).map(f => ({ lhs: f.determinant.slice(), rhs: f.dependent.slice() }));
+            const key = def.key || t0.columns.filter(c => c.isPK).map(c => c.name);
+            if (key.length) { const rest = attrs.filter(a => !key.includes(a)); if (rest.length) fds.push({ lhs: key.slice(), rhs: rest }); }
+            return { attrs, fds };
+        }
+
+        function renderFDList(fds) {
+            const list = document.getElementById('fds-list');
+            list.innerHTML = '';
+            fds.forEach(fd => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="text-yellow-400">{${escapeHtml(fd.determinant.join(','))}}</span> &rarr; <span class="text-emerald-400">{${escapeHtml(fd.dependent.join(','))}}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        function resetCaseFlags() {
+            state.selectedCols = []; state.hintLevel = 0; state.hintsCounted = 0;
+            state.hasAttemptedCurrentCase = false; state.caseCompleted = false;
+        }
+
+        // "Auto" topic = the topic with the lowest first-try accuracy (unassessed topics first).
+        function pickAutoTopic() {
+            const topics = ['1NF', '2NF', '3NF'];
+            let best = topics[0], bestScore = Infinity;
+            topics.forEach(t => {
+                const s = gameState.topics[t];
+                const score = s.attempts < 2 ? -1 : (s.correctFirst / s.attempts);
+                if (score < bestScore) { bestScore = score; best = t; }
+            });
+            return best;
+        }
 
         function generateEndlessCase() {
             closeModal('endless-modal');
             let topic = document.getElementById('endless-topic').value;
             let diff = document.getElementById('endless-difficulty').value;
-            if (topic === 'auto') topic = '1NF'; if (diff === 'auto') diff = 'intermediate';
-            
-            state.mission = 'endless'; state.currentTopic = topic; state.currentDifficulty = diff;
-            state.selectedCols = []; state.hintLevel = 0; state.hasAttemptedCurrentCase = false; state.caseCompleted = false;
+            if (topic === 'auto') topic = pickAutoTopic();
+            if (!['1NF', '2NF', '3NF'].includes(topic)) topic = '1NF';
+            if (diff === 'auto') { const lv = getMasteryLevel(topic).level; diff = lv === 'Advanced' ? 'advanced' : (lv === 'Intermediate' ? 'intermediate' : 'beginner'); }
+            if (!['beginner', 'intermediate', 'advanced'].includes(diff)) diff = 'intermediate';
 
-            const mockT = [{
-                name: `Endless_${topic}`,
-                columns: [{ name: "ID", isPK: true }, { name: "Nama", isPK: false }, { name: "Atribut", isPK: false }],
-                rows: [{ "ID": "X1", "Nama": "Item A", "Atribut": topic === '1NF' ? "D1, D2" : "D1" }, { "ID": "X2", "Nama": "Item B", "Atribut": "D3" }]
-            }];
+            // Endless cases reuse the validated mission schemas so every case has a real, solvable normalization problem.
+            const base = staticMissions[topic === '1NF' ? 1 : (topic === '2NF' ? 2 : 3)];
+            state.mission = 'endless'; state.currentTopic = topic; state.currentDifficulty = diff;
+            resetCaseFlags();
+
+            const mockT = JSON.parse(JSON.stringify(base.tables));
+            mockT[0].name = `Endless_${topic}`;
             state.tables = JSON.parse(JSON.stringify(mockT)); state.originalTables = JSON.parse(JSON.stringify(mockT));
+            state.spec = buildSpec(base);
 
             document.getElementById('difficulty-badge').textContent = `ENDLESS (${diff})`;
             document.getElementById('difficulty-badge').className = "px-2 py-1 bg-emerald-900 text-[10px] uppercase font-bold rounded border border-emerald-600 text-emerald-300 block";
-            document.getElementById('terminal-title').innerHTML = `<i class="fas fa-infinity mr-2"></i> Endless Lab: ${topic}`;
+            document.getElementById('terminal-title').innerHTML = `<i class="fas fa-infinity mr-2"></i> Endless Lab: ${escapeHtml(topic)}`;
             document.getElementById('mission-objective').textContent = `Selesaikan penyesuaian skema ${topic}.`;
-            document.getElementById('fds-list').innerHTML = '';
+            document.getElementById('scenario-desc').textContent = base.scenario;
+            renderFDList(base.fds);
             
             hideFeedbackPanel(); resetHintsUI(); renderTables(); coachSpeak(`Cabaran Endless Lab ${topic} sedia!`);
         }
@@ -999,46 +1251,219 @@
             state.mission = 'daily'; state.currentChallengeId = `DAILY_${dateStr}`;
             state.currentTopic = '1NF'; // simplified deterministic representation
             state.currentDifficulty = 'Harian';
-            state.selectedCols = []; state.hintLevel = 0; state.hasAttemptedCurrentCase = false; state.caseCompleted = false;
+            resetCaseFlags();
             
             const m = staticMissions[1];
             state.tables = JSON.parse(JSON.stringify(m.tables)); state.originalTables = JSON.parse(JSON.stringify(m.tables));
+            state.spec = buildSpec(m);
 
             document.getElementById('difficulty-badge').textContent = `HARIAN (${dateStr})`;
             document.getElementById('difficulty-badge').className = "px-2 py-1 bg-amber-900 text-[10px] uppercase font-bold rounded border border-amber-600 text-amber-300 block";
             document.getElementById('terminal-title').innerHTML = `<i class="fas fa-calendar-day mr-2"></i> Cabaran Harian: ${state.currentTopic}`;
+            document.getElementById('mission-objective').textContent = m.objective;
+            document.getElementById('scenario-desc').textContent = m.scenario;
+            renderFDList(m.fds);
             
             hideFeedbackPanel(); resetHintsUI(); renderTables();
             if (gameState.dailyCompleted[state.currentChallengeId]) coachSpeak(`Cabaran harian telah diselesaikan sebelum ini.`);
             else coachSpeak(`Selamat datang ke Cabaran Harian ${dateStr}!`);
         }
 
-        function check1NF(tables) {
-            return tables.every(t => t.rows.every(r => Object.values(r).every(v => typeof v !== 'string' || !v.includes(','))));
+        // ==========================================
+        // 3b. NORMALIZATION ENGINE (pure functions, no DOM)
+        //     Works only on DECLARED functional dependencies.
+        // ==========================================
+        // <NORM_ENGINE_START>
+        const NormEngine = (() => {
+            const MAX_ATTRS = 12;
+            const uniq = a => Array.from(new Set(a));
+            const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const fmt = arr => '{' + arr.map(esc).join(', ') + '}';
+            const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+
+            function subsets(arr) {
+                if (arr.length > MAX_ATTRS) throw new Error('Terlalu banyak atribut dalam satu jadual');
+                const out = [];
+                for (let m = 1; m < (1 << arr.length); m++) out.push(arr.filter((_, i) => m & (1 << i)));
+                return out;
+            }
+            // Attribute closure X+ under fds [{lhs:[], rhs:[]}]
+            function closure(attrs, fds) {
+                const c = new Set(attrs); let changed = true;
+                while (changed) {
+                    changed = false;
+                    for (const fd of fds) {
+                        if (fd.lhs.every(x => c.has(x))) for (const r of fd.rhs) if (!c.has(r)) { c.add(r); changed = true; }
+                    }
+                }
+                return Array.from(c);
+            }
+            function isSuperkey(X, R, fds) { const c = closure(X, fds); return R.every(a => c.includes(a)); }
+            function candidateKeys(R, fds) {
+                const keys = [];
+                subsets(R).sort((a, b) => a.length - b.length).forEach(s => {
+                    if (keys.some(k => k.every(x => s.includes(x)))) return;
+                    if (isSuperkey(s, R, fds)) keys.push(s);
+                });
+                return keys;
+            }
+            function primeAttrs(R, fds) { return uniq(candidateKeys(R, fds).flat()); }
+            function minimize(viol) {
+                return viol.filter(v => !viol.some(w => w !== v && w.attr === v.attr && w.lhs.length < v.lhs.length && w.lhs.every(x => v.lhs.includes(x))));
+            }
+            // 2NF: no non-prime attribute depends on a PROPER subset of a candidate key
+            function twoNFViolations(R, fds) {
+                const keys = candidateKeys(R, fds), prime = uniq(keys.flat()), v = [];
+                for (const K of keys) {
+                    if (K.length < 2) continue;
+                    for (const S of subsets(K)) {
+                        if (S.length === K.length) continue;
+                        for (const A of closure(S, fds)) if (R.includes(A) && !S.includes(A) && !prime.includes(A)) v.push({ lhs: S, attr: A, key: K });
+                    }
+                }
+                return minimize(v);
+            }
+            // 3NF: for every non-trivial X -> A (X subset of R, A in R): X is a superkey OR A is prime
+            function threeNFViolations(R, fds) {
+                const prime = primeAttrs(R, fds), v = [];
+                for (const X of subsets(R)) {
+                    if (isSuperkey(X, R, fds)) continue;
+                    for (const A of closure(X, fds)) if (R.includes(A) && !X.includes(A) && !prime.includes(A)) v.push({ lhs: X, attr: A });
+                }
+                return minimize(v);
+            }
+            // Lossless-join test by the chase algorithm
+            function isLossless(schemas, U, fds) {
+                if (!U.every(a => schemas.some(s => s.includes(a)))) return false;
+                if (schemas.length === 1) return true;
+                const rows = schemas.map((s, i) => U.map((a, j) => s.includes(a) ? 'a' + j : 'b' + i + '_' + j));
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    for (const fd of fds) {
+                        const L = fd.lhs.map(a => U.indexOf(a)); if (L.some(i => i < 0)) continue;
+                        const groups = new Map();
+                        rows.forEach((r, ri) => { const k = L.map(i => r[i]).join('|'); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(ri); });
+                        for (const idxs of groups.values()) {
+                            if (idxs.length < 2) continue;
+                            for (const a of fd.rhs) {
+                                const j = U.indexOf(a); if (j < 0) continue;
+                                const syms = uniq(idxs.map(ri => rows[ri][j])); if (syms.length === 1) continue;
+                                const target = syms.find(s => s[0] === 'a') || syms.slice().sort()[0];
+                                rows.forEach(r => { if (syms.includes(r[j])) r[j] = target; });
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+                return rows.some(r => r.every((s, j) => s === 'a' + j));
+            }
+            // Dependency preservation (restricted-closure algorithm, no explicit projection needed)
+            function preservesDependencies(schemas, fds) {
+                const lost = [];
+                for (const fd of fds) {
+                    let Z = new Set(fd.lhs), changed = true;
+                    while (changed) {
+                        changed = false;
+                        for (const Ri of schemas) {
+                            const inter = Array.from(Z).filter(x => Ri.includes(x));
+                            for (const a of closure(inter, fds)) if (Ri.includes(a) && !Z.has(a)) { Z.add(a); changed = true; }
+                        }
+                    }
+                    if (!fd.rhs.every(a => Z.has(a))) lost.push(fd);
+                }
+                return { preserved: lost.length === 0, lost };
+            }
+            // Foreign-key connectivity: tables linked through shared attributes that form a key of at least one side
+            function referentialLinks(tables, fds) {
+                const n = tables.length; if (n <= 1) return { connected: true, isolated: [] };
+                const adj = tables.map(() => []);
+                for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+                    const sh = tables[i].attrs.filter(a => tables[j].attrs.includes(a)); if (!sh.length) continue;
+                    if (isSuperkey(sh, tables[i].attrs, fds) || isSuperkey(sh, tables[j].attrs, fds)) { adj[i].push(j); adj[j].push(i); }
+                }
+                const seen = new Set([0]), q = [0];
+                while (q.length) { const x = q.pop(); adj[x].forEach(y => { if (!seen.has(y)) { seen.add(y); q.push(y); } }); }
+                return { connected: seen.size === n, isolated: tables.filter((_, i) => !seen.has(i)).map(t => t.name) };
+            }
+            // 1NF (as taught in the game): every cell is atomic, i.e. holds no comma-separated list
+            function isAtomic(tables) {
+                return tables.every(t => t.rows.every(r => Object.values(r).every(v => typeof v !== 'string' || !v.includes(','))));
+            }
+
+            // level: '1NF' | '2NF' | '3NF' | 'FK' | 'FULL'
+            function evaluateSchema(tables, spec, level) {
+                if (!isAtomic(tables)) return { ok: false, msgs: ['Masih terdapat data tidak atomik (nilai berbilang dipisahkan koma). 1NF memerlukan satu nilai bagi setiap sel.'] };
+                if (level === '1NF') return { ok: true, msgs: [] };
+                if (!spec || !Array.isArray(spec.attrs) || !Array.isArray(spec.fds)) return { ok: false, msgs: ['Spesifikasi skema tidak tersedia.'] };
+                const U = spec.attrs, F = spec.fds, msgs = [];
+                const schemas = tables.map(t => t.columns.map(c => c.name));
+                const all = uniq(schemas.flat());
+                const missing = U.filter(a => !all.includes(a));
+                if (missing.length) return { ok: false, msgs: [`Atribut hilang daripada skema: ${fmt(missing)}. Penguraian mesti mengekalkan semua atribut.`] };
+                if (schemas.some(s => s.length > MAX_ATTRS)) return { ok: false, msgs: ['Terlalu banyak lajur dalam satu jadual untuk disahkan.'] };
+
+                tables.forEach((t, i) => {
+                    const pk = t.columns.filter(c => c.isPK).map(c => c.name);
+                    if (!pk.length) { msgs.push(`Jadual '${esc(t.name)}' belum mempunyai Kunci Utama (PK).`); return; }
+                    const cks = candidateKeys(schemas[i], F);
+                    if (!cks.some(k => sameSet(k, pk))) msgs.push(`Kunci Utama ${fmt(pk)} bagi jadual '${esc(t.name)}' bukan kunci calon. Kunci calon sebenar: ${cks.map(fmt).join(' atau ')}.`);
+                });
+                tables.forEach((t, i) => {
+                    if (level === '2NF') {
+                        const v = twoNFViolations(schemas[i], F);
+                        if (v.length) msgs.push(`Jadual '${esc(t.name)}' melanggar 2NF: ${fmt(v[0].lhs)} &rarr; ${esc(v[0].attr)} ialah kebergantungan separa (atribut bukan-prima '${esc(v[0].attr)}' bergantung pada sebahagian kunci calon ${fmt(v[0].key)}).`);
+                    }
+                    if (level === '3NF' || level === 'FULL') {
+                        const v = threeNFViolations(schemas[i], F);
+                        if (v.length) msgs.push(`Jadual '${esc(t.name)}' melanggar 3NF: ${fmt(v[0].lhs)} &rarr; ${esc(v[0].attr)}, tetapi ${fmt(v[0].lhs)} bukan superkunci dan '${esc(v[0].attr)}' bukan atribut prima (kebergantungan transitif).`);
+                    }
+                });
+                if (!isLossless(schemas, U, F)) msgs.push('Penguraian tidak lossless: join semula jadual boleh menghasilkan atau menghilangkan data. Atribut sepunya mesti menjadi kunci bagi sekurang-kurangnya satu jadual.');
+                if (level === '3NF' || level === 'FULL') {
+                    const p = preservesDependencies(schemas, F);
+                    if (!p.preserved) msgs.push(`Kebergantungan fungsi tidak dikekalkan: ${p.lost.map(fd => fmt(fd.lhs) + ' &rarr; ' + fmt(fd.rhs)).join('; ')}.`);
+                }
+                if (level === 'FK' || level === 'FULL') {
+                    const l = referentialLinks(tables.map((t, i) => ({ name: t.name, attrs: schemas[i] })), F);
+                    if (!l.connected) msgs.push(`Pautan kunci asing (FK) tidak lengkap: jadual ${l.isolated.map(n => "'" + esc(n) + "'").join(', ')} tidak dihubungkan melalui atribut sepunya yang menjadi kunci utama jadual lain.`);
+                }
+                return { ok: msgs.length === 0, msgs };
+            }
+
+            return { closure, candidateKeys, primeAttrs, twoNFViolations, threeNFViolations, isLossless, preservesDependencies, referentialLinks, isAtomic, evaluateSchema };
+        })();
+        // <NORM_ENGINE_END>
+
+        function check1NF(tables) { return NormEngine.isAtomic(tables); }
+
+        // Classroom: a wrong submission is an error, not the end of the run
+        function registerClassroomError(msg) {
+            playSFX('error');
+            const st = activeClassStudent && hasOwn(classState.students, activeClassStudent.name) ? classState.students[activeClassStudent.name] : null;
+            if (st) { st.errors = (st.errors || 0) + 1; saveClassData(); }
+            showResultModal("PENGESAHAN GAGAL", msg, false);
         }
 
         function validateCurrentStage() {
             if(state.mission === 'boss') { validateBossLogic(); return; }
+            if (isClassroomMode && !classroomRunActive) { showToast('Klik "MULA TUGASAN" dahulu.', 'error'); return; }
             playSFX('click');
-            let isValid = false; let msg = "";
-            let hasKeys = state.tables.every(t => t.columns.some(c => c.isPK));
+            const level = state.currentTopic;
+            const res = NormEngine.evaluateSchema(state.tables, state.spec, level);
+            const isValid = res.ok;
+            const okMsg = level === '1NF' ? "1NF Berjaya! Semua data atomik."
+                : `${level} Berjaya! Kunci calon, ${level}, penguraian lossless${level === '3NF' ? ' dan pemeliharaan kebergantungan' : ''} telah disahkan.`;
+            const msg = isValid ? okMsg : res.msgs.join('<br>');
 
-            if (state.currentTopic === '1NF') {
-                isValid = check1NF(state.tables);
-                msg = isValid ? "1NF Berjaya! Semua data atomik." : "Masih terdapat data tidak atomik (koma).";
-            } else if (state.currentTopic === '2NF' || state.currentTopic === '3NF') {
-                isValid = check1NF(state.tables) && state.tables.length >= 2 && hasKeys;
-                msg = isValid ? `${state.currentTopic} Berjaya! Skema telah dinormalkan.` : "Jadual belum diekstrak sepenuhnya atau tiada Kunci Utama ditandakan.";
-            } else { isValid = true; msg = "Selesai."; }
-            
             if (isClassroomMode) {
-                recordClassroomAttempt(isValid, msg);
+                classroomAttemptCounter++;
+                if (isValid) recordClassroomAttempt(true, msg); else registerClassroomError(msg);
             } else {
-                recordAttemptResult(state.currentTopic, isValid, state.hintLevel);
+                const r = recordAttemptResult(level, isValid, state.hintLevel);
                 if (isValid) {
                     playSFX('success');
-                    if (typeof state.mission === 'number' && !gameState.completedMissions.includes(state.mission)) gameState.completedMissions.push(state.mission);
-                    showResultModal("MISI BERJAYA", msg, true);
+                    showResultModal("MISI BERJAYA", msg + (r.xp > 0 ? `<br><br><b>+${r.xp} XP</b>` : ''), true);
                 } else {
                     playSFX('error');
                     showResultModal("PENGESAHAN GAGAL", msg, false);
@@ -1047,17 +1472,17 @@
         }
 
         function validateBossLogic() {
+            if (isClassroomMode && !classroomRunActive) { showToast('Klik "MULA TUGASAN" dahulu.', 'error'); return; }
             playSFX('click');
-            let stage = state.bossStage;
-            let isValid = false; let msg = "";
-            let hasKeys = state.tables.every(t => t.columns.some(c => c.isPK));
-
-            if (stage === 1) { isValid = true; msg = "Siasatan selesai."; }
-            else if (stage === 2) { isValid = check1NF(state.tables); msg = isValid ? "1NF lulus." : "Gagal 1NF."; }
-            else if (stage === 3) { isValid = check1NF(state.tables) && state.tables.length >= 2 && hasKeys; msg = isValid ? "2NF lulus." : "Gagal 2NF."; }
-            else if (stage === 4) { isValid = check1NF(state.tables) && state.tables.length >= 3 && hasKeys; msg = isValid ? "3NF lulus." : "Gagal 3NF."; }
-            else if (stage === 5) { isValid = hasKeys && state.tables.length >= 3; msg = isValid ? "Integriti rujukan kekal." : "Kunci terputus."; }
-            else if (stage === 6) { isValid = check1NF(state.tables) && state.tables.length >= 3 && hasKeys; msg = isValid ? "Pangkalan Data Stabil!" : "Sistem goyah."; }
+            const stage = state.bossStage;
+            const levels = { 2: '1NF', 3: '2NF', 4: '3NF', 5: 'FK', 6: 'FULL' };
+            const okMsgs = { 1: "Siasatan selesai.", 2: "1NF lulus.", 3: "2NF lulus.", 4: "3NF lulus.", 5: "Integriti rujukan kekal.", 6: "Pangkalan Data Stabil!" };
+            let isValid = true, msg = okMsgs[stage] || "Selesai.";
+            if (stage !== 1) {
+                const res = NormEngine.evaluateSchema(state.tables, state.spec, levels[stage]);
+                isValid = res.ok; if (!isValid) msg = res.msgs.join('<br>');
+            }
+            if (isClassroomMode) classroomAttemptCounter++;
 
             if (isValid) {
                 playSFX('success');
@@ -1068,17 +1493,20 @@
                     document.getElementById('modal-actions').innerHTML = `<button onclick="advanceBossStage(${next})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold transition text-xs">Teruskan Tahap ${next}</button>`;
                 }
             } else {
-                playSFX('error');
-                if(!isClassroomMode) { gameState.boss.errors++; saveGame(false); }
-                else { classState.students[activeClassStudent.name].errors = (classState.students[activeClassStudent.name].errors || 0) + 1; }
-                showResultModal("RALAT SISTEM", msg, false);
+                if (!isClassroomMode) { playSFX('error'); gameState.boss.errors++; saveGame(false); showResultModal("RALAT SISTEM", msg, false); }
+                else registerClassroomError(msg);
             }
         }
 
         function advanceBossStage(nStage) {
-            closeModal('custom-modal'); state.bossStage = nStage;
-            if(!isClassroomMode) { gameState.boss.savedTables = state.tables; saveGame(false); }
-            loadBossStage(nStage);
+            closeModal('custom-modal');
+            const carry = JSON.parse(JSON.stringify(state.tables));
+            if (!isClassroomMode) {
+                gameState.boss.savedTables = carry; gameState.boss.stage = nStage;
+                if (gameState.boss.status !== 'Completed') gameState.boss.status = 'In Progress';
+                saveGame(false);
+            }
+            loadBossStage(nStage, carry);
         }
 
         // ==========================================
@@ -1111,8 +1539,9 @@
         }
 
         function createClassroomSession() {
-            const topic = document.getElementById('tc-topic').value;
-            const time = parseInt(document.getElementById('tc-time').value) || 0;
+            const rawTopic = document.getElementById('tc-topic').value;
+            const topic = ['1', '2', '3', 'BOSS'].includes(rawTopic) ? rawTopic : '1';
+            const time = clampInt(document.getElementById('tc-time').value, 0, 600, 0);
             
             classState = {
                 active: true,
@@ -1121,7 +1550,7 @@
                 students: {},
                 results: []
             };
-            saveClassData();
+            if (!saveClassData()) alert("Amaran: data kelas tidak dapat disimpan pada peranti ini.");
             enterTeacherMode();
             showToast("Sesi Kelas Berjaya Dicipta!", "success");
         }
@@ -1130,7 +1559,8 @@
             document.getElementById('td-code').innerText = classState.code;
             
             const totalSt = Object.keys(classState.students).length;
-            const completed = classState.results.filter(r => r.status === 'Lulus').length;
+            // Unique students who passed (a student with several passing runs is counted once)
+            const completed = new Set(classState.results.filter(r => r.status === 'Lulus').map(r => r.name)).size;
             const totalScore = classState.results.reduce((acc, r) => acc + r.score, 0);
             const avg = classState.results.length ? Math.round(totalScore / classState.results.length) : 0;
             const high = classState.results.length ? Math.max(...classState.results.map(r => r.score)) : 0;
@@ -1142,34 +1572,37 @@
 
             const tbody = document.getElementById('td-student-list');
             tbody.innerHTML = '';
+            const addCell = (tr, text, cls) => { const td = document.createElement('td'); td.className = cls; td.textContent = text; tr.appendChild(td); };
             classState.results.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-white">${r.name}</td>
-                    <td class="p-3 ${r.status==='Lulus' ? 'text-emerald-400':'text-red-400'}">${r.status}</td>
-                    <td class="p-3 text-amber-400 font-mono">${r.score}</td>
-                    <td class="p-3 font-mono text-slate-400">${r.time}s</td>
-                    <td class="p-3 text-slate-400">${r.attempts}</td>
-                    <td class="p-3 text-slate-400">${r.hints}</td>
-                `;
+                addCell(tr, r.name, 'p-3 font-bold text-white');
+                addCell(tr, r.status, 'p-3 ' + (r.status === 'Lulus' ? 'text-emerald-400' : 'text-red-400'));
+                addCell(tr, r.score, 'p-3 text-amber-400 font-mono');
+                addCell(tr, r.time + 's', 'p-3 font-mono text-slate-400');
+                addCell(tr, r.attempts, 'p-3 text-slate-400');
+                addCell(tr, r.hints, 'p-3 text-slate-400');
                 tbody.appendChild(tr);
             });
         }
 
         function joinClassroom() {
             const code = document.getElementById('sl-code').value.trim().toUpperCase();
-            const name = document.getElementById('sl-name').value.trim();
+            const name = cleanText(document.getElementById('sl-name').value, 24).replace(/\s+/g, ' ');
 
             if (!classState.active || classState.code !== code) {
                 alert("Kod kelas tidak sah atau tiada kelas aktif di peranti ini."); return;
             }
             if (!name) { alert("Sila masukkan nama panggilan."); return; }
+            if (RESERVED_NAMES.includes(name.toLowerCase())) { alert("Nama panggilan ini tidak dibenarkan. Sila pilih nama lain."); return; }
 
-            if (!classState.students[name]) classState.students[name] = { results: [], highestScore: 0 };
+            if (!hasOwn(classState.students, name)) classState.students[name] = { results: [], highestScore: 0, errors: 0 };
             saveClassData();
 
             activeClassStudent = { name, code };
             isClassroomMode = true;
+            state.isGameStarted = true;
+            try { Tone.start(); initAudio(); } catch (e) {}
+            applySettings();
             
             closeModal('student-login-modal');
             document.getElementById('start-overlay').style.display = 'none';
@@ -1188,9 +1621,10 @@
             document.getElementById('classroom-sidebar-ui').classList.remove('hidden');
             document.getElementById('classroom-sidebar-ui').classList.add('flex');
 
-            let tName = classState.config.topic === 'BOSS' ? 'Final Boss Recovery' : `Misi ${classState.config.topic} (${staticMissions[classState.config.topic].topic})`;
+            const tk = classState.config.topic;
+            let tName = tk === 'BOSS' ? 'Final Boss Recovery' : `Misi ${tk} (${staticMissions[tk] ? staticMissions[tk].topic : '?'})`;
             document.getElementById('classroom-assignment-info').innerHTML = `
-                <b>Topik:</b> ${tName}<br>
+                <b>Topik:</b> ${escapeHtml(tName)}<br>
                 <b>Masa:</b> ${classState.config.timeLimit ? classState.config.timeLimit + ' minit' : 'Tiada had'}
             `;
             
@@ -1199,7 +1633,10 @@
         }
 
         function startClassroomChallenge() {
-            classroomTimer = 0; classroomAttemptCounter++;
+            if (classroomRunActive) return;
+            classroomRunActive = true; classroomStartTime = Date.now(); classroomTimer = 0; classroomAttemptCounter = 0;
+            const startBtn = document.getElementById('btn-start-classroom');
+            if (startBtn) { startBtn.disabled = true; startBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
             document.getElementById('action-buttons').classList.remove('hidden');
             
             const timerUI = document.getElementById('timer-display');
@@ -1207,27 +1644,33 @@
             timerUI.classList.replace('text-red-400', 'text-purple-400');
             timerUI.classList.replace('border-red-800', 'border-purple-800');
             timerUI.classList.add('classroom-glow');
+            document.getElementById('time-text').innerText = '00:00';
             
             if(classroomTimerInterval) clearInterval(classroomTimerInterval);
+            // Elapsed time is derived from the wall clock, so throttled background tabs cannot make the timer drift
             classroomTimerInterval = setInterval(() => {
-                classroomTimer++;
+                classroomTimer = Math.floor((Date.now() - classroomStartTime) / 1000);
                 let m = Math.floor(classroomTimer / 60).toString().padStart(2, '0');
                 let s = (classroomTimer % 60).toString().padStart(2, '0');
                 document.getElementById('time-text').innerText = `${m}:${s}`;
                 
                 if (classState.config.timeLimit > 0 && classroomTimer >= classState.config.timeLimit * 60) {
-                    clearInterval(classroomTimerInterval);
                     recordClassroomAttempt(false, "Masa tamat!");
                 }
-            }, 1000);
+            }, 500);
 
             if (classState.config.topic === 'BOSS') { loadBossStage(1); } 
-            else { loadMission(parseInt(classState.config.topic)); }
+            else { loadMission(parseInt(classState.config.topic, 10)); }
         }
 
         function recordClassroomAttempt(isSuccess, msg) {
+            if (!classroomRunActive) return; // a finished run can never be recorded twice
+            classroomRunActive = false;
             if(classroomTimerInterval) clearInterval(classroomTimerInterval);
             playSFX(isSuccess ? 'success' : 'error');
+
+            classroomTimer = Math.floor((Date.now() - classroomStartTime) / 1000);
+            if (classState.config.timeLimit > 0) classroomTimer = Math.min(classroomTimer, classState.config.timeLimit * 60);
 
             let score = 0;
             if (isSuccess) {
@@ -1243,43 +1686,51 @@
                 attempts: classroomAttemptCounter,
                 hints: state.hintLevel
             });
+            const st = hasOwn(classState.students, activeClassStudent.name) ? classState.students[activeClassStudent.name] : null;
+            if (st) st.highestScore = Math.max(st.highestScore || 0, score);
             saveClassData();
 
             showResultModal(isSuccess ? "TUGASAN SELESAI" : "TUGASAN GAGAL", 
-                `${msg}<br><br>Pelajar: <b>${activeClassStudent.name}</b><br>Skor: <b>${score}</b><br>Masa: <b>${classroomTimer}s</b>`, isSuccess);
+                `${msg}<br><br>Pelajar: <b>${escapeHtml(activeClassStudent.name)}</b><br>Skor: <b>${score}</b><br>Masa: <b>${classroomTimer}s</b>`, isSuccess);
             
             document.getElementById('modal-actions').innerHTML = `<button onclick="closeModal('custom-modal'); exitClassroomMode()" class="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded shadow transition">Selesai & Keluar</button>`;
         }
 
         function exitClassroomMode() {
+            if (classroomRunActive && !confirm("Tugasan sedang berjalan dan tidak akan direkodkan jika anda keluar. Keluar sekarang?")) return;
             if(classroomTimerInterval) clearInterval(classroomTimerInterval);
+            classroomRunActive = false;
             isClassroomMode = false; activeClassStudent = null;
             location.reload(); 
         }
 
         function resetClassroomConfirm() {
             if(confirm("AMARAN: Semua rekod pelajar dan sesi kelas akan dipadam dari peranti ini. Teruskan?")) {
-                if(storageAvailable) localStorage.removeItem(CLASS_SAVE_KEY);
+                if(storageAvailable) { localStorage.removeItem(CLASS_SAVE_KEY); removeBackups(CLASS_SAVE_KEY); }
                 location.reload();
             }
         }
 
         function exportClassroomCSV() {
             if(classState.results.length === 0) { alert("Tiada rekod untuk dieksport."); return; }
-            const sanitize = (val) => { let str = String(val); if (/^[=+\-@]/.test(str)) return "'" + str; return `"${str.replace(/"/g, '""')}"`; };
+            // Neutralise spreadsheet formulas (=, +, -, @, tab, CR), then always quote and escape quotes.
+            const cell = (val) => { let s = String(val === null || val === undefined ? '' : val); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
+            const num = (val) => { const n = Number(val); return Number.isFinite(n) ? n : 0; };
             let csvContent = "\uFEFF"; 
             csvContent += "Pelajar,Status,Skor,Masa(s),Cubaan,Bantuan\n";
-            classState.results.forEach(r => { csvContent += `${sanitize(r.name)},${sanitize(r.status)},${r.score},${r.time},${r.attempts},${r.hints}\n`; });
+            classState.results.forEach(r => { csvContent += `${cell(r.name)},${cell(r.status)},${num(r.score)},${num(r.time)},${num(r.attempts)},${num(r.hints)}\n`; });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a"); a.href = url; a.download = `Laporan_Kelas_${classState.code}_${new Date().toISOString().split('T')[0]}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         // ==========================================
         // 5. CORE UI, TABLES & ACTIONS
         // ==========================================
         function startGame(isNew = false) {
+            if (state.isGameStarted) return;
             document.getElementById('start-overlay').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('start-overlay').style.display = 'none';
@@ -1288,14 +1739,16 @@
                 setTimeout(() => { document.getElementById('app-container').style.opacity = '1'; }, 50);
             }, 500);
 
+            if (isNew) gameState = defaultGameState(); else { loadSavedGame(); updateSaveBanner(); }
             try { Tone.start(); initAudio(); } catch(e) {}
             state.isGameStarted = true;
-
-            if (!isNew) loadSavedGame();
             
             applySettings();
             updatePlayerRank();
             loadMission(1);
+
+            const rs = lastLoadReport.status;
+            if (rs === 'corrupt' || rs === 'newer' || rs === 'unavailable') setTimeout(() => showToast(document.getElementById('save-status-banner').textContent, 'error'), 800);
             
             setTimeout(() => {
                 openTutorialModal(false);
@@ -1341,11 +1794,12 @@
         }
 
         function loadMission(id) {
-            state.mission = id; state.selectedCols = []; state.hintLevel = 0; classroomAttemptCounter = 0;
+            state.mission = id; resetCaseFlags();
             const m = staticMissions[id];
             state.currentTopic = m.topic; state.currentDifficulty = 'Standard';
             state.tables = JSON.parse(JSON.stringify(m.tables));
             state.originalTables = JSON.parse(JSON.stringify(m.tables));
+            state.spec = buildSpec(m);
             
             document.getElementById('terminal-title').innerHTML = `<i class="fas fa-terminal mr-2"></i> Misi ${id}: ${m.topic}`;
             document.getElementById('mission-objective').textContent = m.objective;
@@ -1353,27 +1807,34 @@
             document.getElementById('difficulty-badge').textContent = state.currentDifficulty;
             document.getElementById('difficulty-badge').className = "px-2 py-1 bg-slate-800 text-[10px] uppercase font-bold rounded border border-slate-600 text-slate-300 block";
             
-            const list = document.getElementById('fds-list');
-            list.innerHTML = '';
-            m.fds.forEach(fd => list.innerHTML += `<li><span class="text-yellow-400">{${fd.determinant.join(',')}}</span> &rarr; <span class="text-emerald-400">{${fd.dependent.join(',')}}</span></li>`);
+            renderFDList(m.fds);
             
             updateSidebarUI(); hideFeedbackPanel(); resetHintsUI(); renderTables();
             coachSpeak(`Misi ${id} dimuatkan.`);
         }
 
-        function loadBossStage(stage) {
-            state.mission = 'boss'; state.bossStage = stage; state.selectedCols = []; state.hintLevel = 0; classroomAttemptCounter = 0;
+        function loadBossStage(stage, carryTables) {
+            // Tables for this stage: carried over from the previous stage, or restored from a valid save, otherwise restart at stage 1
+            let start = null;
+            if (Array.isArray(carryTables)) start = sanitizeTables(carryTables);
+            else if (stage > 1 && !isClassroomMode) start = sanitizeTables(gameState.boss.savedTables);
+            if (!start) { stage = 1; start = JSON.parse(JSON.stringify(bossData.tables)); }
+            if (!isClassroomMode && stage === 1 && !Array.isArray(carryTables) && (gameState.boss.stage !== 1 || gameState.boss.savedTables)) {
+                gameState.boss.stage = 1; gameState.boss.savedTables = null; saveGame(false);
+            }
+
+            state.mission = 'boss'; state.bossStage = stage; resetCaseFlags();
             state.currentTopic = 'BOSS';
-            
-            state.tables = stage === 1 ? JSON.parse(JSON.stringify(bossData.tables)) : (gameState.boss.savedTables || JSON.parse(JSON.stringify(bossData.tables)));
-            state.originalTables = JSON.parse(JSON.stringify(bossData.tables));
+            state.tables = JSON.parse(JSON.stringify(start));
+            state.originalTables = JSON.parse(JSON.stringify(start)); // "Reset Data" returns to the start of THIS stage
+            state.spec = buildSpec(bossData);
             
             document.getElementById('difficulty-badge').textContent = "CRITICAL BOSS";
             document.getElementById('difficulty-badge').className = "px-2 py-1 bg-red-900 text-[10px] uppercase font-bold rounded border border-red-600 text-red-300 boss-glow block";
             document.getElementById('terminal-title').innerHTML = `<i class="fas fa-skull text-red-500 mr-2"></i> Boss Tahap ${stage}`;
             document.getElementById('mission-objective').textContent = "Selesaikan skema pangkalan data pusat.";
-            document.getElementById('fds-list').innerHTML = '';
-            bossData.fds.forEach(fd => document.getElementById('fds-list').innerHTML += `<li><span class="text-yellow-400">{${fd.determinant.join(',')}}</span> &rarr; <span class="text-emerald-400">{${fd.dependent.join(',')}}</span></li>`);
+            document.getElementById('scenario-desc').textContent = bossData.scenario;
+            renderFDList(bossData.fds);
             
             updateSidebarUI(); hideFeedbackPanel(); resetHintsUI(); renderTables();
             coachSpeak(`Boss Tahap ${stage} dimulakan.`);
@@ -1381,8 +1842,14 @@
         
         function completeBoss() {
             if(!isClassroomMode) {
-                gameState.boss.status = 'Completed'; gameState.xp += 1000; saveGame(true);
-                showResultModal("KEMPEN BOSS TAMAT", `Tahniah! Pemulihan Pangkalan Data Pusat Selesai.<br>Skor Diperolehi: <b>+1000 XP</b>`, true);
+                const firstTime = gameState.boss.status !== 'Completed';
+                gameState.boss.status = 'Completed'; gameState.boss.stage = 1; gameState.boss.savedTables = null;
+                if (firstTime) gameState.xp += 1000; // reward only for the first victory
+                recordHistoryEntry('BOSS', 'BOSS', 'CRITICAL', 'SUCCESS', firstTime ? 1000 : 0, state.hintLevel, false);
+                checkAchievements(); saveGame(true); updateSidebarUI();
+                showResultModal("KEMPEN BOSS TAMAT", firstTime
+                    ? `Tahniah! Pemulihan Pangkalan Data Pusat Selesai.<br>Skor Diperolehi: <b>+1000 XP</b>`
+                    : `Tahniah! Pemulihan Pangkalan Data Pusat Selesai.<br>Ganjaran XP hanya diberikan pada kemenangan pertama.`, true);
                 document.getElementById('modal-actions').innerHTML = `<button onclick="closeModal('custom-modal'); loadMission(1);" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold transition text-xs">Kembali Ke Menu Utama</button>`;
             } else {
                 recordClassroomAttempt(true, "Final Boss Berjaya Ditebus!");
@@ -1395,15 +1862,24 @@
             state.tables.forEach((table, tIndex) => {
                 const wrap = document.createElement('div');
                 wrap.className = 'mb-6 bg-slate-800/50 p-4 rounded-xl border border-slate-700 shadow-lg';
-                wrap.innerHTML = `<h3 class="text-cyan-400 font-bold mb-3 text-sm flex justify-between"><span><i class="fas fa-table mr-2"></i>${table.name}</span></h3>`;
+                const h3 = document.createElement('h3');
+                h3.className = 'text-cyan-400 font-bold mb-3 text-sm flex justify-between';
+                const titleSpan = document.createElement('span');
+                titleSpan.innerHTML = '<i class="fas fa-table mr-2"></i>';
+                titleSpan.appendChild(document.createTextNode(table.name)); // textContent-safe: table names can be typed by the player
+                h3.appendChild(titleSpan); wrap.appendChild(h3);
 
                 const t = document.createElement('table');
                 const trH = document.createElement('tr');
                 table.columns.forEach((col, cIndex) => {
                     const th = document.createElement('th');
-                    th.innerHTML = `${col.isPK ? '<i class="fas fa-key text-yellow-400 mr-1"></i>' : ''}${col.name}`;
-                    if (state.selectedCols.find(x => x.t === tIndex && x.c === cIndex)) th.classList.add('selected');
+                    if (col.isPK) { const k = document.createElement('i'); k.className = 'fas fa-key text-yellow-400 mr-1'; th.appendChild(k); }
+                    th.appendChild(document.createTextNode(col.name));
+                    const isSel = !!state.selectedCols.find(x => x.t === tIndex && x.c === cIndex);
+                    if (isSel) th.classList.add('selected');
+                    th.tabIndex = 0; th.setAttribute('role', 'button'); th.setAttribute('aria-pressed', String(isSel));
                     th.onclick = () => { selectColumn(tIndex, cIndex); };
+                    th.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); selectColumn(tIndex, cIndex); } };
                     trH.appendChild(th);
                 });
                 t.appendChild(document.createElement('thead')).appendChild(trH);
@@ -1457,11 +1933,15 @@
 
         function actionExtractTableStart() {
             const tMap = {}; state.selectedCols.forEach(s => { if(!tMap[s.t]) tMap[s.t]=[]; tMap[s.t].push(s.c); });
-            const tIdx = parseInt(Object.keys(tMap)[0]);
             if(Object.keys(tMap).length > 1) { alert("Pilih satu jadual shj."); return; }
+            if (state.tables.length >= 8) { alert("Bilangan jadual maksimum (8) telah dicapai."); return; }
+            const tIdx = parseInt(Object.keys(tMap)[0]);
             const oldT = state.tables[tIdx]; const sCols = tMap[tIdx];
             
             let nName = prompt("Nama jadual baru:", "Jadual_Baru"); if(!nName) return;
+            nName = cleanText(nName, 40);
+            if (!nName) { alert("Nama jadual tidak sah."); return; }
+            if (state.tables.some(t => t.name.toLowerCase() === nName.toLowerCase())) { alert("Nama jadual sudah digunakan."); return; }
             const nCols = sCols.map(i => ({...oldT.columns[i], isPK:false}));
             let cNames = sCols.map(i => oldT.columns[i].name);
             let conn = prompt("Kunci penghubung?\nPilihan: " + cNames.join(', '));
@@ -1469,7 +1949,7 @@
 
             let nRowsMap = new Map();
             oldT.rows.forEach(r => {
-                let k = sCols.map(i => r[oldT.columns[i].name]).join('|');
+                let k = JSON.stringify(sCols.map(i => r[oldT.columns[i].name]));
                 if(!nRowsMap.has(k)) { let nr={}; sCols.forEach(i=>nr[oldT.columns[i].name]=r[oldT.columns[i].name]); nRowsMap.set(k,nr); }
             });
             let nT = { name: nName, columns: nCols, rows: Array.from(nRowsMap.values()) };
@@ -1489,16 +1969,14 @@
             const m = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-title').className = `text-2xl font-bold mb-3 tracking-wide ${isSuccess?'text-emerald-400':'text-red-400'}`;
-            document.getElementById('modal-desc').innerHTML = desc;
+            document.getElementById('modal-desc').innerHTML = desc; // callers pass pre-escaped HTML
             document.getElementById('modal-icon').innerHTML = isSuccess?'<i class="fas fa-check-circle text-emerald-500"></i>':'<i class="fas fa-times-circle text-red-500"></i>';
-            if(!isClassroomMode) {
-                let acts = `<button onclick="closeModal('custom-modal')" class="px-6 py-2 bg-slate-700 text-white rounded font-bold text-xs">Tutup</button>`;
-                if(isSuccess && typeof state.mission === 'number') {
-                    let n = state.mission + 1;
-                    if(staticMissions[n]) acts += `<button onclick="closeModal('custom-modal'); loadMission(${n})" class="px-6 py-2 bg-emerald-600 text-white rounded font-bold text-xs">Misi Seterusnya</button>`;
-                }
-                document.getElementById('modal-actions').innerHTML = acts;
+            let acts = `<button onclick="closeModal('custom-modal')" class="px-6 py-2 bg-slate-700 text-white rounded font-bold text-xs">Tutup</button>`;
+            if(!isClassroomMode && isSuccess && typeof state.mission === 'number') {
+                let n = state.mission + 1;
+                if(staticMissions[n]) acts += `<button onclick="closeModal('custom-modal'); loadMission(${n})" class="px-6 py-2 bg-emerald-600 text-white rounded font-bold text-xs">Misi Seterusnya</button>`;
             }
+            document.getElementById('modal-actions').innerHTML = acts;
             m.classList.remove('hidden'); m.classList.add('flex');
         }
 
@@ -1507,10 +1985,14 @@
         // ==========================================
         // 6. MODALS, AUDIO, AND SETTINGS (Phase 7 Fully Restored)
         // ==========================================
+        // Mastery uses FIRST-TRY accuracy. (completions/attempts always reached 100% once a case was eventually solved.)
+        function getFirstTryAccuracy(stats) {
+            return stats && stats.attempts > 0 ? Math.round((stats.correctFirst / stats.attempts) * 100) : 0;
+        }
         function getMasteryLevel(topic) {
             const stats = gameState.topics[topic];
             if (!stats || stats.attempts < 2) return { level: 'Not Assessed', text: 'Belum Dinilai', color: 'text-slate-400' };
-            const winRate = stats.completions / stats.attempts;
+            const winRate = stats.correctFirst / stats.attempts;
             if (winRate > 0.75 && stats.hintsUsed < stats.completions) return { level: 'Advanced', text: 'Tinggi', color: 'text-emerald-400' };
             if (winRate > 0.4) return { level: 'Intermediate', text: 'Sederhana', color: 'text-yellow-400' };
             return { level: 'Beginner', text: 'Perlu Latihan', color: 'text-red-400' };
@@ -1528,7 +2010,7 @@
             const masteryList = document.getElementById('prof-mastery-list'); masteryList.innerHTML = '';
             ['1NF', '2NF', '3NF'].forEach(topic => {
                 const mst = getMasteryLevel(topic); const stats = gameState.topics[topic];
-                const acc = stats.attempts > 0 ? Math.round((stats.completions / stats.attempts) * 100) : 0;
+                const acc = getFirstTryAccuracy(stats);
                 masteryList.innerHTML += `<div>
                         <div class="flex justify-between text-xs mb-1">
                             <span class="font-bold text-slate-200">${topic}</span><span class="${mst.color} font-bold">${mst.text} (${acc}%)</span>
@@ -1558,13 +2040,17 @@
         function openHistoryModal() {
             const tbody = document.getElementById('history-table-body'); tbody.innerHTML = '';
             if (gameState.history.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">Tiada rekod sejarah.</td></tr>`;
-            else gameState.history.forEach(h => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-900/60 transition">
-                        <td class="p-3 text-slate-400 font-mono">${h.timestamp}</td><td class="p-3 font-bold text-slate-300">${h.type}</td><td class="p-3 text-cyan-400 font-mono">${h.topic}</td>
+            else {
+                let rowsHtml = '';
+                gameState.history.forEach(h => {
+                    rowsHtml += `<tr class="hover:bg-slate-900/60 transition">
+                        <td class="p-3 text-slate-400 font-mono">${escapeHtml(h.timestamp)}</td><td class="p-3 font-bold text-slate-300">${escapeHtml(h.type)}</td><td class="p-3 text-cyan-400 font-mono">${escapeHtml(h.topic)}</td>
                         <td class="p-3">${h.status === 'SUCCESS' ? '<span class="text-emerald-400 font-bold">Lulus</span>' : '<span class="text-red-400 font-bold">Gagal</span>'}</td>
-                        <td class="p-3 font-mono text-yellow-400">+${h.scoreGained}</td><td class="p-3 text-slate-400">${h.hintsUsed}</td>
+                        <td class="p-3 font-mono text-yellow-400">+${Number(h.scoreGained) || 0}</td><td class="p-3 text-slate-400">${Number(h.hintsUsed) || 0}</td>
                     </tr>`;
-            });
+                });
+                tbody.innerHTML = rowsHtml;
+            }
             const m = document.getElementById('history-modal'); m.classList.remove('hidden'); m.classList.add('flex');
         }
 
@@ -1572,7 +2058,7 @@
             const cont = document.getElementById('dashboard-stats'); cont.innerHTML = '';
             ['1NF', '2NF', '3NF'].forEach(topic => {
                 const s = gameState.topics[topic]; const mst = getMasteryLevel(topic);
-                let acc = s.attempts > 0 ? Math.round((s.completions / s.attempts) * 100) : 0;
+                let acc = getFirstTryAccuracy(s);
                 cont.innerHTML += `<div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
                         <h4 class="text-white font-bold mb-2">${topic}</h4>
                         <div class="text-xs text-slate-400 flex justify-between mb-1"><span>Penguasaan:</span> <span class="font-bold ${mst.color}">${mst.text}</span></div>
@@ -1597,7 +2083,7 @@
             if (type === 'error') borderBg = "border-red-500 bg-slate-900 text-red-300";
             if (type === 'achievement') borderBg = "border-amber-500 bg-amber-950/90 text-amber-200 font-bold";
             toast.className = `p-3 rounded-lg border text-xs font-mono shadow-xl flex items-center justify-between toast-banner ${borderBg}`;
-            toast.innerHTML = `<span>${message}</span>`;
+            const sp = document.createElement('span'); sp.textContent = message; toast.appendChild(sp);
             container.appendChild(toast); setTimeout(() => toast.remove(), 4000);
         }
 
@@ -1607,26 +2093,35 @@
             document.getElementById('feedback-panel').classList.remove('hidden');
         }
         function hideFeedbackPanel() { document.getElementById('feedback-panel').classList.add('hidden'); }
+        const HINTS = {
+            '1NF': ["Cari sel yang mengandungi lebih daripada satu nilai (dipisahkan koma). 1NF: satu sel = satu nilai.", "Klik tajuk lajur yang bermasalah, kemudian tekan 'Asingkan Sel (Split)'.", "Selepas split, setiap nilai mempunyai barisnya sendiri. Tekan 'Sahkan Struktur'."],
+            '2NF': ["Tentukan kunci calon: gabungan lajur yang menentukan semua atribut lain. Tandakan dengan 'Set Kunci'.", "Atribut bukan-kunci yang bergantung pada SEBAHAGIAN kunci sahaja ialah kebergantungan separa (lihat senarai FD).", "Pilih penentu + atribut bergantungnya, tekan 'Ekstrak Jadual Baru' dan guna penentu sebagai kunci penghubung."],
+            '3NF': ["Cari atribut bukan-kunci yang menentukan atribut bukan-kunci lain (kebergantungan transitif).", "Pilih penentu transitif dan atribut bergantungnya, kemudian 'Ekstrak Jadual Baru'.", "Pastikan setiap jadual mempunyai kunci utama yang betul dan atribut penghubung kekal sebagai kunci jadual baru."],
+            'BOSS': ["Tahap 2-6 berurutan: 1NF, 2NF, 3NF, integriti rujukan (FK), kemudian semakan akhir.", "Kenal pasti kunci calon daripada senarai FD: atribut yang tidak muncul di sebelah kanan sebarang FD mesti ada dalam kunci.", "Pisahkan mengikut penentu: pekerja, jabatan dan kemahiran-projek. Setiap jadual perlu kunci utama yang betul."]
+        };
+
         function requestHint() {
-            let hints = staticMissions[state.mission]?.hints || ["Periksa syarat kebentuk normal."];
+            const hints = HINTS[state.mission === 'boss' ? 'BOSS' : state.currentTopic] || ["Periksa syarat bentuk normal."];
             if (state.hintLevel < hints.length) {
                 const text = hints[state.hintLevel]; state.hintLevel++;
                 let dot = document.getElementById(`hint-dot-${state.hintLevel}`);
                 if (dot) dot.classList.add('active');
                 coachSpeak(`[Bantuan]: ${text}`); showFeedbackPanel("Bantuan Abe Jamal", text);
-            }
+            } else showToast("Tiada lagi bantuan untuk cabaran ini.", "info");
         }
         function resetHintsUI() { for (let i = 1; i <= 3; i++) { let dot = document.getElementById(`hint-dot-${i}`); if (dot) dot.classList.remove('active'); } }
         function coachSpeak(text) {
             document.getElementById('jamal-text').innerText = text;
-            if (gameState.settings.voiceEnabled && window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                const voices = window.speechSynthesis.getVoices();
-                const msVoice = voices.find(v => v.lang.includes('ms') || v.lang.includes('id'));
-                if (msVoice) utterance.voice = msVoice;
-                window.speechSynthesis.speak(utterance);
-            }
+            try {
+                if (gameState.settings.voiceEnabled && window.speechSynthesis && typeof SpeechSynthesisUtterance !== 'undefined') {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    const voices = window.speechSynthesis.getVoices();
+                    const msVoice = voices.find(v => /^(ms|id)/i.test(v.lang));
+                    if (msVoice) utterance.voice = msVoice;
+                    window.speechSynthesis.speak(utterance);
+                }
+            } catch (e) { /* speech is optional; text is always shown */ }
         }
 
         // Settings & Audio
@@ -1641,11 +2136,16 @@
                 if (gameState.settings.bgmEnabled) { Tone.context.resume(); Tone.Transport.start(); bgmLoop.start(0); state.bgmPlaying = true; }
             } catch (e) {}
         }
+        function applyBGMState() {
+            try {
+                if (gameState.settings.bgmEnabled) { Tone.context.resume(); Tone.Transport.start(); if (bgmLoop && bgmLoop.state !== 'started') bgmLoop.start(0); state.bgmPlaying = true; }
+                else { if (bgmLoop) bgmLoop.stop(); state.bgmPlaying = false; }
+            } catch (e) { state.bgmPlaying = false; }
+        }
         function toggleBGM() {
             if (!state.isGameStarted) return;
             gameState.settings.bgmEnabled = !gameState.settings.bgmEnabled; saveGame(false); applySettings();
-            if (gameState.settings.bgmEnabled) { Tone.context.resume(); Tone.Transport.start(); if (bgmLoop && bgmLoop.state !== 'started') bgmLoop.start(0); state.bgmPlaying = true; } 
-            else { if (bgmLoop) bgmLoop.stop(); state.bgmPlaying = false; }
+            applyBGMState();
         }
         function toggleVoice() { gameState.settings.voiceEnabled = !gameState.settings.voiceEnabled; saveGame(false); applySettings(); if (!gameState.settings.voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel(); else coachSpeak("Suara diaktifkan."); }
         function playSFX(type) {
@@ -1677,7 +2177,7 @@
         function toggleSetting(key) {
             if (key === 'textSize') gameState.settings.textSize = gameState.settings.textSize === 'normal' ? 'large' : 'normal';
             else gameState.settings[key] = !gameState.settings[key];
-            saveGame(false); if (key === 'bgmEnabled') toggleBGM(); if (key === 'voiceEnabled' && !gameState.settings.voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+            saveGame(false); if (key === 'bgmEnabled') applyBGMState(); if (key === 'voiceEnabled' && !gameState.settings.voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
             applySettings();
         }
 
@@ -1710,7 +2210,7 @@
         function prevTutorialStep() { playSFX('select'); if (currentTutorialStep > 0) { currentTutorialStep--; renderTutorialStep(); } }
         function closeTutorial() { gameState.settings.tutorialCompleted = true; saveGame(false); closeModal('tutorial-modal'); if(state.isGameStarted) coachSpeak("Sistem bersedia menerima arahan."); }
 
-        window.onload = () => { loadSavedGame(); };
+        window.onload = () => { loadSavedGame(); updateSaveBanner(); };
     </script>
 </body>
 </html>
